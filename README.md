@@ -4,7 +4,7 @@
 
 ## Current migration status
 
-The repository now contains the first two concrete Phase 2 waves:
+The repository now contains the first three concrete Phase 2 waves:
 
 - `Italbytz.AI.Abstractions`
 - `Italbytz.AI`
@@ -12,10 +12,11 @@ The repository now contains the first two concrete Phase 2 waves:
 - `Italbytz.AI.Agent`
 - `Italbytz.AI.Search.Abstractions`
 - `Italbytz.AI.Search`
+- `Italbytz.AI.CSP.Abstractions`
+- `Italbytz.AI.CSP`
 
 Upcoming migration slices will add:
 
-- `Italbytz.AI.CSP(.Abstractions)`
 - `Italbytz.AI.Planning(.Abstractions)`
 - `Italbytz.AI.Learning(.Abstractions)`
 - `Italbytz.AI.Evolutionary(.Abstractions)`
@@ -29,6 +30,8 @@ Upcoming migration slices will add:
 - Use `Italbytz.AI.Agent` for basic agent and environment helper implementations.
 - Use `Italbytz.AI.Search.Abstractions` for search/problem contracts.
 - Use `Italbytz.AI.Search` for concrete search helpers such as `SearchAgent`, `GeneralProblem`, breadth-first search, and uniform-cost search.
+- Use `Italbytz.AI.CSP.Abstractions` for constraint-satisfaction contracts such as `ICSP`, `IAssignment`, `IDomain`, and `IConstraint`.
+- Use `Italbytz.AI.CSP` for concrete CSP building blocks and solvers such as `CSP`, `MapCSP`, `FlexibleBacktrackingSolver`, `TreeCspSolver`, and `MinConflictsSolver`.
 
 ## Migration notice
 

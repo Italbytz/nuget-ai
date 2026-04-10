@@ -1,0 +1,14 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <PackageId>Italbytz.AI.CSP</PackageId>
+    <Description>Constraint satisfaction problem models, examples, and solver implementations for the Italbytz AI package family.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Italbytz.AI\Italbytz.AI.csproj" />
+    <ProjectReference Include="..\Italbytz.AI.CSP.Abstractions\Italbytz.AI.CSP.Abstractions.csproj" />
+  </ItemGroup>
+
+</Project>

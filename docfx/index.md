@@ -12,10 +12,11 @@ The migration currently includes:
 - `Italbytz.AI.Agent`
 - `Italbytz.AI.Search.Abstractions`
 - `Italbytz.AI.Search`
+- `Italbytz.AI.CSP.Abstractions`
+- `Italbytz.AI.CSP`
 
 ## Planned next slices
 
-- `Italbytz.AI.CSP(.Abstractions)`
 - `Italbytz.AI.Planning(.Abstractions)`
 - `Italbytz.AI.Learning(.Abstractions)`
 - `Italbytz.AI.Evolutionary(.Abstractions)`

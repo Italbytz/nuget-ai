@@ -1,0 +1,9 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <PackageId>Italbytz.AI.CSP.Abstractions</PackageId>
+    <Description>Core contracts for constraint satisfaction problems in the Italbytz AI package family.</Description>
+  </PropertyGroup>
+
+</Project>
