@@ -80,6 +80,12 @@ This repository includes:
 - automated `restore`, `build`, `test`, `pack`, and docs generation
 - a `docfx` setup under `docfx/`
 
+## Release model
+
+- the current `nuget-ai` line stays on `1.0.0-preview.*` while the broader AI migration is still in progress
+- a pushed tag such as `v1.0.0-preview.2` triggers the release-ready pipeline in GitHub Actions
+- if the repository secret `NUGET_API_KEY` is configured, the workflow also publishes `.nupkg` and `.snupkg` files to NuGet
+
 ## Local validation
 
 ```bash
