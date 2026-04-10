@@ -26,7 +26,7 @@ The migration currently includes:
 
 ## Current follow-up work
 
-- remaining LogicGp- and benchmark-adjacent ML integrations on top of the new `Italbytz.AI.ML.*` foundation
+- higher-level ML configuration, explanation, and additional benchmark datasets on top of the new `Italbytz.AI.ML.*` trainer foundation
 
 ## Local validation
 

@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.ML" />
+    <PackageReference Include="MathNet.Numerics" />
   </ItemGroup>
 
   <ItemGroup>

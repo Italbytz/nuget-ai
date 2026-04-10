@@ -6,6 +6,7 @@ using Italbytz.AI.ML.Trainers;
 using Italbytz.AI.ML.UciDatasets;
 using Microsoft.ML;
 using Microsoft.ML.Data;
+using InputOutputColumnPair = Microsoft.ML.InputOutputColumnPair;
 
 namespace Italbytz.AI.Tests;
 
@@ -45,6 +46,29 @@ public class MlIntegrationTests
         Assert.HasCount(2, dataSet.Examples);
         Assert.AreEqual("1", dataSet.Examples[0].TargetValue());
         Assert.AreEqual("0", dataSet.Examples[1].GetAttributeValueAsString("f2"));
+    }
+
+    [TestMethod]
+    public void Feature_descriptors_capture_value_ranges()
+    {
+        var categorical = new CategoricalFeature
+        {
+            PropertyName = "Color",
+            ColumnName = "color",
+            ColumnIndex = 2,
+            ValueRange = ["red", "green", "blue"]
+        };
+        var numerical = new NumericalFeature
+        {
+            PropertyName = "Weight",
+            ColumnName = "weight",
+            ColumnIndex = 3,
+            ValueRange = [0.5f, 1.5f, 2.5f]
+        };
+
+        CollectionAssert.AreEqual(new[] { "red", "green", "blue" }, categorical.ValueRange);
+        CollectionAssert.AreEqual(new[] { 0.5f, 1.5f, 2.5f }, numerical.ValueRange);
+        Assert.AreEqual("weight", numerical.ColumnName);
     }
 
     [TestMethod]
@@ -125,6 +149,45 @@ public class MlIntegrationTests
         }
     }
 
+    [TestMethod]
+    public void Least_squares_trainer_fits_simple_regression_data()
+    {
+        const string csv = "x1,x2,y\n" +
+                           "1,1,9\n" +
+                           "2,1,12\n" +
+                           "1,2,13\n" +
+                           "3,2,19\n";
+
+        var path = Path.Combine(Path.GetTempPath(), $"regression-{Guid.NewGuid():N}.csv");
+        File.WriteAllText(path, csv);
+
+        try
+        {
+            var mlContext = ThreadSafeMLContext.LocalMLContext;
+            var data = mlContext.Data.LoadFromTextFile<RegressionModelInput>(path, ',', true);
+            var trainer = new LeastSquaresTrainer();
+            var pipeline = mlContext.Transforms.ReplaceMissingValues(new[]
+                {
+                    new InputOutputColumnPair("x1"),
+                    new InputOutputColumnPair("x2"),
+                    new InputOutputColumnPair(DefaultColumnNames.Label, "y")
+                })
+                .Append(mlContext.Transforms.Concatenate(DefaultColumnNames.Features, "x1", "x2"))
+                .Append(trainer);
+
+            var model = pipeline.Fit(data);
+            var transformed = model.Transform(data);
+            var metrics = mlContext.Regression.Evaluate(transformed);
+
+            Assert.AreEqual(0.0, metrics.MeanSquaredError, 0.0001);
+            Assert.AreEqual(1.0, metrics.RSquared, 0.0001);
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
     private sealed class RestaurantModelInput
     {
         [LoadColumn(0)] [ColumnName("alternate")] public float Alternate { get; set; }
@@ -138,5 +201,12 @@ public class MlIntegrationTests
         [LoadColumn(8)] [ColumnName("type")] public float Type { get; set; }
         [LoadColumn(9)] [ColumnName("wait_estimate")] public float WaitEstimate { get; set; }
         [LoadColumn(10)] [ColumnName("will_wait")] public uint WillWait { get; set; }
+    }
+
+    private sealed class RegressionModelInput
+    {
+        [LoadColumn(0)] [ColumnName("x1")] public float X1 { get; set; }
+        [LoadColumn(1)] [ColumnName("x2")] public float X2 { get; set; }
+        [LoadColumn(2)] [ColumnName("y")] public float Y { get; set; }
     }
 }
