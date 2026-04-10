@@ -60,6 +60,28 @@ public class CspIntegrationTests
     }
 
     [TestMethod]
+    public void Heuristic_backtracking_solves_legacy_map_coloring_problem()
+    {
+        var csp = new MapCSP();
+        var solver = new FlexibleBacktrackingSolver<Variable, string>
+        {
+            VariableSelectionStrategy = CspHeuristics.MrvDeg<Variable, string>(),
+            ValueOrderingStrategy = CspHeuristics.Lcv<Variable, string>()
+        };
+
+        var assignment = solver.Solve(csp);
+
+        Assert.IsNotNull(assignment);
+        Assert.IsTrue(assignment.IsComplete(csp.Variables));
+        Assert.IsTrue(assignment.IsSolution(csp));
+
+        foreach (var variable in csp.Variables)
+        {
+            CollectionAssert.Contains(MapCSP.Colors.ToList(), assignment.GetValue(variable));
+        }
+    }
+
+    [TestMethod]
     public void Tree_solver_handles_tree_structured_csp()
     {
         IVariable wa = new Variable("WA");
