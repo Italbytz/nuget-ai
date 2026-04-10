@@ -23,6 +23,7 @@
     <ProjectReference Include="..\..\src\Italbytz.AI.Search\Italbytz.AI.Search.csproj" />
     <ProjectReference Include="..\..\src\Italbytz.AI.CSP\Italbytz.AI.CSP.csproj" />
     <ProjectReference Include="..\..\src\Italbytz.AI.Planning\Italbytz.AI.Planning.csproj" />
+    <ProjectReference Include="..\..\src\Italbytz.AI.Learning\Italbytz.AI.Learning.csproj" />
   </ItemGroup>
 
 </Project>

@@ -1,0 +1,14 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <PackageId>Italbytz.AI.Learning</PackageId>
+    <Description>Learning datasets, decision trees, and learner implementations for the Italbytz AI package family.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Italbytz.AI\Italbytz.AI.csproj" />
+    <ProjectReference Include="..\Italbytz.AI.Learning.Abstractions\Italbytz.AI.Learning.Abstractions.csproj" />
+  </ItemGroup>
+
+</Project>

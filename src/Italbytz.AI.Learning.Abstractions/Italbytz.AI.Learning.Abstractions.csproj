@@ -1,0 +1,9 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <PackageId>Italbytz.AI.Learning.Abstractions</PackageId>
+    <Description>Core contracts for datasets, learners, and inductive learning in the Italbytz AI package family.</Description>
+  </PropertyGroup>
+
+</Project>

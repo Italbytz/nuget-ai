@@ -4,7 +4,7 @@
 
 ## Current migration status
 
-The repository now contains the first four concrete Phase 2 waves:
+The repository now contains the first five concrete Phase 2 waves:
 
 - `Italbytz.AI.Abstractions`
 - `Italbytz.AI`
@@ -16,10 +16,11 @@ The repository now contains the first four concrete Phase 2 waves:
 - `Italbytz.AI.CSP`
 - `Italbytz.AI.Planning.Abstractions`
 - `Italbytz.AI.Planning`
+- `Italbytz.AI.Learning.Abstractions`
+- `Italbytz.AI.Learning`
 
 Upcoming migration slices will add:
 
-- `Italbytz.AI.Learning(.Abstractions)`
 - `Italbytz.AI.Evolutionary(.Abstractions)`
 - `Italbytz.AI.ML*`
 
@@ -35,6 +36,8 @@ Upcoming migration slices will add:
 - Use `Italbytz.AI.CSP` for concrete CSP building blocks and solvers such as `CSP`, `MapCSP`, `FlexibleBacktrackingSolver`, `TreeCspSolver`, and `MinConflictsSolver`.
 - Use `Italbytz.AI.Planning.Abstractions` for planning contracts such as `IActionSchema`, `IState`, `IPlanningProblem`, and the minimal FOL term/literal abstractions they rely on.
 - Use `Italbytz.AI.Planning` for planning parsers and implementations such as `ActionSchema`, `State`, `PlanningProblem`, `HierarchicalSearchAlgorithm`, and `PlanningProblemFactory`.
+- Use `Italbytz.AI.Learning.Abstractions` for dataset, attribute, and learner contracts such as `IDataSet`, `IExample`, `ILearner`, `IParameterizedLearner`, and `ICrossValidation`.
+- Use `Italbytz.AI.Learning` for concrete learning helpers and algorithms such as `DataSetFactory`, `DataSetSpecification`, `MajorityLearner`, `DecisionTreeLearner`, `DecisionTree`, and `CrossValidation`.
 
 ## Migration notice
 
