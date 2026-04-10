@@ -25,6 +25,9 @@
     <ProjectReference Include="..\..\src\Italbytz.AI.Planning\Italbytz.AI.Planning.csproj" />
     <ProjectReference Include="..\..\src\Italbytz.AI.Learning\Italbytz.AI.Learning.csproj" />
     <ProjectReference Include="..\..\src\Italbytz.AI.Evolutionary\Italbytz.AI.Evolutionary.csproj" />
+    <ProjectReference Include="..\..\src\Italbytz.AI.ML.Core\Italbytz.AI.ML.Core.csproj" />
+    <ProjectReference Include="..\..\src\Italbytz.AI.ML\Italbytz.AI.ML.csproj" />
+    <ProjectReference Include="..\..\src\Italbytz.AI.ML.UciDatasets\Italbytz.AI.ML.UciDatasets.csproj" />
   </ItemGroup>
 
 </Project>

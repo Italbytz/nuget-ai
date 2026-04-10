@@ -20,10 +20,13 @@ The migration currently includes:
 - `Italbytz.AI.Learning`
 - `Italbytz.AI.Evolutionary.Abstractions`
 - `Italbytz.AI.Evolutionary`
+- `Italbytz.AI.ML.Core`
+- `Italbytz.AI.ML`
+- `Italbytz.AI.ML.UciDatasets`
 
-## Planned next slices
+## Current follow-up work
 
-- `Italbytz.AI.ML*`
+- remaining LogicGp- and benchmark-adjacent ML integrations on top of the new `Italbytz.AI.ML.*` foundation
 
 ## Local validation
 

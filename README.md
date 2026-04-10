@@ -4,7 +4,7 @@
 
 ## Current migration status
 
-The repository now contains the first six concrete Phase 2 waves:
+The repository now contains the first seven concrete Phase 2 waves:
 
 - `Italbytz.AI.Abstractions`
 - `Italbytz.AI`
@@ -20,10 +20,11 @@ The repository now contains the first six concrete Phase 2 waves:
 - `Italbytz.AI.Learning`
 - `Italbytz.AI.Evolutionary.Abstractions`
 - `Italbytz.AI.Evolutionary`
+- `Italbytz.AI.ML.Core`
+- `Italbytz.AI.ML`
+- `Italbytz.AI.ML.UciDatasets`
 
-Upcoming migration slices will add:
-
-- `Italbytz.AI.ML*`
+Current follow-up work focuses on the remaining LogicGp- and benchmark-adjacent ML integrations that build on this new foundation.
 
 ## Which package should I use?
 
@@ -41,6 +42,9 @@ Upcoming migration slices will add:
 - Use `Italbytz.AI.Learning` for concrete learning helpers and algorithms such as `DataSetFactory`, `DataSetSpecification`, `MajorityLearner`, `DecisionTreeLearner`, `DecisionTree`, and `CrossValidation`.
 - Use `Italbytz.AI.Evolutionary.Abstractions` for evolutionary-algorithm contracts such as `IFitnessFunction`, `IFitnessValue`, `IIndividual`, `IGenotype`, `ISearchSpace`, `ILiteral`, `IMonomial`, and `IPolynomial`.
 - Use `Italbytz.AI.Evolutionary` for core evolutionary implementations such as `SingleFitnessValue`, `OneMax`, `BitString`, `BitStringGenotype`, `SetLiteral`, `WeightedMonomial`, `WeightedPolynomial`, and `WeightedPolynomialGenotype`.
+- Use `Italbytz.AI.ML.Core` for shared ML.NET helpers such as `ThreadSafeMLContext`, `DataExcerpt`, metrics, default column names, and lookup-map utilities.
+- Use `Italbytz.AI.ML` for Learning-backed ML.NET integrations and trainers such as `DecisionTreeBinaryTrainer` and `DecisionTreeMulticlassTrainer`.
+- Use `Italbytz.AI.ML.UciDatasets` for curated UCI-style dataset loaders and preprocessing helpers such as `IrisDataset`.
 
 ## Migration notice
 
@@ -55,6 +59,8 @@ Older repositories and articles may still refer to names such as:
 - `Italbytz.Ports.Algorithms.EA`
 - `Italbytz.Adapters.Algorithms.EA`
 - `Italbytz.ML`
+- `Italbytz.ML.UCIMLR`
+- `Italbytz.Adapters.Algorithms.ML`
 
 For all new development, please use the new `Italbytz.AI.*` package family.
 
