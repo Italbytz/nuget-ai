@@ -4,7 +4,7 @@
 
 ## Current migration status
 
-The repository now contains the first seven concrete Phase 2 waves:
+The repository now contains the first ten verified Phase 2 waves:
 
 - `Italbytz.AI.Abstractions`
 - `Italbytz.AI`
@@ -24,7 +24,7 @@ The repository now contains the first seven concrete Phase 2 waves:
 - `Italbytz.AI.ML`
 - `Italbytz.AI.ML.UciDatasets`
 
-Current follow-up work now focuses on additional benchmark datasets and selective ML-configuration refinements; `Explainer`, `Interpreter`, and the serializable `Italbytz.AI.ML.Core.Configuration` layer are already available.
+Current follow-up work now focuses on the remaining benchmark helpers and selective ML-configuration refinements; `Explainer`, `Interpreter`, the serializable `Italbytz.AI.ML.Core.Configuration` layer, and curated `Iris`, `Heart Disease`, `Wine Quality`, and `Breast Cancer Wisconsin Diagnostic` dataset descriptors are already available.
 
 ## Which package should I use?
 
@@ -44,7 +44,7 @@ Current follow-up work now focuses on additional benchmark datasets and selectiv
 - Use `Italbytz.AI.Evolutionary` for core evolutionary implementations such as `SingleFitnessValue`, `OneMax`, `BitString`, `BitStringGenotype`, `SetLiteral`, `WeightedMonomial`, `WeightedPolynomial`, and `WeightedPolynomialGenotype`.
 - Use `Italbytz.AI.ML.Core` for shared ML.NET helpers and configuration DTOs such as `ThreadSafeMLContext`, `DataExcerpt`, `CategoricalFeature`, `NumericalFeature`, `TrainingConfiguration`, `TabularFileDataSourceV3`, metrics, default column names, and lookup-map utilities.
 - Use `Italbytz.AI.ML` for Learning-backed ML.NET integrations, trainers, and model-inspection helpers such as `DecisionTreeBinaryTrainer`, `DecisionTreeMulticlassTrainer`, `LeastSquaresTrainer`, `Explainer`, and `Interpreter`.
-- Use `Italbytz.AI.ML.UciDatasets` for curated UCI-style dataset loaders and preprocessing helpers such as `IrisDataset`.
+- Use `Italbytz.AI.ML.UciDatasets` for curated UCI-style dataset loaders and preprocessing helpers such as `IrisDataset`, `HeartDiseaseDataset`, `WineQualityDataset`, `BreastCancerWisconsinDiagnosticDataset`, and the shared `Data` registry.
 
 ## Migration notice
 

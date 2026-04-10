@@ -120,7 +120,7 @@ public class MlIntegrationTests
 
         StringAssert.Contains(json, "FastTree");
         StringAssert.Contains(json, "\"Scenario\":\"Classification\"");
-        Assert.IsFalse(json.Contains("null"));
+        Assert.DoesNotContain(json, "null");
     }
 
     [TestMethod]
@@ -162,7 +162,7 @@ public class MlIntegrationTests
             var ceterisParibus = explainer.GetCeterisParibusTable<IrisLikeModelInput, MulticlassClassificationOutput>(0, 5);
 
             StringAssert.Contains(pfi, "Feature, Importance");
-            Assert.IsTrue(pfi.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries).Length > 1);
+            Assert.IsGreaterThan(1, pfi.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries).Length);
             StringAssert.Contains(ceterisParibus, "Feature,Score,Class");
         }
         finally
@@ -242,6 +242,61 @@ public class MlIntegrationTests
         {
             File.Delete(path);
         }
+    }
+
+    [TestMethod]
+    public void Additional_uci_datasets_load_and_build_preprocessing_pipelines()
+    {
+        const string heartCsv = "age,sex,cp,trestbps,chol,fbs,restecg,thalach,exang,oldpeak,slope,ca,thal,num\n" +
+                                "63,1,3,145,233,1,0,150,0,2.3,0,0,1,1\n" +
+                                "37,1,2,130,250,0,1,187,0,3.5,0,0,2,0\n" +
+                                "41,0,1,130,204,0,0,172,0,1.4,2,0,2,0\n";
+        const string wineCsv = "fixed_acidity,volatile_acidity,citric_acid,residual_sugar,chlorides,free_sulfur_dioxide,total_sulfur_dioxide,density,pH,sulphates,alcohol,quality\n" +
+                               "7.4,0.70,0.00,1.9,0.076,11.0,34.0,0.9978,3.51,0.56,9.4,5\n" +
+                               "7.8,0.88,0.00,2.6,0.098,25.0,67.0,0.9968,3.20,0.68,9.8,5\n" +
+                               "7.3,0.65,0.00,1.2,0.065,15.0,21.0,0.9946,3.39,0.47,10.0,7\n";
+
+        var heartPath = Path.Combine(Path.GetTempPath(), $"heart-{Guid.NewGuid():N}.csv");
+        var winePath = Path.Combine(Path.GetTempPath(), $"wine-{Guid.NewGuid():N}.csv");
+        File.WriteAllText(heartPath, heartCsv);
+        File.WriteAllText(winePath, wineCsv);
+
+        try
+        {
+            var mlContext = ThreadSafeMLContext.LocalMLContext;
+
+            var heartDataset = new HeartDiseaseDataset();
+            var heartData = heartDataset.LoadFromTextFile(heartPath);
+            var heartTransformed = heartDataset.BuildPreprocessingPipeline(mlContext).Fit(heartData).Transform(heartData);
+
+            var wineDataset = new WineQualityDataset();
+            var wineData = wineDataset.LoadFromTextFile(winePath);
+            var wineTransformed = wineDataset.BuildPreprocessingPipeline(mlContext).Fit(wineData).Transform(wineData);
+
+            Assert.HasCount(14, heartDataset.ColumnProperties);
+            Assert.AreEqual("num", heartDataset.LabelColumnName);
+            Assert.IsNotNull(heartTransformed.Schema.GetColumnOrNull(DefaultColumnNames.Features));
+            Assert.IsNotNull(heartTransformed.Schema.GetColumnOrNull(DefaultColumnNames.Label));
+
+            Assert.HasCount(12, wineDataset.ColumnProperties);
+            Assert.AreEqual("quality", wineDataset.LabelColumnName);
+            Assert.IsNotNull(wineTransformed.Schema.GetColumnOrNull(DefaultColumnNames.Features));
+            Assert.IsNotNull(wineTransformed.Schema.GetColumnOrNull(DefaultColumnNames.Label));
+        }
+        finally
+        {
+            File.Delete(heartPath);
+            File.Delete(winePath);
+        }
+    }
+
+    [TestMethod]
+    public void Data_registry_exposes_supported_uci_dataset_descriptors()
+    {
+        Assert.AreEqual("iris", Data.Iris.FilePrefix);
+        Assert.AreEqual("heart_disease", Data.HeartDisease.FilePrefix);
+        Assert.AreEqual("wine_quality", Data.WineQuality.FilePrefix);
+        Assert.AreEqual("breast_cancer_wisconsin_diagnostic", Data.BreastCancerWisconsinDiagnostic.FilePrefix);
     }
 
     [TestMethod]

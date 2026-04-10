@@ -26,7 +26,7 @@ The migration currently includes:
 
 ## Current follow-up work
 
-- additional benchmark datasets and targeted ML-configuration refinements on top of the now-available `Italbytz.AI.ML.*` trainer, explainer, interpreter, and configuration foundation
+- remaining benchmark helpers and targeted ML-configuration refinements on top of the now-available `Italbytz.AI.ML.*` trainer, explainer, interpreter, configuration foundation, and curated UCI dataset descriptors (`IrisDataset`, `HeartDiseaseDataset`, `WineQualityDataset`, `BreastCancerWisconsinDiagnosticDataset`)
 
 ## Local validation
 
