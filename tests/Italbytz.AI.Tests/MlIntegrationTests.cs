@@ -296,6 +296,29 @@ public class MlIntegrationTests
                                   "1,1,1,1,B\n" +
                                   "2,2,1,1,R\n" +
                                   "1,1,2,2,L\n";
+        const string banknoteCsv = "variance,skewness,curtosis,entropy,class\n" +
+                                   "3.6,8.7,-2.4,-0.4,0\n" +
+                                   "2.1,5.9,-1.8,-1.0,0\n" +
+                                   "4.0,9.0,-2.8,-0.2,0\n" +
+                                   "-1.2,-3.4,8.1,2.1,1\n" +
+                                   "-2.0,-6.1,9.5,1.9,1\n" +
+                                   "-1.5,-4.8,8.7,2.4,1\n";
+        const string wineClassicCsv = "Alcohol,Malicacid,Ash,Alcalinity_of_ash,Magnesium,Total_phenols,Flavanoids,Nonflavanoid_phenols,Proanthocyanins,Color_intensity,Hue,0D280_0D315_of_diluted_wines,Proline,class\n" +
+                                      "14.2,1.7,2.4,15.6,127,2.8,3.0,0.28,2.2,5.6,1.04,3.9,1065,1\n" +
+                                      "13.9,1.8,2.5,16.0,120,2.7,2.9,0.30,2.1,5.4,1.02,3.8,1040,1\n" +
+                                      "12.3,1.9,2.3,20.0,92,2.0,2.1,0.35,1.6,3.8,1.05,2.9,680,2\n" +
+                                      "12.1,2.1,2.4,21.0,88,1.9,2.0,0.36,1.5,3.6,1.03,2.8,650,2\n" +
+                                      "13.1,3.2,2.5,22.5,96,1.5,0.8,0.52,1.2,7.1,0.62,1.7,560,3\n" +
+                                      "13.3,3.3,2.6,23.0,98,1.4,0.7,0.55,1.1,7.4,0.60,1.6,540,3\n";
+        const string pageBlocksCsv = "height,length,area,eccen,p_black,p_and,mean_tr,blackpix,blackand,wb_trans,class\n" +
+                                     "10,12,120,0.10,0.20,0.10,0.30,15,12,0.80,1\n" +
+                                     "11,13,143,0.12,0.22,0.11,0.32,16,13,0.82,1\n" +
+                                     "18,20,360,0.25,0.40,0.22,0.45,35,24,0.70,2\n" +
+                                     "19,21,399,0.27,0.42,0.24,0.47,36,25,0.69,2\n" +
+                                     "26,28,728,0.38,0.58,0.32,0.60,55,40,0.55,3\n" +
+                                     "27,29,783,0.40,0.60,0.34,0.62,57,41,0.53,3\n" +
+                                     "34,36,1224,0.52,0.74,0.45,0.78,82,60,0.38,4\n" +
+                                     "42,44,1848,0.66,0.86,0.54,0.90,110,84,0.24,5\n";
 
         var heartPath = Path.Combine(Path.GetTempPath(), $"heart-{Guid.NewGuid():N}.csv");
         var winePath = Path.Combine(Path.GetTempPath(), $"wine-{Guid.NewGuid():N}.csv");
@@ -305,6 +328,9 @@ public class MlIntegrationTests
         var nphaPath = Path.Combine(Path.GetTempPath(), $"npha-{Guid.NewGuid():N}.csv");
         var lensesPath = Path.Combine(Path.GetTempPath(), $"lenses-{Guid.NewGuid():N}.csv");
         var balancePath = Path.Combine(Path.GetTempPath(), $"balance-{Guid.NewGuid():N}.csv");
+        var banknotePath = Path.Combine(Path.GetTempPath(), $"banknote-{Guid.NewGuid():N}.csv");
+        var wineClassicPath = Path.Combine(Path.GetTempPath(), $"wine-classic-{Guid.NewGuid():N}.csv");
+        var pageBlocksPath = Path.Combine(Path.GetTempPath(), $"page-blocks-{Guid.NewGuid():N}.csv");
         File.WriteAllText(heartPath, heartCsv);
         File.WriteAllText(winePath, wineCsv);
         File.WriteAllText(breastPath, breastCsv);
@@ -313,6 +339,9 @@ public class MlIntegrationTests
         File.WriteAllText(nphaPath, nphaCsv);
         File.WriteAllText(lensesPath, lensesCsv);
         File.WriteAllText(balancePath, balanceCsv);
+        File.WriteAllText(banknotePath, banknoteCsv);
+        File.WriteAllText(wineClassicPath, wineClassicCsv);
+        File.WriteAllText(pageBlocksPath, pageBlocksCsv);
 
         try
         {
@@ -349,6 +378,18 @@ public class MlIntegrationTests
             var balanceDataset = new BalanceScaleDataset();
             var balanceData = balanceDataset.LoadFromTextFile(balancePath);
             var balanceTransformed = balanceDataset.BuildPreprocessingPipeline(mlContext).Fit(balanceData).Transform(balanceData);
+
+            var banknoteDataset = new BanknoteAuthenticationDataset();
+            var banknoteData = banknoteDataset.LoadFromTextFile(banknotePath);
+            var banknoteTransformed = banknoteDataset.BuildPreprocessingPipeline(mlContext).Fit(banknoteData).Transform(banknoteData);
+
+            var wineClassicDataset = new WineDataset();
+            var wineClassicData = wineClassicDataset.LoadFromTextFile(wineClassicPath);
+            var wineClassicTransformed = wineClassicDataset.BuildPreprocessingPipeline(mlContext).Fit(wineClassicData).Transform(wineClassicData);
+
+            var pageBlocksDataset = new PageBlocksDataset();
+            var pageBlocksData = pageBlocksDataset.LoadFromTextFile(pageBlocksPath);
+            var pageBlocksTransformed = pageBlocksDataset.BuildPreprocessingPipeline(mlContext).Fit(pageBlocksData).Transform(pageBlocksData);
 
             Assert.HasCount(14, heartDataset.ColumnProperties);
             Assert.AreEqual("num", heartDataset.LabelColumnName);
@@ -389,6 +430,21 @@ public class MlIntegrationTests
             Assert.AreEqual("class", balanceDataset.LabelColumnName);
             Assert.IsNotNull(balanceTransformed.Schema.GetColumnOrNull(DefaultColumnNames.Features));
             Assert.IsNotNull(balanceTransformed.Schema.GetColumnOrNull(DefaultColumnNames.Label));
+
+            Assert.HasCount(5, banknoteDataset.ColumnProperties);
+            Assert.AreEqual("class", banknoteDataset.LabelColumnName);
+            Assert.IsNotNull(banknoteTransformed.Schema.GetColumnOrNull(DefaultColumnNames.Features));
+            Assert.IsNotNull(banknoteTransformed.Schema.GetColumnOrNull(DefaultColumnNames.Label));
+
+            Assert.HasCount(14, wineClassicDataset.ColumnProperties);
+            Assert.AreEqual("class", wineClassicDataset.LabelColumnName);
+            Assert.IsNotNull(wineClassicTransformed.Schema.GetColumnOrNull(DefaultColumnNames.Features));
+            Assert.IsNotNull(wineClassicTransformed.Schema.GetColumnOrNull(DefaultColumnNames.Label));
+
+            Assert.HasCount(11, pageBlocksDataset.ColumnProperties);
+            Assert.AreEqual("class", pageBlocksDataset.LabelColumnName);
+            Assert.IsNotNull(pageBlocksTransformed.Schema.GetColumnOrNull(DefaultColumnNames.Features));
+            Assert.IsNotNull(pageBlocksTransformed.Schema.GetColumnOrNull(DefaultColumnNames.Label));
         }
         finally
         {
@@ -400,6 +456,9 @@ public class MlIntegrationTests
             File.Delete(nphaPath);
             File.Delete(lensesPath);
             File.Delete(balancePath);
+            File.Delete(banknotePath);
+            File.Delete(wineClassicPath);
+            File.Delete(pageBlocksPath);
         }
     }
 
@@ -413,8 +472,11 @@ public class MlIntegrationTests
         Assert.AreEqual("car_evaluation", Data.CarEvaluation.FilePrefix);
         Assert.AreEqual("solar_flare", Data.SolarFlare.FilePrefix);
         Assert.AreEqual("npha", Data.NPHA.FilePrefix);
+        Assert.AreEqual("wine", Data.Wine.FilePrefix);
         Assert.AreEqual("lenses", Data.Lenses.FilePrefix);
         Assert.AreEqual("balance_scale", Data.BalanceScale.FilePrefix);
+        Assert.AreEqual("page_blocks_classification", Data.PageBlocks.FilePrefix);
+        Assert.AreEqual("banknote", Data.BanknoteAuthentication.FilePrefix);
     }
 
     [TestMethod]
@@ -473,6 +535,118 @@ public class MlIntegrationTests
         {
             var mlContext = ThreadSafeMLContext.LocalMLContext;
             var dataset = new BalanceScaleDataset();
+            var data = dataset.LoadFromTextFile(path);
+            var pipeline = dataset.BuildPipeline(mlContext,
+                new DecisionTreeMulticlassTrainer<MulticlassClassificationOutput>());
+
+            var model = pipeline.Fit(data);
+            var transformed = model.Transform(data);
+            var predictions = mlContext.Data.CreateEnumerable<LabeledPredictionRow>(transformed, reuseRowObject: false).ToList();
+
+            Assert.HasCount(6, predictions);
+            Assert.AreEqual(predictions.Count, predictions.Count(row => row.Label == row.PredictedLabel));
+        }
+        finally
+        {
+            ThreadSafeMLContext.Seed = null;
+            File.Delete(path);
+        }
+    }
+
+    [TestMethod]
+    public void Decision_tree_binary_trainer_fits_banknote_authentication_starter_data()
+    {
+        const string csv = "variance,skewness,curtosis,entropy,class\n" +
+                           "3.6,8.7,-2.4,-0.4,0\n" +
+                           "2.1,5.9,-1.8,-1.0,0\n" +
+                           "4.0,9.0,-2.8,-0.2,0\n" +
+                           "-1.2,-3.4,8.1,2.1,1\n" +
+                           "-2.0,-6.1,9.5,1.9,1\n" +
+                           "-1.5,-4.8,8.7,2.4,1\n";
+
+        var path = Path.Combine(Path.GetTempPath(), $"logicgp-banknote-{Guid.NewGuid():N}.csv");
+        File.WriteAllText(path, csv);
+
+        ThreadSafeMLContext.Seed = 42;
+        try
+        {
+            var mlContext = ThreadSafeMLContext.LocalMLContext;
+            var dataset = new BanknoteAuthenticationDataset();
+            var data = dataset.LoadFromTextFile(path);
+            var pipeline = dataset.BuildPipeline(mlContext, new DecisionTreeBinaryTrainer());
+
+            var model = pipeline.Fit(data);
+            var transformed = model.Transform(data);
+            var metrics = mlContext.BinaryClassification.Evaluate(transformed);
+
+            Assert.IsGreaterThanOrEqualTo(0.99, metrics.Accuracy);
+            Assert.IsGreaterThanOrEqualTo(0.99, metrics.F1Score);
+        }
+        finally
+        {
+            ThreadSafeMLContext.Seed = null;
+            File.Delete(path);
+        }
+    }
+
+    [TestMethod]
+    public void Decision_tree_multiclass_trainer_fits_page_blocks_starter_data()
+    {
+        const string csv = "height,length,area,eccen,p_black,p_and,mean_tr,blackpix,blackand,wb_trans,class\n" +
+                           "10,12,120,0.10,0.20,0.10,0.30,15,12,0.80,1\n" +
+                           "11,13,143,0.12,0.22,0.11,0.32,16,13,0.82,1\n" +
+                           "18,20,360,0.25,0.40,0.22,0.45,35,24,0.70,2\n" +
+                           "19,21,399,0.27,0.42,0.24,0.47,36,25,0.69,2\n" +
+                           "26,28,728,0.38,0.58,0.32,0.60,55,40,0.55,3\n" +
+                           "27,29,783,0.40,0.60,0.34,0.62,57,41,0.53,3\n" +
+                           "34,36,1224,0.52,0.74,0.45,0.78,82,60,0.38,4\n" +
+                           "42,44,1848,0.66,0.86,0.54,0.90,110,84,0.24,5\n";
+
+        var path = Path.Combine(Path.GetTempPath(), $"logicgp-page-blocks-{Guid.NewGuid():N}.csv");
+        File.WriteAllText(path, csv);
+
+        ThreadSafeMLContext.Seed = 42;
+        try
+        {
+            var mlContext = ThreadSafeMLContext.LocalMLContext;
+            var dataset = new PageBlocksDataset();
+            var data = dataset.LoadFromTextFile(path);
+            var pipeline = dataset.BuildPipeline(mlContext,
+                new DecisionTreeMulticlassTrainer<MulticlassClassificationOutput>());
+
+            var model = pipeline.Fit(data);
+            var transformed = model.Transform(data);
+            var predictions = mlContext.Data.CreateEnumerable<LabeledPredictionRow>(transformed, reuseRowObject: false).ToList();
+
+            Assert.HasCount(8, predictions);
+            Assert.AreEqual(predictions.Count, predictions.Count(row => row.Label == row.PredictedLabel));
+        }
+        finally
+        {
+            ThreadSafeMLContext.Seed = null;
+            File.Delete(path);
+        }
+    }
+
+    [TestMethod]
+    public void Decision_tree_multiclass_trainer_fits_wine_starter_data()
+    {
+        const string csv = "Alcohol,Malicacid,Ash,Alcalinity_of_ash,Magnesium,Total_phenols,Flavanoids,Nonflavanoid_phenols,Proanthocyanins,Color_intensity,Hue,0D280_0D315_of_diluted_wines,Proline,class\n" +
+                           "14.2,1.7,2.4,15.6,127,2.8,3.0,0.28,2.2,5.6,1.04,3.9,1065,1\n" +
+                           "13.9,1.8,2.5,16.0,120,2.7,2.9,0.30,2.1,5.4,1.02,3.8,1040,1\n" +
+                           "12.3,1.9,2.3,20.0,92,2.0,2.1,0.35,1.6,3.8,1.05,2.9,680,2\n" +
+                           "12.1,2.1,2.4,21.0,88,1.9,2.0,0.36,1.5,3.6,1.03,2.8,650,2\n" +
+                           "13.1,3.2,2.5,22.5,96,1.5,0.8,0.52,1.2,7.1,0.62,1.7,560,3\n" +
+                           "13.3,3.3,2.6,23.0,98,1.4,0.7,0.55,1.1,7.4,0.60,1.6,540,3\n";
+
+        var path = Path.Combine(Path.GetTempPath(), $"logicgp-wine-classic-{Guid.NewGuid():N}.csv");
+        File.WriteAllText(path, csv);
+
+        ThreadSafeMLContext.Seed = 42;
+        try
+        {
+            var mlContext = ThreadSafeMLContext.LocalMLContext;
+            var dataset = new WineDataset();
             var data = dataset.LoadFromTextFile(path);
             var pipeline = dataset.BuildPipeline(mlContext,
                 new DecisionTreeMulticlassTrainer<MulticlassClassificationOutput>());
