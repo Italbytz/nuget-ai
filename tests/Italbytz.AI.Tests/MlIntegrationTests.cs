@@ -124,6 +124,99 @@ public class MlIntegrationTests
     }
 
     [TestMethod]
+    public void Explainer_generates_permutation_importance_and_ceteris_paribus_tables()
+    {
+        const string csv = "sepal length,sepal width,petal length,petal width,class\n" +
+                           "5.1,3.5,1.4,0.2,Iris-setosa\n" +
+                           "4.9,3.0,1.4,0.2,Iris-setosa\n" +
+                           "6.0,2.2,4.0,1.0,Iris-versicolor\n" +
+                           "5.9,3.0,4.2,1.5,Iris-versicolor\n" +
+                           "6.3,3.3,6.0,2.5,Iris-virginica\n" +
+                           "6.5,3.0,5.8,2.2,Iris-virginica\n";
+
+        var path = Path.Combine(Path.GetTempPath(), $"iris-explainer-{Guid.NewGuid():N}.csv");
+        File.WriteAllText(path, csv);
+
+        try
+        {
+            var mlContext = ThreadSafeMLContext.LocalMLContext;
+            var data = mlContext.Data.LoadFromTextFile<IrisLikeModelInput>(path, ',', true);
+            var pipeline = mlContext.Transforms.ReplaceMissingValues(new[]
+                {
+                    new InputOutputColumnPair("sepal length"),
+                    new InputOutputColumnPair("sepal width"),
+                    new InputOutputColumnPair("petal length"),
+                    new InputOutputColumnPair("petal width")
+                })
+                .Append(mlContext.Transforms.Concatenate(DefaultColumnNames.Features,
+                    "sepal length", "sepal width", "petal length", "petal width"))
+                .Append(mlContext.Transforms.Conversion.MapValueToKey(DefaultColumnNames.Label, "class"))
+                .Append(mlContext.MulticlassClassification.Trainers.SdcaMaximumEntropy(
+                    labelColumnName: DefaultColumnNames.Label,
+                    featureColumnName: DefaultColumnNames.Features));
+
+            var model = pipeline.Fit(data);
+            var explainer = new Explainer(model, data, ScenarioType.Classification, "class");
+
+            var pfi = explainer.GetPermutationFeatureImportanceTable(Metric.MacroAccuracy);
+            var ceterisParibus = explainer.GetCeterisParibusTable<IrisLikeModelInput, MulticlassClassificationOutput>(0, 5);
+
+            StringAssert.Contains(pfi, "Feature, Importance");
+            Assert.IsTrue(pfi.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries).Length > 1);
+            StringAssert.Contains(ceterisParibus, "Feature,Score,Class");
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [TestMethod]
+    public void Interpreter_externalizes_model_parameters_from_multiclass_pipeline()
+    {
+        const string csv = "sepal length,sepal width,petal length,petal width,class\n" +
+                           "5.1,3.5,1.4,0.2,Iris-setosa\n" +
+                           "4.9,3.0,1.4,0.2,Iris-setosa\n" +
+                           "6.0,2.2,4.0,1.0,Iris-versicolor\n" +
+                           "5.9,3.0,4.2,1.5,Iris-versicolor\n" +
+                           "6.3,3.3,6.0,2.5,Iris-virginica\n" +
+                           "6.5,3.0,5.8,2.2,Iris-virginica\n";
+
+        var path = Path.Combine(Path.GetTempPath(), $"iris-interpreter-{Guid.NewGuid():N}.csv");
+        File.WriteAllText(path, csv);
+
+        try
+        {
+            var mlContext = ThreadSafeMLContext.LocalMLContext;
+            var data = mlContext.Data.LoadFromTextFile<IrisLikeModelInput>(path, ',', true);
+            var pipeline = mlContext.Transforms.ReplaceMissingValues(new[]
+                {
+                    new InputOutputColumnPair("sepal length"),
+                    new InputOutputColumnPair("sepal width"),
+                    new InputOutputColumnPair("petal length"),
+                    new InputOutputColumnPair("petal width")
+                })
+                .Append(mlContext.Transforms.Concatenate(DefaultColumnNames.Features,
+                    "sepal length", "sepal width", "petal length", "petal width"))
+                .Append(mlContext.Transforms.Conversion.MapValueToKey(DefaultColumnNames.Label, "class"))
+                .Append(mlContext.MulticlassClassification.Trainers.SdcaMaximumEntropy(
+                    labelColumnName: DefaultColumnNames.Label,
+                    featureColumnName: DefaultColumnNames.Features));
+
+            var model = pipeline.Fit(data);
+            var interpreter = new Interpreter(model);
+            var parameters = interpreter.ExternalizedModelParameters;
+
+            Assert.IsNotNull(parameters);
+            StringAssert.Contains(parameters.GetType().Name, "ModelParameters");
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [TestMethod]
     public void Iris_dataset_loads_csv_and_builds_preprocessing_pipeline()
     {
         const string csv = "sepal length,sepal width,petal length,petal width,class\n" +
@@ -238,6 +331,15 @@ public class MlIntegrationTests
         {
             File.Delete(path);
         }
+    }
+
+    private sealed class IrisLikeModelInput
+    {
+        [LoadColumn(0)] [ColumnName("sepal length")] public float SepalLength { get; set; }
+        [LoadColumn(1)] [ColumnName("sepal width")] public float SepalWidth { get; set; }
+        [LoadColumn(2)] [ColumnName("petal length")] public float PetalLength { get; set; }
+        [LoadColumn(3)] [ColumnName("petal width")] public float PetalWidth { get; set; }
+        [LoadColumn(4)] [ColumnName("class")] public string Class { get; set; } = string.Empty;
     }
 
     private sealed class RestaurantModelInput
