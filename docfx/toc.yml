@@ -1,4 +1,12 @@
 - name: Home
   href: index.md
+- name: Guides
+  items:
+    - name: Architecture
+      href: docs/architecture.md
+    - name: AIMA algorithm index
+      href: docs/aima-algorithm-index.md
+    - name: Getting started with ML helpers
+      href: docs/getting-started-ml.md
 - name: API Reference
   href: api/

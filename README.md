@@ -70,6 +70,12 @@ API documentation is generated with `docfx` and can be published via GitHub Page
 
 - `https://italbytz.github.io/nuget-ai/`
 
+The doc site now also carries forward the most useful orientation material from the older AI/AIMA repositories:
+
+- an architecture guide for the historic Ports-and-Adapters split
+- an AIMA-oriented algorithm index
+- an ML quickstart for `LeastSquaresTrainer`, `Explainer`, and `Interpreter`
+
 If the URL still returns `404`, wait until the `CI` workflow on `main` has completed the first Pages publish run.
 
 ## Quality checks
