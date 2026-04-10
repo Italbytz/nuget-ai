@@ -255,11 +255,24 @@ public class MlIntegrationTests
                                "7.4,0.70,0.00,1.9,0.076,11.0,34.0,0.9978,3.51,0.56,9.4,5\n" +
                                "7.8,0.88,0.00,2.6,0.098,25.0,67.0,0.9968,3.20,0.68,9.8,5\n" +
                                "7.3,0.65,0.00,1.2,0.065,15.0,21.0,0.9946,3.39,0.47,10.0,7\n";
+        const string breastCsv = "radius1,texture1,perimeter1,area1,smoothness1,compactness1,concavity1,concave_points1,symmetry1,fractal_dimension1,radius2,texture2,perimeter2,area2,smoothness2,compactness2,concavity2,concave_points2,symmetry2,fractal_dimension2,radius3,texture3,perimeter3,area3,smoothness3,compactness3,concavity3,concave_points3,symmetry3,fractal_dimension3,Diagnosis\n" +
+                                 "12.1,14.5,78.2,460.0,0.090,0.060,0.025,0.020,0.170,0.058,0.28,1.20,2.00,20.0,0.007,0.015,0.012,0.008,0.018,0.002,13.2,16.0,85.0,520.0,0.120,0.150,0.090,0.040,0.250,0.075,B\n" +
+                                 "11.8,13.9,76.5,440.0,0.088,0.055,0.020,0.018,0.165,0.057,0.25,1.10,1.80,18.0,0.006,0.014,0.010,0.007,0.017,0.002,12.9,15.1,82.8,495.0,0.118,0.140,0.080,0.035,0.240,0.072,B\n" +
+                                 "18.5,21.4,122.0,1090.0,0.104,0.145,0.190,0.100,0.195,0.066,1.05,1.90,7.50,110.0,0.009,0.040,0.050,0.018,0.025,0.004,24.5,28.0,165.0,1850.0,0.145,0.380,0.450,0.210,0.310,0.095,M\n" +
+                                 "17.9,20.8,118.4,1020.0,0.101,0.138,0.180,0.094,0.190,0.064,0.98,1.80,7.00,102.0,0.008,0.036,0.046,0.017,0.024,0.004,23.8,27.2,158.0,1720.0,0.141,0.360,0.420,0.195,0.300,0.091,M\n";
+        const string balanceCsv = "right-distance,right-weight,left-distance,left-weight,class\n" +
+                                  "1,1,1,1,B\n" +
+                                  "2,2,1,1,R\n" +
+                                  "1,1,2,2,L\n";
 
         var heartPath = Path.Combine(Path.GetTempPath(), $"heart-{Guid.NewGuid():N}.csv");
         var winePath = Path.Combine(Path.GetTempPath(), $"wine-{Guid.NewGuid():N}.csv");
+        var breastPath = Path.Combine(Path.GetTempPath(), $"breast-{Guid.NewGuid():N}.csv");
+        var balancePath = Path.Combine(Path.GetTempPath(), $"balance-{Guid.NewGuid():N}.csv");
         File.WriteAllText(heartPath, heartCsv);
         File.WriteAllText(winePath, wineCsv);
+        File.WriteAllText(breastPath, breastCsv);
+        File.WriteAllText(balancePath, balanceCsv);
 
         try
         {
@@ -273,6 +286,14 @@ public class MlIntegrationTests
             var wineData = wineDataset.LoadFromTextFile(winePath);
             var wineTransformed = wineDataset.BuildPreprocessingPipeline(mlContext).Fit(wineData).Transform(wineData);
 
+            var breastDataset = new BreastCancerWisconsinDiagnosticDataset();
+            var breastData = breastDataset.LoadFromTextFile(breastPath);
+            var breastTransformed = breastDataset.BuildPreprocessingPipeline(mlContext).Fit(breastData).Transform(breastData);
+
+            var balanceDataset = new BalanceScaleDataset();
+            var balanceData = balanceDataset.LoadFromTextFile(balancePath);
+            var balanceTransformed = balanceDataset.BuildPreprocessingPipeline(mlContext).Fit(balanceData).Transform(balanceData);
+
             Assert.HasCount(14, heartDataset.ColumnProperties);
             Assert.AreEqual("num", heartDataset.LabelColumnName);
             Assert.IsNotNull(heartTransformed.Schema.GetColumnOrNull(DefaultColumnNames.Features));
@@ -282,11 +303,23 @@ public class MlIntegrationTests
             Assert.AreEqual("quality", wineDataset.LabelColumnName);
             Assert.IsNotNull(wineTransformed.Schema.GetColumnOrNull(DefaultColumnNames.Features));
             Assert.IsNotNull(wineTransformed.Schema.GetColumnOrNull(DefaultColumnNames.Label));
+
+            Assert.HasCount(31, breastDataset.ColumnProperties);
+            Assert.AreEqual("Diagnosis", breastDataset.LabelColumnName);
+            Assert.IsNotNull(breastTransformed.Schema.GetColumnOrNull(DefaultColumnNames.Features));
+            Assert.IsNotNull(breastTransformed.Schema.GetColumnOrNull(DefaultColumnNames.Label));
+
+            Assert.HasCount(5, balanceDataset.ColumnProperties);
+            Assert.AreEqual("class", balanceDataset.LabelColumnName);
+            Assert.IsNotNull(balanceTransformed.Schema.GetColumnOrNull(DefaultColumnNames.Features));
+            Assert.IsNotNull(balanceTransformed.Schema.GetColumnOrNull(DefaultColumnNames.Label));
         }
         finally
         {
             File.Delete(heartPath);
             File.Delete(winePath);
+            File.Delete(breastPath);
+            File.Delete(balancePath);
         }
     }
 
@@ -297,6 +330,190 @@ public class MlIntegrationTests
         Assert.AreEqual("heart_disease", Data.HeartDisease.FilePrefix);
         Assert.AreEqual("wine_quality", Data.WineQuality.FilePrefix);
         Assert.AreEqual("breast_cancer_wisconsin_diagnostic", Data.BreastCancerWisconsinDiagnostic.FilePrefix);
+        Assert.AreEqual("balance_scale", Data.BalanceScale.FilePrefix);
+    }
+
+    [TestMethod]
+    public void Decision_tree_multiclass_trainer_fits_iris_starter_data()
+    {
+        const string csv = "sepal length,sepal width,petal length,petal width,class\n" +
+                           "5.1,3.5,1.4,0.2,Iris-setosa\n" +
+                           "4.9,3.0,1.4,0.2,Iris-setosa\n" +
+                           "6.0,2.2,4.0,1.0,Iris-versicolor\n" +
+                           "5.9,3.0,4.2,1.5,Iris-versicolor\n" +
+                           "6.3,3.3,6.0,2.5,Iris-virginica\n" +
+                           "6.5,3.0,5.8,2.2,Iris-virginica\n";
+
+        var path = Path.Combine(Path.GetTempPath(), $"logicgp-iris-{Guid.NewGuid():N}.csv");
+        File.WriteAllText(path, csv);
+
+        ThreadSafeMLContext.Seed = 42;
+        try
+        {
+            var mlContext = ThreadSafeMLContext.LocalMLContext;
+            var dataset = new IrisDataset();
+            var data = dataset.LoadFromTextFile(path);
+            var pipeline = dataset.BuildPipeline(mlContext,
+                new DecisionTreeMulticlassTrainer<MulticlassClassificationOutput>());
+
+            var model = pipeline.Fit(data);
+            var transformed = model.Transform(data);
+            var predictions = mlContext.Data.CreateEnumerable<LabeledPredictionRow>(transformed, reuseRowObject: false).ToList();
+
+            Assert.HasCount(6, predictions);
+            Assert.AreEqual(predictions.Count, predictions.Count(row => row.Label == row.PredictedLabel));
+        }
+        finally
+        {
+            ThreadSafeMLContext.Seed = null;
+            File.Delete(path);
+        }
+    }
+
+    [TestMethod]
+    public void Decision_tree_multiclass_trainer_fits_balance_scale_starter_data()
+    {
+        const string csv = "right-distance,right-weight,left-distance,left-weight,class\n" +
+                           "1,1,1,1,B\n" +
+                           "2,2,1,1,R\n" +
+                           "3,1,1,3,B\n" +
+                           "1,1,2,2,L\n" +
+                           "3,2,1,1,R\n" +
+                           "1,1,3,2,L\n";
+
+        var path = Path.Combine(Path.GetTempPath(), $"logicgp-balance-{Guid.NewGuid():N}.csv");
+        File.WriteAllText(path, csv);
+
+        ThreadSafeMLContext.Seed = 42;
+        try
+        {
+            var mlContext = ThreadSafeMLContext.LocalMLContext;
+            var dataset = new BalanceScaleDataset();
+            var data = dataset.LoadFromTextFile(path);
+            var pipeline = dataset.BuildPipeline(mlContext,
+                new DecisionTreeMulticlassTrainer<MulticlassClassificationOutput>());
+
+            var model = pipeline.Fit(data);
+            var transformed = model.Transform(data);
+            var predictions = mlContext.Data.CreateEnumerable<LabeledPredictionRow>(transformed, reuseRowObject: false).ToList();
+
+            Assert.HasCount(6, predictions);
+            Assert.AreEqual(predictions.Count, predictions.Count(row => row.Label == row.PredictedLabel));
+        }
+        finally
+        {
+            ThreadSafeMLContext.Seed = null;
+            File.Delete(path);
+        }
+    }
+
+    [TestMethod]
+    public void Decision_tree_multiclass_trainer_fits_wine_quality_starter_data()
+    {
+        const string csv = "fixed_acidity,volatile_acidity,citric_acid,residual_sugar,chlorides,free_sulfur_dioxide,total_sulfur_dioxide,density,pH,sulphates,alcohol,quality\n" +
+                           "7.4,0.82,0.02,2.0,0.085,12.0,32.0,0.9975,3.48,0.55,9.2,5\n" +
+                           "7.8,0.76,0.04,2.2,0.080,14.0,40.0,0.9969,3.42,0.61,9.8,5\n" +
+                           "6.8,0.42,0.28,2.1,0.070,18.0,44.0,0.9955,3.32,0.68,10.6,6\n" +
+                           "6.5,0.36,0.31,2.0,0.065,20.0,46.0,0.9948,3.28,0.72,11.0,6\n" +
+                           "6.1,0.20,0.44,1.8,0.054,28.0,62.0,0.9924,3.18,0.82,12.6,7\n" +
+                           "5.9,0.18,0.46,1.7,0.050,30.0,66.0,0.9918,3.15,0.86,12.9,7\n";
+
+        var path = Path.Combine(Path.GetTempPath(), $"logicgp-wine-{Guid.NewGuid():N}.csv");
+        File.WriteAllText(path, csv);
+
+        ThreadSafeMLContext.Seed = 42;
+        try
+        {
+            var mlContext = ThreadSafeMLContext.LocalMLContext;
+            var dataset = new WineQualityDataset();
+            var data = dataset.LoadFromTextFile(path);
+            var pipeline = dataset.BuildPipeline(mlContext,
+                new DecisionTreeMulticlassTrainer<MulticlassClassificationOutput>());
+
+            var model = pipeline.Fit(data);
+            var transformed = model.Transform(data);
+            var predictions = mlContext.Data.CreateEnumerable<LabeledPredictionRow>(transformed, reuseRowObject: false).ToList();
+
+            Assert.HasCount(6, predictions);
+            Assert.AreEqual(predictions.Count, predictions.Count(row => row.Label == row.PredictedLabel));
+        }
+        finally
+        {
+            ThreadSafeMLContext.Seed = null;
+            File.Delete(path);
+        }
+    }
+
+    [TestMethod]
+    public void Decision_tree_binary_trainer_fits_heart_disease_starter_data()
+    {
+        const string csv = "age,sex,cp,trestbps,chol,fbs,restecg,thalach,exang,oldpeak,slope,ca,thal,num\n" +
+                           "45,0,1,110,190,0,0,172,0,0.0,1,0,2,0\n" +
+                           "51,0,2,118,210,0,0,168,0,0.1,1,0,2,0\n" +
+                           "39,1,1,120,185,0,0,175,0,0.0,1,0,2,0\n" +
+                           "67,1,4,160,286,0,2,108,1,1.5,2,3,3,1\n" +
+                           "58,1,4,150,270,1,2,111,1,1.2,2,2,3,1\n" +
+                           "62,1,4,140,268,0,2,116,1,2.0,2,2,3,1\n";
+
+        var path = Path.Combine(Path.GetTempPath(), $"logicgp-heart-{Guid.NewGuid():N}.csv");
+        File.WriteAllText(path, csv);
+
+        ThreadSafeMLContext.Seed = 42;
+        try
+        {
+            var mlContext = ThreadSafeMLContext.LocalMLContext;
+            var dataset = new HeartDiseaseDataset();
+            var data = dataset.LoadFromTextFile(path);
+            var pipeline = dataset.BuildPipeline(mlContext, new DecisionTreeBinaryTrainer());
+
+            var model = pipeline.Fit(data);
+            var transformed = model.Transform(data);
+            var metrics = mlContext.BinaryClassification.Evaluate(transformed);
+
+            Assert.IsGreaterThanOrEqualTo(0.99, metrics.Accuracy);
+            Assert.IsGreaterThanOrEqualTo(0.99, metrics.F1Score);
+        }
+        finally
+        {
+            ThreadSafeMLContext.Seed = null;
+            File.Delete(path);
+        }
+    }
+
+    [TestMethod]
+    public void Decision_tree_binary_trainer_fits_breast_cancer_wisconsin_diagnostic_starter_data()
+    {
+        const string csv = "radius1,texture1,perimeter1,area1,smoothness1,compactness1,concavity1,concave_points1,symmetry1,fractal_dimension1,radius2,texture2,perimeter2,area2,smoothness2,compactness2,concavity2,concave_points2,symmetry2,fractal_dimension2,radius3,texture3,perimeter3,area3,smoothness3,compactness3,concavity3,concave_points3,symmetry3,fractal_dimension3,Diagnosis\n" +
+                           "12.1,14.5,78.2,460.0,0.090,0.060,0.025,0.020,0.170,0.058,0.28,1.20,2.00,20.0,0.007,0.015,0.012,0.008,0.018,0.002,13.2,16.0,85.0,520.0,0.120,0.150,0.090,0.040,0.250,0.075,B\n" +
+                           "11.8,13.9,76.5,440.0,0.088,0.055,0.020,0.018,0.165,0.057,0.25,1.10,1.80,18.0,0.006,0.014,0.010,0.007,0.017,0.002,12.9,15.1,82.8,495.0,0.118,0.140,0.080,0.035,0.240,0.072,B\n" +
+                           "12.4,15.0,80.1,470.0,0.091,0.062,0.028,0.021,0.171,0.058,0.29,1.25,2.10,21.0,0.007,0.016,0.013,0.008,0.018,0.002,13.5,16.4,86.4,530.0,0.121,0.152,0.092,0.041,0.252,0.076,B\n" +
+                           "18.5,21.4,122.0,1090.0,0.104,0.145,0.190,0.100,0.195,0.066,1.05,1.90,7.50,110.0,0.009,0.040,0.050,0.018,0.025,0.004,24.5,28.0,165.0,1850.0,0.145,0.380,0.450,0.210,0.310,0.095,M\n" +
+                           "17.9,20.8,118.4,1020.0,0.101,0.138,0.180,0.094,0.190,0.064,0.98,1.80,7.00,102.0,0.008,0.036,0.046,0.017,0.024,0.004,23.8,27.2,158.0,1720.0,0.141,0.360,0.420,0.195,0.300,0.091,M\n" +
+                           "18.9,22.0,124.8,1110.0,0.106,0.150,0.198,0.104,0.198,0.067,1.08,1.95,7.70,114.0,0.009,0.041,0.052,0.019,0.026,0.004,25.1,28.5,168.0,1880.0,0.147,0.390,0.460,0.215,0.315,0.097,M\n";
+
+        var path = Path.Combine(Path.GetTempPath(), $"logicgp-breast-{Guid.NewGuid():N}.csv");
+        File.WriteAllText(path, csv);
+
+        ThreadSafeMLContext.Seed = 42;
+        try
+        {
+            var mlContext = ThreadSafeMLContext.LocalMLContext;
+            var dataset = new BreastCancerWisconsinDiagnosticDataset();
+            var data = dataset.LoadFromTextFile(path);
+            var pipeline = dataset.BuildPipeline(mlContext, new DecisionTreeBinaryTrainer());
+
+            var model = pipeline.Fit(data);
+            var transformed = model.Transform(data);
+            var metrics = mlContext.BinaryClassification.Evaluate(transformed);
+
+            Assert.IsGreaterThanOrEqualTo(0.99, metrics.Accuracy);
+            Assert.IsGreaterThanOrEqualTo(0.99, metrics.F1Score);
+        }
+        finally
+        {
+            ThreadSafeMLContext.Seed = null;
+            File.Delete(path);
+        }
     }
 
     [TestMethod]
@@ -395,6 +612,12 @@ public class MlIntegrationTests
         [LoadColumn(2)] [ColumnName("petal length")] public float PetalLength { get; set; }
         [LoadColumn(3)] [ColumnName("petal width")] public float PetalWidth { get; set; }
         [LoadColumn(4)] [ColumnName("class")] public string Class { get; set; } = string.Empty;
+    }
+
+    private sealed class LabeledPredictionRow
+    {
+        [ColumnName(DefaultColumnNames.Label)] public uint Label { get; set; }
+        public uint PredictedLabel { get; set; }
     }
 
     private sealed class RestaurantModelInput

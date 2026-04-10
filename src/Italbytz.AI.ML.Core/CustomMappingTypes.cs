@@ -88,8 +88,9 @@ public class MulticlassClassificationOutput : IMulticlassClassificationOutput
 {
     public uint PredictedLabel { get; set; }
 
-    [VectorType(2)]
+    [VectorType]
     public virtual VBuffer<float> Score { get; set; }
 
+    [VectorType]
     public VBuffer<float> Probability { get; set; }
 }

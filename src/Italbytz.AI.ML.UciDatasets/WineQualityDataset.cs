@@ -55,7 +55,9 @@ public class WineQualityDataset : Dataset<WineQualityDataset.WineQualityModelInp
 
     protected override IEstimator<ITransformer>? BuildLabelMappingPipeline(MLContext mlContext)
     {
-        return mlContext.Transforms.CopyColumns(DefaultColumnNames.Label, "quality");
+        return mlContext.Transforms.Conversion
+            .MapValueToKey("quality", "quality", addKeyValueAnnotationsAsText: false)
+            .Append(mlContext.Transforms.CopyColumns(DefaultColumnNames.Label, "quality"));
     }
 
     protected override IEstimator<ITransformer>? BuildFeaturizationPipeline(MLContext mlContext)

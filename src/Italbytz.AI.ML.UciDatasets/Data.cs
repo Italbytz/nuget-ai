@@ -9,4 +9,6 @@ public static class Data
     public static IDataset WineQuality { get; } = new WineQualityDataset();
 
     public static IDataset BreastCancerWisconsinDiagnostic { get; } = new BreastCancerWisconsinDiagnosticDataset();
+
+    public static IDataset BalanceScale { get; } = new BalanceScaleDataset();
 }

@@ -67,10 +67,11 @@ For all new development, please use the new `Italbytz.AI.*` package family.
 ## Starter scenarios and examples
 
 The older `csharp-mstest-ai` starter repository is being folded into this repo step by step.
-A good starting point for consumer-style search and CSP examples is now:
+A good starting point for consumer-style search, CSP, and ML starter examples is now:
 
 - `tests/Italbytz.AI.Tests/RomaniaMapSearchIntegrationTests.cs`
 - `tests/Italbytz.AI.Tests/CspIntegrationTests.cs`
+- `tests/Italbytz.AI.Tests/MlIntegrationTests.cs`
 
 This keeps the examples close to the actual `Italbytz.AI.*` packages instead of maintaining a second legacy repo line with outdated package names.
 
