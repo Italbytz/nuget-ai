@@ -64,6 +64,15 @@ Older repositories and articles may still refer to names such as:
 
 For all new development, please use the new `Italbytz.AI.*` package family.
 
+## Starter scenarios and examples
+
+The older `csharp-mstest-ai` starter repository is being folded into this repo step by step.
+A good starting point for consumer-style search examples is now:
+
+- `tests/Italbytz.AI.Tests/RomaniaMapSearchIntegrationTests.cs`
+
+This keeps the examples close to the actual `Italbytz.AI.*` packages instead of maintaining a second legacy repo line with outdated package names.
+
 ## Documentation
 
 API documentation is generated with `docfx` and can be published via GitHub Pages:
