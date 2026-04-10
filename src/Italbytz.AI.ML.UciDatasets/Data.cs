@@ -14,6 +14,8 @@ public static class Data
 
     public static IDataset SolarFlare { get; } = new SolarFlareDataset();
 
+    public static IDataset NPHA { get; } = new NPHADataset();
+
     public static IDataset Lenses { get; } = new LensesDataset();
 
     public static IDataset BalanceScale { get; } = new BalanceScaleDataset();

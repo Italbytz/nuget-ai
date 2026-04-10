@@ -278,6 +278,13 @@ public class MlIntegrationTests
                                 "F,K,I,6,3,3,1,1,60,6,5\n" +
                                 "H,R,C,7,4,3,1,1,70,7,6\n" +
                                 "C,H,O,8,4,4,1,1,80,8,8\n";
+        const string nphaCsv = "Age,Physical_Health,Mental_Health,Dental_Health,Employment,Stress_Keeps_Patient_from_Sleeping,Medication_Keeps_Patient_from_Sleeping,Pain_Keeps_Patient_from_Sleeping,Bathroom_Needs_Keeps_Patient_from_Sleeping,Uknown_Keeps_Patient_from_Sleeping,Trouble_Sleeping,Prescription_Sleep_Medication,Race,Gender,Number_of_Doctors_Visited\n" +
+                               "1,1,1,1,1,0,0,0,0,0,0,0,1,1,1\n" +
+                               "1,1,2,1,1,0,0,0,0,0,1,0,1,2,1\n" +
+                               "2,2,2,2,2,1,0,1,0,0,1,0,2,1,2\n" +
+                               "2,2,3,2,2,1,1,1,0,0,1,1,2,2,2\n" +
+                               "3,3,3,3,3,1,1,1,1,1,1,1,3,1,3\n" +
+                               "3,3,4,3,3,1,1,1,1,1,1,1,3,2,3\n";
         const string lensesCsv = "age,spectacle_prescription,astigmatic,class\n" +
                                  "1,1,1,1\n" +
                                  "1,2,1,1\n" +
@@ -295,6 +302,7 @@ public class MlIntegrationTests
         var breastPath = Path.Combine(Path.GetTempPath(), $"breast-{Guid.NewGuid():N}.csv");
         var carPath = Path.Combine(Path.GetTempPath(), $"car-{Guid.NewGuid():N}.csv");
         var solarPath = Path.Combine(Path.GetTempPath(), $"solar-{Guid.NewGuid():N}.csv");
+        var nphaPath = Path.Combine(Path.GetTempPath(), $"npha-{Guid.NewGuid():N}.csv");
         var lensesPath = Path.Combine(Path.GetTempPath(), $"lenses-{Guid.NewGuid():N}.csv");
         var balancePath = Path.Combine(Path.GetTempPath(), $"balance-{Guid.NewGuid():N}.csv");
         File.WriteAllText(heartPath, heartCsv);
@@ -302,6 +310,7 @@ public class MlIntegrationTests
         File.WriteAllText(breastPath, breastCsv);
         File.WriteAllText(carPath, carCsv);
         File.WriteAllText(solarPath, solarCsv);
+        File.WriteAllText(nphaPath, nphaCsv);
         File.WriteAllText(lensesPath, lensesCsv);
         File.WriteAllText(balancePath, balanceCsv);
 
@@ -328,6 +337,10 @@ public class MlIntegrationTests
             var solarDataset = new SolarFlareDataset();
             var solarData = solarDataset.LoadFromTextFile(solarPath);
             var solarTransformed = solarDataset.BuildPreprocessingPipeline(mlContext).Fit(solarData).Transform(solarData);
+
+            var nphaDataset = new NPHADataset();
+            var nphaData = nphaDataset.LoadFromTextFile(nphaPath);
+            var nphaTransformed = nphaDataset.BuildPreprocessingPipeline(mlContext).Fit(nphaData).Transform(nphaData);
 
             var lensesDataset = new LensesDataset();
             var lensesData = lensesDataset.LoadFromTextFile(lensesPath);
@@ -362,6 +375,11 @@ public class MlIntegrationTests
             Assert.IsNotNull(solarTransformed.Schema.GetColumnOrNull(DefaultColumnNames.Features));
             Assert.IsNotNull(solarTransformed.Schema.GetColumnOrNull(DefaultColumnNames.Label));
 
+            Assert.HasCount(15, nphaDataset.ColumnProperties);
+            Assert.AreEqual("Number_of_Doctors_Visited", nphaDataset.LabelColumnName);
+            Assert.IsNotNull(nphaTransformed.Schema.GetColumnOrNull(DefaultColumnNames.Features));
+            Assert.IsNotNull(nphaTransformed.Schema.GetColumnOrNull(DefaultColumnNames.Label));
+
             Assert.HasCount(4, lensesDataset.ColumnProperties);
             Assert.AreEqual("class", lensesDataset.LabelColumnName);
             Assert.IsNotNull(lensesTransformed.Schema.GetColumnOrNull(DefaultColumnNames.Features));
@@ -379,6 +397,7 @@ public class MlIntegrationTests
             File.Delete(breastPath);
             File.Delete(carPath);
             File.Delete(solarPath);
+            File.Delete(nphaPath);
             File.Delete(lensesPath);
             File.Delete(balancePath);
         }
@@ -393,6 +412,7 @@ public class MlIntegrationTests
         Assert.AreEqual("breast_cancer_wisconsin_diagnostic", Data.BreastCancerWisconsinDiagnostic.FilePrefix);
         Assert.AreEqual("car_evaluation", Data.CarEvaluation.FilePrefix);
         Assert.AreEqual("solar_flare", Data.SolarFlare.FilePrefix);
+        Assert.AreEqual("npha", Data.NPHA.FilePrefix);
         Assert.AreEqual("lenses", Data.Lenses.FilePrefix);
         Assert.AreEqual("balance_scale", Data.BalanceScale.FilePrefix);
     }
@@ -550,6 +570,43 @@ public class MlIntegrationTests
     }
 
     [TestMethod]
+    public void Decision_tree_multiclass_trainer_fits_npha_starter_data()
+    {
+        const string csv = "Age,Physical_Health,Mental_Health,Dental_Health,Employment,Stress_Keeps_Patient_from_Sleeping,Medication_Keeps_Patient_from_Sleeping,Pain_Keeps_Patient_from_Sleeping,Bathroom_Needs_Keeps_Patient_from_Sleeping,Uknown_Keeps_Patient_from_Sleeping,Trouble_Sleeping,Prescription_Sleep_Medication,Race,Gender,Number_of_Doctors_Visited\n" +
+                           "1,1,1,1,1,0,0,0,0,0,0,0,1,1,1\n" +
+                           "1,1,2,1,1,0,0,0,0,0,1,0,1,2,1\n" +
+                           "2,2,2,2,2,1,0,1,0,0,1,0,2,1,2\n" +
+                           "2,2,3,2,2,1,1,1,0,0,1,1,2,2,2\n" +
+                           "3,3,3,3,3,1,1,1,1,1,1,1,3,1,3\n" +
+                           "3,3,4,3,3,1,1,1,1,1,1,1,3,2,3\n";
+
+        var path = Path.Combine(Path.GetTempPath(), $"logicgp-npha-{Guid.NewGuid():N}.csv");
+        File.WriteAllText(path, csv);
+
+        ThreadSafeMLContext.Seed = 42;
+        try
+        {
+            var mlContext = ThreadSafeMLContext.LocalMLContext;
+            var dataset = new NPHADataset();
+            var data = dataset.LoadFromTextFile(path);
+            var pipeline = dataset.BuildPipeline(mlContext,
+                new DecisionTreeMulticlassTrainer<MulticlassClassificationOutput>());
+
+            var model = pipeline.Fit(data);
+            var transformed = model.Transform(data);
+            var predictions = mlContext.Data.CreateEnumerable<LabeledPredictionRow>(transformed, reuseRowObject: false).ToList();
+
+            Assert.HasCount(6, predictions);
+            Assert.AreEqual(predictions.Count, predictions.Count(row => row.Label == row.PredictedLabel));
+        }
+        finally
+        {
+            ThreadSafeMLContext.Seed = null;
+            File.Delete(path);
+        }
+    }
+
+    [TestMethod]
     public void Decision_tree_multiclass_trainer_fits_lenses_starter_data()
     {
         const string csv = "age,spectacle_prescription,astigmatic,class\n" +
@@ -613,6 +670,47 @@ public class MlIntegrationTests
             var predictions = mlContext.Data.CreateEnumerable<LabeledPredictionRow>(transformed, reuseRowObject: false).ToList();
 
             Assert.HasCount(6, predictions);
+            Assert.AreEqual(predictions.Count, predictions.Count(row => row.Label == row.PredictedLabel));
+        }
+        finally
+        {
+            ThreadSafeMLContext.Seed = null;
+            File.Delete(path);
+        }
+    }
+
+    [TestMethod]
+    public void Decision_tree_multiclass_trainer_fits_heart_disease_starter_data()
+    {
+        const string csv = "age,sex,cp,trestbps,chol,fbs,restecg,thalach,exang,oldpeak,slope,ca,thal,num\n" +
+                           "42,0,1,110,180,0,0,170,0,0.0,1,0,2,0\n" +
+                           "45,0,2,115,195,0,0,168,0,0.1,1,0,2,0\n" +
+                           "50,1,2,124,220,0,1,155,0,0.8,1,0,2,1\n" +
+                           "53,1,3,128,235,0,1,148,0,1.0,1,1,2,1\n" +
+                           "58,1,3,136,250,0,1,140,1,1.4,2,1,3,2\n" +
+                           "60,1,4,140,260,0,2,132,1,1.8,2,2,3,2\n" +
+                           "64,1,4,148,275,1,2,122,1,2.2,2,2,3,3\n" +
+                           "66,1,4,152,285,1,2,116,1,2.6,2,3,3,3\n" +
+                           "69,1,4,160,300,1,2,108,1,3.0,2,3,3,4\n" +
+                           "71,1,4,165,315,1,2,102,1,3.4,2,3,3,4\n";
+
+        var path = Path.Combine(Path.GetTempPath(), $"logicgp-heart-multi-{Guid.NewGuid():N}.csv");
+        File.WriteAllText(path, csv);
+
+        ThreadSafeMLContext.Seed = 42;
+        try
+        {
+            var mlContext = ThreadSafeMLContext.LocalMLContext;
+            var dataset = new HeartDiseaseDataset();
+            var data = dataset.LoadFromTextFile(path);
+            var pipeline = dataset.BuildPipeline(mlContext,
+                new DecisionTreeMulticlassTrainer<MulticlassClassificationOutput>());
+
+            var model = pipeline.Fit(data);
+            var transformed = model.Transform(data);
+            var predictions = mlContext.Data.CreateEnumerable<LabeledPredictionRow>(transformed, reuseRowObject: false).ToList();
+
+            Assert.HasCount(10, predictions);
             Assert.AreEqual(predictions.Count, predictions.Count(row => row.Label == row.PredictedLabel));
         }
         finally
