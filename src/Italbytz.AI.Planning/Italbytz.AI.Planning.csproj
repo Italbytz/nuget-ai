@@ -1,0 +1,13 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <PackageId>Italbytz.AI.Planning</PackageId>
+    <Description>Planning models, state progression, and hierarchical search helpers for the Italbytz AI package family.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Italbytz.AI.Planning.Abstractions\Italbytz.AI.Planning.Abstractions.csproj" />
+  </ItemGroup>
+
+</Project>

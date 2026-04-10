@@ -1,0 +1,9 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <PackageId>Italbytz.AI.Planning.Abstractions</PackageId>
+    <Description>Core contracts for classical planning and hierarchical planning in the Italbytz AI package family.</Description>
+  </PropertyGroup>
+
+</Project>

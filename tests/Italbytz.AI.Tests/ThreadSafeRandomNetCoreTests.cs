@@ -4,6 +4,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace Italbytz.AI.Tests;
 
 [TestClass]
+[DoNotParallelize]
 public class ThreadSafeRandomNetCoreTests
 {
     private static readonly int[] ExpectedWithSeed42 =
@@ -15,31 +16,45 @@ public class ThreadSafeRandomNetCoreTests
     public void FixedSeedProducesExpectedSequence()
     {
         ThreadSafeRandomNetCore.Seed = 42;
-        var random = ThreadSafeRandomNetCore.Shared;
-
-        var numbers = new int[10];
-        for (var i = 0; i < numbers.Length; i++)
+        try
         {
-            numbers[i] = random.Next(1, 100);
-        }
+            var random = ThreadSafeRandomNetCore.Shared;
 
-        CollectionAssert.AreEqual(ExpectedWithSeed42, numbers);
+            var numbers = new int[10];
+            for (var i = 0; i < numbers.Length; i++)
+            {
+                numbers[i] = random.Next(1, 100);
+            }
+
+            CollectionAssert.AreEqual(ExpectedWithSeed42, numbers);
+        }
+        finally
+        {
+            ThreadSafeRandomNetCore.Seed = null;
+        }
     }
 
     [TestMethod]
     public void ResettingFixedSeedReproducesSameSequence()
     {
         ThreadSafeRandomNetCore.Seed = 42;
-        var firstRun = Enumerable.Range(0, 10)
-            .Select(_ => ThreadSafeRandomNetCore.Shared.Next(1, 100))
-            .ToArray();
+        try
+        {
+            var firstRun = Enumerable.Range(0, 10)
+                .Select(_ => ThreadSafeRandomNetCore.Shared.Next(1, 100))
+                .ToArray();
 
-        ThreadSafeRandomNetCore.Seed = 42;
-        var secondRun = Enumerable.Range(0, 10)
-            .Select(_ => ThreadSafeRandomNetCore.Shared.Next(1, 100))
-            .ToArray();
+            ThreadSafeRandomNetCore.Seed = 42;
+            var secondRun = Enumerable.Range(0, 10)
+                .Select(_ => ThreadSafeRandomNetCore.Shared.Next(1, 100))
+                .ToArray();
 
-        CollectionAssert.AreEqual(firstRun, secondRun);
+            CollectionAssert.AreEqual(firstRun, secondRun);
+        }
+        finally
+        {
+            ThreadSafeRandomNetCore.Seed = null;
+        }
     }
 
     [TestMethod]
@@ -63,18 +78,25 @@ public class ThreadSafeRandomNetCoreTests
     public void SharedRandomRemainsUsableUnderParallelLoad()
     {
         ThreadSafeRandomNetCore.Seed = 42;
-        var rng = ThreadSafeRandomNetCore.Shared;
-
-        Parallel.For(0, 5, _ =>
+        try
         {
-            var numbers = new int[10000];
-            for (var i = 0; i < numbers.Length; i++)
-            {
-                numbers[i] = rng.Next();
-            }
+            var rng = ThreadSafeRandomNetCore.Shared;
 
-            var zeroCount = numbers.Count(x => x == 0);
-            Assert.AreEqual(0, zeroCount);
-        });
+            Parallel.For(0, 5, _ =>
+            {
+                var numbers = new int[10000];
+                for (var i = 0; i < numbers.Length; i++)
+                {
+                    numbers[i] = rng.Next();
+                }
+
+                var zeroCount = numbers.Count(x => x == 0);
+                Assert.AreEqual(0, zeroCount);
+            });
+        }
+        finally
+        {
+            ThreadSafeRandomNetCore.Seed = null;
+        }
     }
 }

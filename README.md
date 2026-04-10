@@ -4,7 +4,7 @@
 
 ## Current migration status
 
-The repository now contains the first three concrete Phase 2 waves:
+The repository now contains the first four concrete Phase 2 waves:
 
 - `Italbytz.AI.Abstractions`
 - `Italbytz.AI`
@@ -14,10 +14,11 @@ The repository now contains the first three concrete Phase 2 waves:
 - `Italbytz.AI.Search`
 - `Italbytz.AI.CSP.Abstractions`
 - `Italbytz.AI.CSP`
+- `Italbytz.AI.Planning.Abstractions`
+- `Italbytz.AI.Planning`
 
 Upcoming migration slices will add:
 
-- `Italbytz.AI.Planning(.Abstractions)`
 - `Italbytz.AI.Learning(.Abstractions)`
 - `Italbytz.AI.Evolutionary(.Abstractions)`
 - `Italbytz.AI.ML*`
@@ -32,6 +33,8 @@ Upcoming migration slices will add:
 - Use `Italbytz.AI.Search` for concrete search helpers such as `SearchAgent`, `GeneralProblem`, breadth-first search, and uniform-cost search.
 - Use `Italbytz.AI.CSP.Abstractions` for constraint-satisfaction contracts such as `ICSP`, `IAssignment`, `IDomain`, and `IConstraint`.
 - Use `Italbytz.AI.CSP` for concrete CSP building blocks and solvers such as `CSP`, `MapCSP`, `FlexibleBacktrackingSolver`, `TreeCspSolver`, and `MinConflictsSolver`.
+- Use `Italbytz.AI.Planning.Abstractions` for planning contracts such as `IActionSchema`, `IState`, `IPlanningProblem`, and the minimal FOL term/literal abstractions they rely on.
+- Use `Italbytz.AI.Planning` for planning parsers and implementations such as `ActionSchema`, `State`, `PlanningProblem`, `HierarchicalSearchAlgorithm`, and `PlanningProblemFactory`.
 
 ## Migration notice
 
