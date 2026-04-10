@@ -260,6 +260,13 @@ public class MlIntegrationTests
                                  "11.8,13.9,76.5,440.0,0.088,0.055,0.020,0.018,0.165,0.057,0.25,1.10,1.80,18.0,0.006,0.014,0.010,0.007,0.017,0.002,12.9,15.1,82.8,495.0,0.118,0.140,0.080,0.035,0.240,0.072,B\n" +
                                  "18.5,21.4,122.0,1090.0,0.104,0.145,0.190,0.100,0.195,0.066,1.05,1.90,7.50,110.0,0.009,0.040,0.050,0.018,0.025,0.004,24.5,28.0,165.0,1850.0,0.145,0.380,0.450,0.210,0.310,0.095,M\n" +
                                  "17.9,20.8,118.4,1020.0,0.101,0.138,0.180,0.094,0.190,0.064,0.98,1.80,7.00,102.0,0.008,0.036,0.046,0.017,0.024,0.004,23.8,27.2,158.0,1720.0,0.141,0.360,0.420,0.195,0.300,0.091,M\n";
+        const string lensesCsv = "age,spectacle_prescription,astigmatic,class\n" +
+                                 "1,1,1,1\n" +
+                                 "1,2,1,1\n" +
+                                 "2,1,2,2\n" +
+                                 "2,2,2,2\n" +
+                                 "3,1,1,3\n" +
+                                 "3,2,1,3\n";
         const string balanceCsv = "right-distance,right-weight,left-distance,left-weight,class\n" +
                                   "1,1,1,1,B\n" +
                                   "2,2,1,1,R\n" +
@@ -268,10 +275,12 @@ public class MlIntegrationTests
         var heartPath = Path.Combine(Path.GetTempPath(), $"heart-{Guid.NewGuid():N}.csv");
         var winePath = Path.Combine(Path.GetTempPath(), $"wine-{Guid.NewGuid():N}.csv");
         var breastPath = Path.Combine(Path.GetTempPath(), $"breast-{Guid.NewGuid():N}.csv");
+        var lensesPath = Path.Combine(Path.GetTempPath(), $"lenses-{Guid.NewGuid():N}.csv");
         var balancePath = Path.Combine(Path.GetTempPath(), $"balance-{Guid.NewGuid():N}.csv");
         File.WriteAllText(heartPath, heartCsv);
         File.WriteAllText(winePath, wineCsv);
         File.WriteAllText(breastPath, breastCsv);
+        File.WriteAllText(lensesPath, lensesCsv);
         File.WriteAllText(balancePath, balanceCsv);
 
         try
@@ -289,6 +298,10 @@ public class MlIntegrationTests
             var breastDataset = new BreastCancerWisconsinDiagnosticDataset();
             var breastData = breastDataset.LoadFromTextFile(breastPath);
             var breastTransformed = breastDataset.BuildPreprocessingPipeline(mlContext).Fit(breastData).Transform(breastData);
+
+            var lensesDataset = new LensesDataset();
+            var lensesData = lensesDataset.LoadFromTextFile(lensesPath);
+            var lensesTransformed = lensesDataset.BuildPreprocessingPipeline(mlContext).Fit(lensesData).Transform(lensesData);
 
             var balanceDataset = new BalanceScaleDataset();
             var balanceData = balanceDataset.LoadFromTextFile(balancePath);
@@ -309,6 +322,11 @@ public class MlIntegrationTests
             Assert.IsNotNull(breastTransformed.Schema.GetColumnOrNull(DefaultColumnNames.Features));
             Assert.IsNotNull(breastTransformed.Schema.GetColumnOrNull(DefaultColumnNames.Label));
 
+            Assert.HasCount(4, lensesDataset.ColumnProperties);
+            Assert.AreEqual("class", lensesDataset.LabelColumnName);
+            Assert.IsNotNull(lensesTransformed.Schema.GetColumnOrNull(DefaultColumnNames.Features));
+            Assert.IsNotNull(lensesTransformed.Schema.GetColumnOrNull(DefaultColumnNames.Label));
+
             Assert.HasCount(5, balanceDataset.ColumnProperties);
             Assert.AreEqual("class", balanceDataset.LabelColumnName);
             Assert.IsNotNull(balanceTransformed.Schema.GetColumnOrNull(DefaultColumnNames.Features));
@@ -319,6 +337,7 @@ public class MlIntegrationTests
             File.Delete(heartPath);
             File.Delete(winePath);
             File.Delete(breastPath);
+            File.Delete(lensesPath);
             File.Delete(balancePath);
         }
     }
@@ -330,6 +349,7 @@ public class MlIntegrationTests
         Assert.AreEqual("heart_disease", Data.HeartDisease.FilePrefix);
         Assert.AreEqual("wine_quality", Data.WineQuality.FilePrefix);
         Assert.AreEqual("breast_cancer_wisconsin_diagnostic", Data.BreastCancerWisconsinDiagnostic.FilePrefix);
+        Assert.AreEqual("lenses", Data.Lenses.FilePrefix);
         Assert.AreEqual("balance_scale", Data.BalanceScale.FilePrefix);
     }
 
@@ -408,6 +428,43 @@ public class MlIntegrationTests
     }
 
     [TestMethod]
+    public void Decision_tree_multiclass_trainer_fits_lenses_starter_data()
+    {
+        const string csv = "age,spectacle_prescription,astigmatic,class\n" +
+                           "1,1,1,1\n" +
+                           "1,2,1,1\n" +
+                           "2,1,2,2\n" +
+                           "2,2,2,2\n" +
+                           "3,1,1,3\n" +
+                           "3,2,1,3\n";
+
+        var path = Path.Combine(Path.GetTempPath(), $"logicgp-lenses-{Guid.NewGuid():N}.csv");
+        File.WriteAllText(path, csv);
+
+        ThreadSafeMLContext.Seed = 42;
+        try
+        {
+            var mlContext = ThreadSafeMLContext.LocalMLContext;
+            var dataset = new LensesDataset();
+            var data = dataset.LoadFromTextFile(path);
+            var pipeline = dataset.BuildPipeline(mlContext,
+                new DecisionTreeMulticlassTrainer<MulticlassClassificationOutput>());
+
+            var model = pipeline.Fit(data);
+            var transformed = model.Transform(data);
+            var predictions = mlContext.Data.CreateEnumerable<LabeledPredictionRow>(transformed, reuseRowObject: false).ToList();
+
+            Assert.HasCount(6, predictions);
+            Assert.AreEqual(predictions.Count, predictions.Count(row => row.Label == row.PredictedLabel));
+        }
+        finally
+        {
+            ThreadSafeMLContext.Seed = null;
+            File.Delete(path);
+        }
+    }
+
+    [TestMethod]
     public void Decision_tree_multiclass_trainer_fits_wine_quality_starter_data()
     {
         const string csv = "fixed_acidity,volatile_acidity,citric_acid,residual_sugar,chlorides,free_sulfur_dioxide,total_sulfur_dioxide,density,pH,sulphates,alcohol,quality\n" +
@@ -417,7 +474,6 @@ public class MlIntegrationTests
                            "6.5,0.36,0.31,2.0,0.065,20.0,46.0,0.9948,3.28,0.72,11.0,6\n" +
                            "6.1,0.20,0.44,1.8,0.054,28.0,62.0,0.9924,3.18,0.82,12.6,7\n" +
                            "5.9,0.18,0.46,1.7,0.050,30.0,66.0,0.9918,3.15,0.86,12.9,7\n";
-
         var path = Path.Combine(Path.GetTempPath(), $"logicgp-wine-{Guid.NewGuid():N}.csv");
         File.WriteAllText(path, csv);
 
