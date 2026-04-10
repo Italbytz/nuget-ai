@@ -12,6 +12,8 @@ public static class Data
 
     public static IDataset CarEvaluation { get; } = new CarEvaluationDataset();
 
+    public static IDataset SolarFlare { get; } = new SolarFlareDataset();
+
     public static IDataset Lenses { get; } = new LensesDataset();
 
     public static IDataset BalanceScale { get; } = new BalanceScaleDataset();

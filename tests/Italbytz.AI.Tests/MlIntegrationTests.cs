@@ -269,6 +269,15 @@ public class MlIntegrationTests
                               "low,low,three,more,med,high,good\n" +
                               "low,low,four,more,big,high,vgood\n" +
                               "low,med,fiveormore,more,big,high,vgood\n";
+        const string solarCsv = "modified Zurich class,largest spot size,spot distribution,activity,evolution,previous 24 hour flare activity,historically-complex,became complex on this pass,area,area of largest spot,flares\n" +
+                                "A,X,X,1,1,0,0,0,10,1,0\n" +
+                                "B,R,O,2,1,1,0,0,20,2,1\n" +
+                                "C,S,I,3,2,1,1,0,30,3,2\n" +
+                                "D,A,C,4,2,2,1,1,40,4,3\n" +
+                                "E,H,O,5,3,2,1,1,50,5,4\n" +
+                                "F,K,I,6,3,3,1,1,60,6,5\n" +
+                                "H,R,C,7,4,3,1,1,70,7,6\n" +
+                                "C,H,O,8,4,4,1,1,80,8,8\n";
         const string lensesCsv = "age,spectacle_prescription,astigmatic,class\n" +
                                  "1,1,1,1\n" +
                                  "1,2,1,1\n" +
@@ -285,12 +294,14 @@ public class MlIntegrationTests
         var winePath = Path.Combine(Path.GetTempPath(), $"wine-{Guid.NewGuid():N}.csv");
         var breastPath = Path.Combine(Path.GetTempPath(), $"breast-{Guid.NewGuid():N}.csv");
         var carPath = Path.Combine(Path.GetTempPath(), $"car-{Guid.NewGuid():N}.csv");
+        var solarPath = Path.Combine(Path.GetTempPath(), $"solar-{Guid.NewGuid():N}.csv");
         var lensesPath = Path.Combine(Path.GetTempPath(), $"lenses-{Guid.NewGuid():N}.csv");
         var balancePath = Path.Combine(Path.GetTempPath(), $"balance-{Guid.NewGuid():N}.csv");
         File.WriteAllText(heartPath, heartCsv);
         File.WriteAllText(winePath, wineCsv);
         File.WriteAllText(breastPath, breastCsv);
         File.WriteAllText(carPath, carCsv);
+        File.WriteAllText(solarPath, solarCsv);
         File.WriteAllText(lensesPath, lensesCsv);
         File.WriteAllText(balancePath, balanceCsv);
 
@@ -313,6 +324,10 @@ public class MlIntegrationTests
             var carDataset = new CarEvaluationDataset();
             var carData = carDataset.LoadFromTextFile(carPath);
             var carTransformed = carDataset.BuildPreprocessingPipeline(mlContext).Fit(carData).Transform(carData);
+
+            var solarDataset = new SolarFlareDataset();
+            var solarData = solarDataset.LoadFromTextFile(solarPath);
+            var solarTransformed = solarDataset.BuildPreprocessingPipeline(mlContext).Fit(solarData).Transform(solarData);
 
             var lensesDataset = new LensesDataset();
             var lensesData = lensesDataset.LoadFromTextFile(lensesPath);
@@ -342,6 +357,11 @@ public class MlIntegrationTests
             Assert.IsNotNull(carTransformed.Schema.GetColumnOrNull(DefaultColumnNames.Features));
             Assert.IsNotNull(carTransformed.Schema.GetColumnOrNull(DefaultColumnNames.Label));
 
+            Assert.HasCount(11, solarDataset.ColumnProperties);
+            Assert.AreEqual("flares", solarDataset.LabelColumnName);
+            Assert.IsNotNull(solarTransformed.Schema.GetColumnOrNull(DefaultColumnNames.Features));
+            Assert.IsNotNull(solarTransformed.Schema.GetColumnOrNull(DefaultColumnNames.Label));
+
             Assert.HasCount(4, lensesDataset.ColumnProperties);
             Assert.AreEqual("class", lensesDataset.LabelColumnName);
             Assert.IsNotNull(lensesTransformed.Schema.GetColumnOrNull(DefaultColumnNames.Features));
@@ -358,6 +378,7 @@ public class MlIntegrationTests
             File.Delete(winePath);
             File.Delete(breastPath);
             File.Delete(carPath);
+            File.Delete(solarPath);
             File.Delete(lensesPath);
             File.Delete(balancePath);
         }
@@ -371,6 +392,7 @@ public class MlIntegrationTests
         Assert.AreEqual("wine_quality", Data.WineQuality.FilePrefix);
         Assert.AreEqual("breast_cancer_wisconsin_diagnostic", Data.BreastCancerWisconsinDiagnostic.FilePrefix);
         Assert.AreEqual("car_evaluation", Data.CarEvaluation.FilePrefix);
+        Assert.AreEqual("solar_flare", Data.SolarFlare.FilePrefix);
         Assert.AreEqual("lenses", Data.Lenses.FilePrefix);
         Assert.AreEqual("balance_scale", Data.BalanceScale.FilePrefix);
     }
@@ -470,6 +492,45 @@ public class MlIntegrationTests
         {
             var mlContext = ThreadSafeMLContext.LocalMLContext;
             var dataset = new CarEvaluationDataset();
+            var data = dataset.LoadFromTextFile(path);
+            var pipeline = dataset.BuildPipeline(mlContext,
+                new DecisionTreeMulticlassTrainer<MulticlassClassificationOutput>());
+
+            var model = pipeline.Fit(data);
+            var transformed = model.Transform(data);
+            var predictions = mlContext.Data.CreateEnumerable<LabeledPredictionRow>(transformed, reuseRowObject: false).ToList();
+
+            Assert.HasCount(8, predictions);
+            Assert.AreEqual(predictions.Count, predictions.Count(row => row.Label == row.PredictedLabel));
+        }
+        finally
+        {
+            ThreadSafeMLContext.Seed = null;
+            File.Delete(path);
+        }
+    }
+
+    [TestMethod]
+    public void Decision_tree_multiclass_trainer_fits_solar_flare_starter_data()
+    {
+        const string csv = "modified Zurich class,largest spot size,spot distribution,activity,evolution,previous 24 hour flare activity,historically-complex,became complex on this pass,area,area of largest spot,flares\n" +
+                           "A,X,X,1,1,0,0,0,10,1,0\n" +
+                           "B,R,O,2,1,1,0,0,20,2,1\n" +
+                           "C,S,I,3,2,1,1,0,30,3,2\n" +
+                           "D,A,C,4,2,2,1,1,40,4,3\n" +
+                           "E,H,O,5,3,2,1,1,50,5,4\n" +
+                           "F,K,I,6,3,3,1,1,60,6,5\n" +
+                           "H,R,C,7,4,3,1,1,70,7,6\n" +
+                           "C,H,O,8,4,4,1,1,80,8,8\n";
+
+        var path = Path.Combine(Path.GetTempPath(), $"logicgp-solar-{Guid.NewGuid():N}.csv");
+        File.WriteAllText(path, csv);
+
+        ThreadSafeMLContext.Seed = 42;
+        try
+        {
+            var mlContext = ThreadSafeMLContext.LocalMLContext;
+            var dataset = new SolarFlareDataset();
             var data = dataset.LoadFromTextFile(path);
             var pipeline = dataset.BuildPipeline(mlContext,
                 new DecisionTreeMulticlassTrainer<MulticlassClassificationOutput>());
