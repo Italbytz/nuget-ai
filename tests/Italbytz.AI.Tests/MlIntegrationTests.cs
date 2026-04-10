@@ -319,6 +319,21 @@ public class MlIntegrationTests
                                      "27,29,783,0.40,0.60,0.34,0.62,57,41,0.53,3\n" +
                                      "34,36,1224,0.52,0.74,0.45,0.78,82,60,0.38,4\n" +
                                      "42,44,1848,0.66,0.86,0.54,0.90,110,84,0.24,5\n";
+        const string cdcCsv = "HighBP,HighChol,CholCheck,BMI,Smoker,Stroke,HeartDiseaseorAttack,PhysActivity,Fruits,Veggies,HvyAlcoholConsump,AnyHealthcare,NoDocbcCost,GenHlth,MentHlth,PhysHlth,DiffWalk,Sex,Age,Education,Income,Diabetes_binary\n" +
+                              "0,0,1,22,0,0,0,1,1,1,0,1,0,1,0,0,0,0,3,6,7,0\n" +
+                              "0,1,1,25,0,0,0,1,1,1,0,1,0,2,2,1,0,1,4,5,6,0\n" +
+                              "0,0,1,24,1,0,0,1,0,1,0,1,0,2,1,2,0,0,5,6,6,0\n" +
+                              "1,1,1,34,1,0,1,0,0,0,0,1,1,4,10,8,1,1,9,3,3,1\n" +
+                              "1,1,1,37,1,1,1,0,0,0,1,1,1,5,12,10,1,0,10,2,2,1\n" +
+                              "1,1,1,40,0,1,1,0,0,0,1,1,1,5,15,12,1,1,11,2,1,1\n";
+        const string obesityCsv = "Gender,Age,Height,Weight,family_history_with_overweight,FAVC,FCVC,NCP,CAEC,SMOKE,CH2O,SCC,FAF,TUE,CALC,MTRANS,NObeyesdad\n" +
+                                  "Female,19,1.70,48,no,no,3,3,Sometimes,no,2,no,3,1,no,Walking,Insufficient_Weight\n" +
+                                  "Male,24,1.78,70,no,no,3,3,Sometimes,no,2,no,2,1,Sometimes,Bike,Normal_Weight\n" +
+                                  "Female,28,1.65,78,yes,yes,2,4,Frequently,no,2,yes,1,2,Sometimes,Public_Transportation,Overweight_Level_I\n" +
+                                  "Male,32,1.72,88,yes,yes,2,4,Frequently,no,1,yes,1,3,Frequently,Automobile,Overweight_Level_II\n" +
+                                  "Female,36,1.60,95,yes,yes,2,3,Always,no,1,yes,0,4,Frequently,Automobile,Obesity_Type_I\n" +
+                                  "Male,40,1.68,110,yes,yes,1,3,Always,yes,1,yes,0,5,Always,Motorbike,Obesity_Type_II\n" +
+                                  "Female,44,1.58,125,yes,yes,1,2,Always,yes,1,yes,0,6,Always,Automobile,Obesity_Type_III\n";
 
         var heartPath = Path.Combine(Path.GetTempPath(), $"heart-{Guid.NewGuid():N}.csv");
         var winePath = Path.Combine(Path.GetTempPath(), $"wine-{Guid.NewGuid():N}.csv");
@@ -331,6 +346,8 @@ public class MlIntegrationTests
         var banknotePath = Path.Combine(Path.GetTempPath(), $"banknote-{Guid.NewGuid():N}.csv");
         var wineClassicPath = Path.Combine(Path.GetTempPath(), $"wine-classic-{Guid.NewGuid():N}.csv");
         var pageBlocksPath = Path.Combine(Path.GetTempPath(), $"page-blocks-{Guid.NewGuid():N}.csv");
+        var cdcPath = Path.Combine(Path.GetTempPath(), $"cdcd-{Guid.NewGuid():N}.csv");
+        var obesityPath = Path.Combine(Path.GetTempPath(), $"obesity-{Guid.NewGuid():N}.csv");
         File.WriteAllText(heartPath, heartCsv);
         File.WriteAllText(winePath, wineCsv);
         File.WriteAllText(breastPath, breastCsv);
@@ -342,6 +359,8 @@ public class MlIntegrationTests
         File.WriteAllText(banknotePath, banknoteCsv);
         File.WriteAllText(wineClassicPath, wineClassicCsv);
         File.WriteAllText(pageBlocksPath, pageBlocksCsv);
+        File.WriteAllText(cdcPath, cdcCsv);
+        File.WriteAllText(obesityPath, obesityCsv);
 
         try
         {
@@ -390,6 +409,14 @@ public class MlIntegrationTests
             var pageBlocksDataset = new PageBlocksDataset();
             var pageBlocksData = pageBlocksDataset.LoadFromTextFile(pageBlocksPath);
             var pageBlocksTransformed = pageBlocksDataset.BuildPreprocessingPipeline(mlContext).Fit(pageBlocksData).Transform(pageBlocksData);
+
+            var cdcDataset = new CDCDiabetesDataset();
+            var cdcData = cdcDataset.LoadFromTextFile(cdcPath);
+            var cdcTransformed = cdcDataset.BuildPreprocessingPipeline(mlContext).Fit(cdcData).Transform(cdcData);
+
+            var obesityDataset = new ObesityLevelsDataset();
+            var obesityData = obesityDataset.LoadFromTextFile(obesityPath);
+            var obesityTransformed = obesityDataset.BuildPreprocessingPipeline(mlContext).Fit(obesityData).Transform(obesityData);
 
             Assert.HasCount(14, heartDataset.ColumnProperties);
             Assert.AreEqual("num", heartDataset.LabelColumnName);
@@ -445,6 +472,16 @@ public class MlIntegrationTests
             Assert.AreEqual("class", pageBlocksDataset.LabelColumnName);
             Assert.IsNotNull(pageBlocksTransformed.Schema.GetColumnOrNull(DefaultColumnNames.Features));
             Assert.IsNotNull(pageBlocksTransformed.Schema.GetColumnOrNull(DefaultColumnNames.Label));
+
+            Assert.HasCount(22, cdcDataset.ColumnProperties);
+            Assert.AreEqual("Diabetes_binary", cdcDataset.LabelColumnName);
+            Assert.IsNotNull(cdcTransformed.Schema.GetColumnOrNull(DefaultColumnNames.Features));
+            Assert.IsNotNull(cdcTransformed.Schema.GetColumnOrNull(DefaultColumnNames.Label));
+
+            Assert.HasCount(17, obesityDataset.ColumnProperties);
+            Assert.AreEqual("NObeyesdad", obesityDataset.LabelColumnName);
+            Assert.IsNotNull(obesityTransformed.Schema.GetColumnOrNull(DefaultColumnNames.Features));
+            Assert.IsNotNull(obesityTransformed.Schema.GetColumnOrNull(DefaultColumnNames.Label));
         }
         finally
         {
@@ -459,6 +496,8 @@ public class MlIntegrationTests
             File.Delete(banknotePath);
             File.Delete(wineClassicPath);
             File.Delete(pageBlocksPath);
+            File.Delete(cdcPath);
+            File.Delete(obesityPath);
         }
     }
 
@@ -472,6 +511,8 @@ public class MlIntegrationTests
         Assert.AreEqual("car_evaluation", Data.CarEvaluation.FilePrefix);
         Assert.AreEqual("solar_flare", Data.SolarFlare.FilePrefix);
         Assert.AreEqual("npha", Data.NPHA.FilePrefix);
+        Assert.AreEqual("cdcd", Data.CDCDiabetes.FilePrefix);
+        Assert.AreEqual("ol", Data.ObesityLevels.FilePrefix);
         Assert.AreEqual("wine", Data.Wine.FilePrefix);
         Assert.AreEqual("lenses", Data.Lenses.FilePrefix);
         Assert.AreEqual("balance_scale", Data.BalanceScale.FilePrefix);
@@ -581,6 +622,80 @@ public class MlIntegrationTests
 
             Assert.IsGreaterThanOrEqualTo(0.99, metrics.Accuracy);
             Assert.IsGreaterThanOrEqualTo(0.99, metrics.F1Score);
+        }
+        finally
+        {
+            ThreadSafeMLContext.Seed = null;
+            File.Delete(path);
+        }
+    }
+
+    [TestMethod]
+    public void Decision_tree_binary_trainer_fits_cdc_diabetes_starter_data()
+    {
+        const string csv = "HighBP,HighChol,CholCheck,BMI,Smoker,Stroke,HeartDiseaseorAttack,PhysActivity,Fruits,Veggies,HvyAlcoholConsump,AnyHealthcare,NoDocbcCost,GenHlth,MentHlth,PhysHlth,DiffWalk,Sex,Age,Education,Income,Diabetes_binary\n" +
+                           "0,0,1,22,0,0,0,1,1,1,0,1,0,1,0,0,0,0,3,6,7,0\n" +
+                           "0,1,1,25,0,0,0,1,1,1,0,1,0,2,2,1,0,1,4,5,6,0\n" +
+                           "0,0,1,24,1,0,0,1,0,1,0,1,0,2,1,2,0,0,5,6,6,0\n" +
+                           "1,1,1,34,1,0,1,0,0,0,0,1,1,4,10,8,1,1,9,3,3,1\n" +
+                           "1,1,1,37,1,1,1,0,0,0,1,1,1,5,12,10,1,0,10,2,2,1\n" +
+                           "1,1,1,40,0,1,1,0,0,0,1,1,1,5,15,12,1,1,11,2,1,1\n";
+
+        var path = Path.Combine(Path.GetTempPath(), $"logicgp-cdcd-{Guid.NewGuid():N}.csv");
+        File.WriteAllText(path, csv);
+
+        ThreadSafeMLContext.Seed = 42;
+        try
+        {
+            var mlContext = ThreadSafeMLContext.LocalMLContext;
+            var dataset = new CDCDiabetesDataset();
+            var data = dataset.LoadFromTextFile(path);
+            var pipeline = dataset.BuildPipeline(mlContext, new DecisionTreeBinaryTrainer());
+
+            var model = pipeline.Fit(data);
+            var transformed = model.Transform(data);
+            var metrics = mlContext.BinaryClassification.Evaluate(transformed);
+
+            Assert.IsGreaterThanOrEqualTo(0.99, metrics.Accuracy);
+            Assert.IsGreaterThanOrEqualTo(0.99, metrics.F1Score);
+        }
+        finally
+        {
+            ThreadSafeMLContext.Seed = null;
+            File.Delete(path);
+        }
+    }
+
+    [TestMethod]
+    public void Decision_tree_multiclass_trainer_fits_obesity_levels_starter_data()
+    {
+        const string csv = "Gender,Age,Height,Weight,family_history_with_overweight,FAVC,FCVC,NCP,CAEC,SMOKE,CH2O,SCC,FAF,TUE,CALC,MTRANS,NObeyesdad\n" +
+                           "Female,19,1.70,48,no,no,3,3,Sometimes,no,2,no,3,1,no,Walking,Insufficient_Weight\n" +
+                           "Male,24,1.78,70,no,no,3,3,Sometimes,no,2,no,2,1,Sometimes,Bike,Normal_Weight\n" +
+                           "Female,28,1.65,78,yes,yes,2,4,Frequently,no,2,yes,1,2,Sometimes,Public_Transportation,Overweight_Level_I\n" +
+                           "Male,32,1.72,88,yes,yes,2,4,Frequently,no,1,yes,1,3,Frequently,Automobile,Overweight_Level_II\n" +
+                           "Female,36,1.60,95,yes,yes,2,3,Always,no,1,yes,0,4,Frequently,Automobile,Obesity_Type_I\n" +
+                           "Male,40,1.68,110,yes,yes,1,3,Always,yes,1,yes,0,5,Always,Motorbike,Obesity_Type_II\n" +
+                           "Female,44,1.58,125,yes,yes,1,2,Always,yes,1,yes,0,6,Always,Automobile,Obesity_Type_III\n";
+
+        var path = Path.Combine(Path.GetTempPath(), $"logicgp-obesity-{Guid.NewGuid():N}.csv");
+        File.WriteAllText(path, csv);
+
+        ThreadSafeMLContext.Seed = 42;
+        try
+        {
+            var mlContext = ThreadSafeMLContext.LocalMLContext;
+            var dataset = new ObesityLevelsDataset();
+            var data = dataset.LoadFromTextFile(path);
+            var pipeline = dataset.BuildPipeline(mlContext,
+                new DecisionTreeMulticlassTrainer<MulticlassClassificationOutput>());
+
+            var model = pipeline.Fit(data);
+            var transformed = model.Transform(data);
+            var predictions = mlContext.Data.CreateEnumerable<LabeledPredictionRow>(transformed, reuseRowObject: false).ToList();
+
+            Assert.HasCount(7, predictions);
+            Assert.AreEqual(predictions.Count, predictions.Count(row => row.Label == row.PredictedLabel));
         }
         finally
         {

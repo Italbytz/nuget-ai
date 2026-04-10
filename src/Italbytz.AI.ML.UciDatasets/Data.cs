@@ -16,6 +16,10 @@ public static class Data
 
     public static IDataset NPHA { get; } = new NPHADataset();
 
+    public static IDataset CDCDiabetes { get; } = new CDCDiabetesDataset();
+
+    public static IDataset ObesityLevels { get; } = new ObesityLevelsDataset();
+
     public static IDataset Wine { get; } = new WineDataset();
 
     public static IDataset Lenses { get; } = new LensesDataset();
