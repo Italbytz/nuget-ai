@@ -1,0 +1,14 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <PackageId>Italbytz.AI.Evolutionary</PackageId>
+    <Description>Evolutionary search spaces, genotypes, individuals, and fitness helpers for the Italbytz AI package family.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Italbytz.AI\Italbytz.AI.csproj" />
+    <ProjectReference Include="..\Italbytz.AI.Evolutionary.Abstractions\Italbytz.AI.Evolutionary.Abstractions.csproj" />
+  </ItemGroup>
+
+</Project>

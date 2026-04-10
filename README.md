@@ -4,7 +4,7 @@
 
 ## Current migration status
 
-The repository now contains the first five concrete Phase 2 waves:
+The repository now contains the first six concrete Phase 2 waves:
 
 - `Italbytz.AI.Abstractions`
 - `Italbytz.AI`
@@ -18,10 +18,11 @@ The repository now contains the first five concrete Phase 2 waves:
 - `Italbytz.AI.Planning`
 - `Italbytz.AI.Learning.Abstractions`
 - `Italbytz.AI.Learning`
+- `Italbytz.AI.Evolutionary.Abstractions`
+- `Italbytz.AI.Evolutionary`
 
 Upcoming migration slices will add:
 
-- `Italbytz.AI.Evolutionary(.Abstractions)`
 - `Italbytz.AI.ML*`
 
 ## Which package should I use?
@@ -38,6 +39,8 @@ Upcoming migration slices will add:
 - Use `Italbytz.AI.Planning` for planning parsers and implementations such as `ActionSchema`, `State`, `PlanningProblem`, `HierarchicalSearchAlgorithm`, and `PlanningProblemFactory`.
 - Use `Italbytz.AI.Learning.Abstractions` for dataset, attribute, and learner contracts such as `IDataSet`, `IExample`, `ILearner`, `IParameterizedLearner`, and `ICrossValidation`.
 - Use `Italbytz.AI.Learning` for concrete learning helpers and algorithms such as `DataSetFactory`, `DataSetSpecification`, `MajorityLearner`, `DecisionTreeLearner`, `DecisionTree`, and `CrossValidation`.
+- Use `Italbytz.AI.Evolutionary.Abstractions` for evolutionary-algorithm contracts such as `IFitnessFunction`, `IFitnessValue`, `IIndividual`, `IGenotype`, `ISearchSpace`, `ILiteral`, `IMonomial`, and `IPolynomial`.
+- Use `Italbytz.AI.Evolutionary` for core evolutionary implementations such as `SingleFitnessValue`, `OneMax`, `BitString`, `BitStringGenotype`, `SetLiteral`, `WeightedMonomial`, `WeightedPolynomial`, and `WeightedPolynomialGenotype`.
 
 ## Migration notice
 

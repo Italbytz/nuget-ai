@@ -1,0 +1,9 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <PackageId>Italbytz.AI.Evolutionary.Abstractions</PackageId>
+    <Description>Core contracts for individuals, fitness, mutation, crossover, and search spaces in the Italbytz AI evolutionary package family.</Description>
+  </PropertyGroup>
+
+</Project>

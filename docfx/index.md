@@ -18,10 +18,11 @@ The migration currently includes:
 - `Italbytz.AI.Planning`
 - `Italbytz.AI.Learning.Abstractions`
 - `Italbytz.AI.Learning`
+- `Italbytz.AI.Evolutionary.Abstractions`
+- `Italbytz.AI.Evolutionary`
 
 ## Planned next slices
 
-- `Italbytz.AI.Evolutionary(.Abstractions)`
 - `Italbytz.AI.ML*`
 
 ## Local validation
