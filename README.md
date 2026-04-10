@@ -24,7 +24,7 @@ The repository now contains the first seven concrete Phase 2 waves:
 - `Italbytz.AI.ML`
 - `Italbytz.AI.ML.UciDatasets`
 
-Current follow-up work focuses on the higher-level ML configuration, explanation, and additional benchmark datasets that build on this new trainer foundation.
+Current follow-up work now focuses on `Explainer`, `Interpreter`, and additional benchmark datasets; a first serializable ML configuration layer is already available in `Italbytz.AI.ML.Core.Configuration`.
 
 ## Which package should I use?
 
@@ -42,7 +42,7 @@ Current follow-up work focuses on the higher-level ML configuration, explanation
 - Use `Italbytz.AI.Learning` for concrete learning helpers and algorithms such as `DataSetFactory`, `DataSetSpecification`, `MajorityLearner`, `DecisionTreeLearner`, `DecisionTree`, and `CrossValidation`.
 - Use `Italbytz.AI.Evolutionary.Abstractions` for evolutionary-algorithm contracts such as `IFitnessFunction`, `IFitnessValue`, `IIndividual`, `IGenotype`, `ISearchSpace`, `ILiteral`, `IMonomial`, and `IPolynomial`.
 - Use `Italbytz.AI.Evolutionary` for core evolutionary implementations such as `SingleFitnessValue`, `OneMax`, `BitString`, `BitStringGenotype`, `SetLiteral`, `WeightedMonomial`, `WeightedPolynomial`, and `WeightedPolynomialGenotype`.
-- Use `Italbytz.AI.ML.Core` for shared ML.NET helpers such as `ThreadSafeMLContext`, `DataExcerpt`, `CategoricalFeature`, `NumericalFeature`, metrics, default column names, and lookup-map utilities.
+- Use `Italbytz.AI.ML.Core` for shared ML.NET helpers and configuration DTOs such as `ThreadSafeMLContext`, `DataExcerpt`, `CategoricalFeature`, `NumericalFeature`, `TrainingConfiguration`, `TabularFileDataSourceV3`, metrics, default column names, and lookup-map utilities.
 - Use `Italbytz.AI.ML` for Learning-backed ML.NET integrations and trainers such as `DecisionTreeBinaryTrainer`, `DecisionTreeMulticlassTrainer`, and `LeastSquaresTrainer`.
 - Use `Italbytz.AI.ML.UciDatasets` for curated UCI-style dataset loaders and preprocessing helpers such as `IrisDataset`.
 

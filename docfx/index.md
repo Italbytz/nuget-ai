@@ -26,7 +26,7 @@ The migration currently includes:
 
 ## Current follow-up work
 
-- higher-level ML configuration, explanation, and additional benchmark datasets on top of the new `Italbytz.AI.ML.*` trainer foundation
+- `Explainer`, `Interpreter`, and additional benchmark datasets on top of the now-available `Italbytz.AI.ML.*` trainer and configuration foundation
 
 ## Local validation
 

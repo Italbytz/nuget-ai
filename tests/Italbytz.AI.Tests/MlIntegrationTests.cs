@@ -2,6 +2,7 @@ using System.Globalization;
 using Italbytz.AI.Learning;
 using Italbytz.AI.ML;
 using Italbytz.AI.ML.Core;
+using Italbytz.AI.ML.Core.Configuration;
 using Italbytz.AI.ML.Trainers;
 using Italbytz.AI.ML.UciDatasets;
 using Microsoft.ML;
@@ -69,6 +70,57 @@ public class MlIntegrationTests
         CollectionAssert.AreEqual(new[] { "red", "green", "blue" }, categorical.ValueRange);
         CollectionAssert.AreEqual(new[] { 0.5f, 1.5f, 2.5f }, numerical.ValueRange);
         Assert.AreEqual("weight", numerical.ColumnName);
+    }
+
+    [TestMethod]
+    public void Training_configuration_serializes_without_null_values()
+    {
+        var config = new TrainingConfiguration
+        {
+            Scenario = ScenarioType.Classification,
+            DataSource = new TabularFileDataSourceV3
+            {
+                FilePath = "data.csv",
+                Delimiter = ",",
+                DecimalMarker = '.',
+                HasHeader = true,
+                AllowQuoting = false,
+                EscapeCharacter = '\\',
+                ReadMultiLines = false,
+                ColumnProperties =
+                [
+                    new ColumnPropertiesV5
+                    {
+                        Type = "Column",
+                        ColumnName = "label",
+                        ColumnDataFormat = ColumnDataKind.Boolean,
+                        ColumnPurpose = ColumnPurposeType.AnswerIndex,
+                        IsCategorical = false
+                    }
+                ]
+            },
+            Environment = new LocalEnvironmentV1
+            {
+                Type = "LocalCPU",
+                EnvironmentType = EnvironmentType.LocalCPU
+            },
+            TrainingOption = new ClassificationTrainingOptionV2
+            {
+                LabelColumn = "Label",
+                AvailableTrainers = ["FastTree", "SdcaMaximumEntropy"],
+                TrainingTime = 10,
+                ValidationOption = new TrainValidationSplitOptionV0
+                {
+                    SplitRatio = 0.1f
+                }
+            }
+        };
+
+        var json = config.SerializeToJson();
+
+        StringAssert.Contains(json, "FastTree");
+        StringAssert.Contains(json, "\"Scenario\":\"Classification\"");
+        Assert.IsFalse(json.Contains("null"));
     }
 
     [TestMethod]
