@@ -4,15 +4,17 @@
 
 ## Current migration status
 
-The repository now contains the **base AI layer** for Phase 2:
+The repository now contains the first two concrete Phase 2 waves:
 
 - `Italbytz.AI.Abstractions`
 - `Italbytz.AI`
+- `Italbytz.AI.Agent.Abstractions`
+- `Italbytz.AI.Agent`
+- `Italbytz.AI.Search.Abstractions`
+- `Italbytz.AI.Search`
 
-Upcoming migration slices will add the split packages for:
+Upcoming migration slices will add:
 
-- `Italbytz.AI.Agent(.Abstractions)`
-- `Italbytz.AI.Search(.Abstractions)`
 - `Italbytz.AI.CSP(.Abstractions)`
 - `Italbytz.AI.Planning(.Abstractions)`
 - `Italbytz.AI.Learning(.Abstractions)`
@@ -22,7 +24,11 @@ Upcoming migration slices will add the split packages for:
 ## Which package should I use?
 
 - Use `Italbytz.AI.Abstractions` for general solver and metrics contracts.
-- Use `Italbytz.AI` for the first shared runtime helpers and baseline implementations.
+- Use `Italbytz.AI` for shared runtime helpers such as metrics and thread-safe randomness.
+- Use `Italbytz.AI.Agent.Abstractions` when you only need agent-facing contracts.
+- Use `Italbytz.AI.Agent` for basic agent and environment helper implementations.
+- Use `Italbytz.AI.Search.Abstractions` for search/problem contracts.
+- Use `Italbytz.AI.Search` for concrete search helpers such as `SearchAgent`, `GeneralProblem`, breadth-first search, and uniform-cost search.
 
 ## Migration notice
 

@@ -1,0 +1,14 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.0;net8.0</TargetFrameworks>
+    <PackageId>Italbytz.AI.Search.Abstractions</PackageId>
+    <Description>Search and problem abstractions for reusable AI search scenarios.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Italbytz.AI.Abstractions\Italbytz.AI.Abstractions.csproj" />
+    <ProjectReference Include="..\Italbytz.AI.Agent.Abstractions\Italbytz.AI.Agent.Abstractions.csproj" />
+  </ItemGroup>
+
+</Project>

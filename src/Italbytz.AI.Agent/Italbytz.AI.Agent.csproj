@@ -1,0 +1,13 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <PackageId>Italbytz.AI.Agent</PackageId>
+    <Description>Basic agent implementations and helper types for the Italbytz AI package family.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Italbytz.AI.Agent.Abstractions\Italbytz.AI.Agent.Abstractions.csproj" />
+  </ItemGroup>
+
+</Project>

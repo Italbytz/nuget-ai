@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <PackageId>Italbytz.AI.Search</PackageId>
+    <Description>Core search implementations and problem-solving helpers for the Italbytz AI package family.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Italbytz.AI\Italbytz.AI.csproj" />
+    <ProjectReference Include="..\Italbytz.AI.Agent\Italbytz.AI.Agent.csproj" />
+    <ProjectReference Include="..\Italbytz.AI.Search.Abstractions\Italbytz.AI.Search.Abstractions.csproj" />
+  </ItemGroup>
+
+</Project>

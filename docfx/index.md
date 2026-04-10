@@ -2,17 +2,19 @@
 
 `nuget-ai` is the consolidation repository for the refactored `Italbytz.AI.*` package family.
 
-## Current Phase 2 slice
+## Current Phase 2 slices
 
-The first migration slice currently includes:
+The migration currently includes:
 
 - `Italbytz.AI.Abstractions`
 - `Italbytz.AI`
+- `Italbytz.AI.Agent.Abstractions`
+- `Italbytz.AI.Agent`
+- `Italbytz.AI.Search.Abstractions`
+- `Italbytz.AI.Search`
 
 ## Planned next slices
 
-- `Italbytz.AI.Agent(.Abstractions)`
-- `Italbytz.AI.Search(.Abstractions)`
 - `Italbytz.AI.CSP(.Abstractions)`
 - `Italbytz.AI.Planning(.Abstractions)`
 - `Italbytz.AI.Learning(.Abstractions)`
