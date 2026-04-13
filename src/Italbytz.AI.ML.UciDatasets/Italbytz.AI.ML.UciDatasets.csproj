@@ -14,4 +14,8 @@
     <ProjectReference Include="..\Italbytz.AI.ML.Core\Italbytz.AI.ML.Core.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <EmbeddedResource Include="Data\*.csv" />
+  </ItemGroup>
+
 </Project>
