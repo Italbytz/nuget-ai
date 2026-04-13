@@ -1,5 +1,7 @@
 # nuget-ai
 
+[![Documentation](https://img.shields.io/badge/Documentation-GitHub%20Pages-blue?style=for-the-badge)](https://italbytz.github.io/nuget-ai/)
+
 `nuget-ai` is the target repository for the refactored `Italbytz.AI.*` package family.
 
 ## Which package should I use?
