@@ -4,6 +4,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageVersion Include="Italbytz.ML" Version="9.13.0" />
     <PackageVersion Include="MSTest" Version="4.0.1" />
     <PackageVersion Include="Microsoft.ML" Version="4.0.2" />
     <PackageVersion Include="MathNet.Numerics" Version="5.0.0" />
