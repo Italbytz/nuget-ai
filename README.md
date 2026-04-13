@@ -2,30 +2,6 @@
 
 `nuget-ai` is the target repository for the refactored `Italbytz.AI.*` package family.
 
-## Current migration status
-
-The repository now contains the first ten verified Phase 2 waves:
-
-- `Italbytz.AI.Abstractions`
-- `Italbytz.AI`
-- `Italbytz.AI.Agent.Abstractions`
-- `Italbytz.AI.Agent`
-- `Italbytz.AI.Search.Abstractions`
-- `Italbytz.AI.Search`
-- `Italbytz.AI.CSP.Abstractions`
-- `Italbytz.AI.CSP`
-- `Italbytz.AI.Planning.Abstractions`
-- `Italbytz.AI.Planning`
-- `Italbytz.AI.Learning.Abstractions`
-- `Italbytz.AI.Learning`
-- `Italbytz.AI.Evolutionary.Abstractions`
-- `Italbytz.AI.Evolutionary`
-- `Italbytz.AI.ML.Core`
-- `Italbytz.AI.ML`
-- `Italbytz.AI.ML.UciDatasets`
-
-Current follow-up work now focuses on the remaining benchmark helpers and selective ML-configuration refinements; `Explainer`, `Interpreter`, the serializable `Italbytz.AI.ML.Core.Configuration` layer, and curated `Iris`, `Heart Disease`, `Wine Quality`, and `Breast Cancer Wisconsin Diagnostic` dataset descriptors are already available.
-
 ## Which package should I use?
 
 - Use `Italbytz.AI.Abstractions` for general solver and metrics contracts.
@@ -45,35 +21,6 @@ Current follow-up work now focuses on the remaining benchmark helpers and select
 - Use `Italbytz.AI.ML.Core` for shared ML.NET helpers and configuration DTOs such as `ThreadSafeMLContext`, `DataExcerpt`, `CategoricalFeature`, `NumericalFeature`, `TrainingConfiguration`, `TabularFileDataSourceV3`, metrics, default column names, and lookup-map utilities.
 - Use `Italbytz.AI.ML` for Learning-backed ML.NET integrations, trainers, and model-inspection helpers such as `DecisionTreeBinaryTrainer`, `DecisionTreeMulticlassTrainer`, `LeastSquaresTrainer`, `Explainer`, and `Interpreter`.
 - Use `Italbytz.AI.ML.UciDatasets` for curated UCI-style dataset loaders and preprocessing helpers such as `IrisDataset`, `HeartDiseaseDataset`, `WineQualityDataset`, `BreastCancerWisconsinDiagnosticDataset`, and the shared `Data` registry.
-
-## Migration notice
-
-Older repositories and articles may still refer to names such as:
-
-- `Italbytz.Ports.Algorithms`
-- `Italbytz.Adapters.Algorithms`
-- `Italbytz.Ports.Algorithms.AI`
-- `Italbytz.Adapters.Algorithms.AI`
-- `Italbytz.Ports.Algorithms.AIMA`
-- `Italbytz.Adapters.Algorithms.AIMA`
-- `Italbytz.Ports.Algorithms.EA`
-- `Italbytz.Adapters.Algorithms.EA`
-- `Italbytz.ML`
-- `Italbytz.ML.UCIMLR`
-- `Italbytz.Adapters.Algorithms.ML`
-
-For all new development, please use the new `Italbytz.AI.*` package family.
-
-## Starter scenarios and examples
-
-The older `csharp-mstest-ai` starter repository is being folded into this repo step by step.
-A good starting point for consumer-style search, CSP, and ML starter examples is now:
-
-- `tests/Italbytz.AI.Tests/RomaniaMapSearchIntegrationTests.cs`
-- `tests/Italbytz.AI.Tests/CspIntegrationTests.cs`
-- `tests/Italbytz.AI.Tests/MlIntegrationTests.cs`
-
-This keeps the examples close to the actual `Italbytz.AI.*` packages instead of maintaining a second legacy repo line with outdated package names.
 
 ## Documentation
 
