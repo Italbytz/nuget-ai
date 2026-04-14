@@ -23,6 +23,10 @@
 - Use `Italbytz.AI.ML.Core` for shared ML.NET helpers and configuration DTOs such as `ThreadSafeMLContext`, `DataExcerpt`, `CategoricalFeature`, `NumericalFeature`, `TrainingConfiguration`, `TabularFileDataSourceV3`, metrics, default column names, and lookup-map utilities.
 - Use `Italbytz.AI.ML` for Learning-backed ML.NET integrations, trainers, and model-inspection helpers such as `DecisionTreeBinaryTrainer`, `DecisionTreeMulticlassTrainer`, `LeastSquaresTrainer`, `Explainer`, and `Interpreter`.
 - Use `Italbytz.AI.ML.UciDatasets` for curated UCI-style dataset loaders and preprocessing helpers such as `IrisDataset`, `HeartDiseaseDataset`, `WineQualityDataset`, `BreastCancerWisconsinDiagnosticDataset`, and the shared `Data` registry.
+- Use `Italbytz.AI.ML.LogicGp` for the supported LogicGP trainer facade such as `LogicGpGpasBinaryTrainer`, `LogicGpFlcwMacroMulticlassTrainer`, `LogicGpFlcwMicroMulticlassTrainer`, `LogicGpRlcwMacroMulticlassTrainer`, and `LogicGpRlcwMicroMulticlassTrainer`.
+
+The `Italbytz.AI.ML.LogicGp.Internal.*` namespaces are implementation details of that facade and are not intended as a stable consumer API.
+For shared loading and serialization entry points, use `LogicGpTrainer<TOutput>` and `LogicGp.LoadTrainer<TOutput>(...)` from the root `Italbytz.AI.ML.LogicGp` namespace.
 
 ## Documentation
 
@@ -45,6 +49,12 @@ This repository includes:
 - a `GitHub Actions` workflow in `.github/workflows/ci.yml`
 - automated `restore`, `build`, `test`, `pack`, and docs generation
 - a `docfx` setup under `docfx/`
+
+## Legacy consumer migrations
+
+- the former `csharp-mstest-ai` starter repository is no longer maintained as a standalone consumer; its migrated legacy sample snapshot now lives under `samples/legacy-aima-mstest/`, while the active replacements live in `tests/Italbytz.AI.Tests/`
+- the former `csharp-mstest-logicgp` starter repository is no longer maintained as a standalone consumer; its migrated legacy benchmark snapshot now lives under `benchmarks/legacy-logicgp-regression/`, while compact replacement coverage lives in `tests/Italbytz.AI.Tests/MlIntegrationTests.cs`
+- a short migration map for both removals is documented in `tests/LEGACY_CONSUMER_MIGRATION.md`
 
 ## Release model
 

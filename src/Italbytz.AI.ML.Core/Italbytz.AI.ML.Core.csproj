@@ -10,4 +10,8 @@
     <PackageReference Include="Microsoft.ML" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Italbytz.AI.Evolutionary.Abstractions\Italbytz.AI.Evolutionary.Abstractions.csproj" />
+  </ItemGroup>
+
 </Project>

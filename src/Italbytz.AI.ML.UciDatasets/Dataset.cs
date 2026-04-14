@@ -30,6 +30,49 @@ public abstract class Dataset<TModelInput> : IDataset
 
     public virtual IDataView DataView => _dataViewCache ??= LoadEmbeddedResourceDataView();
 
+    public virtual IEnumerable<TrainValidateTestFileNames> GetTrainValidateTestFiles(
+        string saveFolderPath,
+        string? samplingKeyColumnName = null,
+        double validateFraction = 0.15,
+        double testFraction = 0.15,
+        int[]? seeds = null)
+    {
+        var mlContext = new MLContext();
+        var generatedFiles = new List<TrainValidateTestFileNames>();
+        seeds ??= [int.MinValue];
+
+        foreach (var seed in seeds)
+        {
+            int? realSeed = seed == int.MinValue ? null : seed;
+            var trainTestSplit = mlContext.Data.TrainTestSplit(DataView, testFraction, samplingKeyColumnName, realSeed);
+            var trainValidateDataSet = trainTestSplit.TrainSet;
+            var testDataSet = trainTestSplit.TestSet;
+            var validateInTrainFraction = validateFraction / (1 - testFraction);
+            var validateTrainSplit = mlContext.Data.TrainTestSplit(trainValidateDataSet, validateInTrainFraction, samplingKeyColumnName, realSeed);
+
+            var validateDataSet = validateTrainSplit.TestSet;
+            var trainDataSet = validateTrainSplit.TrainSet;
+
+            var seedString = seed == int.MinValue ? string.Empty : "_seed" + seed;
+            var files = new TrainValidateTestFileNames
+            {
+                TrainFileName = FilePrefix + "_train" + seedString + ".csv",
+                ValidateFileName = FilePrefix + "_validate" + seedString + ".csv",
+                TrainValidateFileName = FilePrefix + "_train_validate" + seedString + ".csv",
+                TestFileName = FilePrefix + "_test" + seedString + ".csv"
+            };
+
+            SaveAsCsv(trainDataSet, Path.Combine(saveFolderPath, files.TrainFileName));
+            SaveAsCsv(validateDataSet, Path.Combine(saveFolderPath, files.ValidateFileName));
+            SaveAsCsv(trainValidateDataSet, Path.Combine(saveFolderPath, files.TrainValidateFileName));
+            SaveAsCsv(testDataSet, Path.Combine(saveFolderPath, files.TestFileName));
+
+            generatedFiles.Add(files);
+        }
+
+        return generatedFiles;
+    }
+
     public abstract IDataView LoadFromTextFile(string path, char? separatorChar = null, bool? hasHeader = null, bool? allowQuoting = null, bool? trimWhitespace = null, bool? allowSparse = null);
 
     protected IDataView LoadFromTextFileInternal(string path, char? separatorChar = null, bool? hasHeader = null, bool? allowQuoting = null, bool? trimWhitespace = null, bool? allowSparse = null)
@@ -161,5 +204,11 @@ public abstract class Dataset<TModelInput> : IDataset
         }
 
         return LoadFromTextFile(tempFile);
+    }
+
+    private static void SaveAsCsv(IDataView dataView, string path)
+    {
+        using var stream = new FileStream(path, FileMode.Create, FileAccess.Write);
+        new MLContext().Data.SaveAsText(dataView, stream, ',', schema: false);
     }
 }

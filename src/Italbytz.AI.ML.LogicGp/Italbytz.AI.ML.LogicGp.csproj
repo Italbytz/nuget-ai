@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <PackageId>Italbytz.AI.ML.LogicGp</PackageId>
+    <Description>LogicGP trainer facade for the Italbytz AI package family.</Description>
+    <RootNamespace>Italbytz.AI.ML.LogicGp</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Text.Json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../Italbytz.AI.Evolutionary/Italbytz.AI.Evolutionary.csproj" />
+    <ProjectReference Include="../Italbytz.AI.ML/Italbytz.AI.ML.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+  </ItemGroup>
+</Project>

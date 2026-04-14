@@ -94,3 +94,81 @@ public class MulticlassClassificationOutput : IMulticlassClassificationOutput
     [VectorType]
     public VBuffer<float> Probability { get; set; }
 }
+
+public class TernaryClassificationOutput : MulticlassClassificationOutput
+{
+    [VectorType(3)]
+    public override VBuffer<float> Score { get; set; }
+}
+
+public class QuaternaryClassificationOutput : MulticlassClassificationOutput
+{
+    [VectorType(4)]
+    public override VBuffer<float> Score { get; set; }
+}
+
+public class QuinaryClassificationOutput : MulticlassClassificationOutput
+{
+    [VectorType(5)]
+    public override VBuffer<float> Score { get; set; }
+}
+
+public class SenaryClassificationOutput : MulticlassClassificationOutput
+{
+    [VectorType(6)]
+    public override VBuffer<float> Score { get; set; }
+}
+
+public class SeptenaryClassificationOutput : MulticlassClassificationOutput
+{
+    [VectorType(7)]
+    public override VBuffer<float> Score { get; set; }
+}
+
+public class OctonaryClassificationOutput : MulticlassClassificationOutput
+{
+    [VectorType(8)]
+    public override VBuffer<float> Score { get; set; }
+}
+
+public class NonaryClassificationOutput : MulticlassClassificationOutput
+{
+    [VectorType(9)]
+    public override VBuffer<float> Score { get; set; }
+}
+
+public class DenaryClassificationOutput : MulticlassClassificationOutput
+{
+    [VectorType(10)]
+    public override VBuffer<float> Score { get; set; }
+}
+
+public class UndenaryClassificationOutput : MulticlassClassificationOutput
+{
+    [VectorType(11)]
+    public override VBuffer<float> Score { get; set; }
+}
+
+public class DuodenaryClassificationOutput : MulticlassClassificationOutput
+{
+    [VectorType(12)]
+    public override VBuffer<float> Score { get; set; }
+}
+
+public class TridenaryClassificationOutput : MulticlassClassificationOutput
+{
+    [VectorType(13)]
+    public override VBuffer<float> Score { get; set; }
+}
+
+public class TetradenaryClassificationOutput : MulticlassClassificationOutput
+{
+    [VectorType(14)]
+    public override VBuffer<float> Score { get; set; }
+}
+
+public class PentadenaryClassificationOutput : MulticlassClassificationOutput
+{
+    [VectorType(15)]
+    public override VBuffer<float> Score { get; set; }
+}

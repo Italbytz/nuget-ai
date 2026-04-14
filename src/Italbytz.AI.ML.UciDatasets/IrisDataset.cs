@@ -10,6 +10,9 @@ public class IrisDataset : Dataset<IrisDataset.IrisModelInput>
 
     public override char Separator => ',';
 
+    protected override string ResourceName =>
+        "Italbytz.AI.ML.UciDatasets.Data.Iris.csv";
+
     public override string FilePrefix => "iris";
 
     public override string? LabelColumnName => "class";

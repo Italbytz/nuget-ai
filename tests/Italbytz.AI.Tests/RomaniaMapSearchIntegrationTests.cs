@@ -1,5 +1,7 @@
 using Italbytz.AI.Search.Agent;
+using Italbytz.AI.Search.Demos.Romania;
 using Italbytz.AI.Search.Framework.Problem;
+using Italbytz.AI.Search.Informed;
 using Italbytz.AI.Search.Uninformed;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -32,6 +34,52 @@ public class RomaniaMapSearchIntegrationTests
 
         CollectionAssert.AreEqual(new[] { RimnicuVilcea, Pitesti, Bucharest }, actions);
         Assert.AreEqual(278d, search.Metrics.GetDouble("pathCost"), 0.0001);
+    }
+
+    [TestMethod]
+    public void AStarSearchPrefersCheapestRouteOnRomaniaMap()
+    {
+        var problem = RomaniaMap.CreateProblem(RomaniaMap.Sibiu);
+        var search = new AStarSearch<string, RomaniaMoveToAction>(RomaniaMap.HeuristicToBucharest);
+
+        var actions = search.FindActions(problem)?.Select(action => action.ToLocation).ToArray()
+            ?? Array.Empty<string>();
+
+        CollectionAssert.AreEqual(new[] { RomaniaMap.RimnicuVilcea, RomaniaMap.Pitesti, RomaniaMap.Bucharest }, actions);
+        Assert.AreEqual(278d, search.Metrics.GetDouble("pathCost"), 0.0001);
+        Assert.AreEqual(4, search.Metrics.GetInt("nodesExpanded"));
+    }
+
+    [TestMethod]
+    public void AStarSearchFromAradMatchesLegacyRomaniaSample()
+    {
+        var problem = RomaniaMap.CreateProblem(RomaniaMap.Arad);
+        var search = new AStarSearch<string, RomaniaMoveToAction>(RomaniaMap.HeuristicToBucharest);
+
+        var actions = search.FindActions(problem)?.Select(action => action.ToLocation).ToArray()
+            ?? Array.Empty<string>();
+
+        CollectionAssert.AreEqual(new[] { RomaniaMap.Sibiu, RomaniaMap.RimnicuVilcea, RomaniaMap.Pitesti, RomaniaMap.Bucharest }, actions);
+        Assert.AreEqual(418d, search.Metrics.GetDouble("pathCost"), 0.0001);
+        Assert.AreEqual(5, search.Metrics.GetInt("nodesExpanded"));
+    }
+
+    [TestMethod]
+    public void RomaniaSearchSimulatorExposesAStarFrontierInPriorityOrder()
+    {
+        var simulator = new RomaniaSearchSimulator();
+
+        var steps = simulator.Simulate(RomaniaMap.Arad, RomaniaSearchAlgorithm.AStarSearch);
+
+        Assert.AreEqual(RomaniaMap.Arad, steps[0].ExpandedNode.State);
+        CollectionAssert.AreEqual(
+            new[] { RomaniaMap.Sibiu, RomaniaMap.Timisoara, RomaniaMap.Zerind },
+            steps[0].Frontier.Select(node => node.State).ToArray());
+        Assert.AreEqual(393d, steps[0].Frontier[0].Priority, 0.0001);
+        Assert.IsTrue(steps[^1].GoalReached);
+        CollectionAssert.AreEqual(
+            new[] { RomaniaMap.Arad, RomaniaMap.Sibiu, RomaniaMap.RimnicuVilcea, RomaniaMap.Pitesti, RomaniaMap.Bucharest },
+            steps[^1].PathStates.ToArray());
     }
 
     [TestMethod]

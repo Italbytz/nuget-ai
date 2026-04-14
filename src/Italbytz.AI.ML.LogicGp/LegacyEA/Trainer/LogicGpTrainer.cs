@@ -1,0 +1,160 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using System.Text.Json.Serialization.Metadata;
+using Italbytz.EA.Extensions;
+using Italbytz.EA.Individuals;
+using Italbytz.EA.Searchspace;
+using Italbytz.AI;
+using Italbytz.AI.ML.Core;
+using Italbytz.AI.ML.Trainers;
+using Microsoft.ML;
+using Microsoft.ML.Data;
+
+namespace Italbytz.AI.ML.LogicGp;
+
+public abstract class LogicGpTrainer<TOutput> :
+    CustomClassificationTrainer<TOutput>,
+    global::Italbytz.AI.Evolutionary.Trainer.IInterpretableTrainer
+    where TOutput : class, new()
+
+{
+    [JsonInclude] private Dictionary<float, int>[] _featureValueMappings;
+    [JsonInclude] private Dictionary<uint, int> _labelMapping = new();
+    [JsonIgnore] private global::Italbytz.AI.Evolutionary.Individuals.IIndividualList? _finalPopulation;
+    [JsonIgnore] private global::Italbytz.AI.Evolutionary.Individuals.IIndividual? _model;
+    private Dictionary<int, float>[] _reverseFeatureValueMappings;
+    [JsonInclude] private Dictionary<int, uint> _reverseLabelMapping;
+
+    private int _classes => _labelMapping.Count;
+
+    [JsonIgnore]
+    protected global::Italbytz.AI.ML.Core.Control.IRunStrategy? RunStrategy { get; set; }
+
+    [JsonIgnore]
+    public global::Italbytz.AI.Evolutionary.Individuals.IIndividualList
+        FinalPopulation =>
+        _finalPopulation == null
+            ? throw new InvalidOperationException("Model is not trained.")
+            : _finalPopulation;
+
+    public global::Italbytz.AI.Evolutionary.Individuals.IIndividual Model
+    {
+        get => _model ??
+               throw new InvalidOperationException("Model is not trained.");
+        set => _model = value;
+    }
+
+    public void Save(Stream stream)
+    {
+        var trainerJson = JsonSerializer.Serialize(this, GetType(),
+            new JsonSerializerOptions
+            {
+                WriteIndented = false,
+                Converters = { new ModelJsonConverter() },
+                TypeInfoResolver = new DefaultJsonTypeInfoResolver()
+            });
+        /*var genotypeJson = JsonSerializer.Serialize(Model.Genotype,
+            Model.Genotype.GetType(),
+            new JsonSerializerOptions { WriteIndented = false });
+
+        var json =
+            $"{{\"Model\":{{\"Genotype\":{genotypeJson}}},{trainerJson[1..]}";*/
+
+        var json = JsonSerializer.Serialize(
+            JsonSerializer.Deserialize<object>(trainerJson),
+            new JsonSerializerOptions { WriteIndented = true });
+
+        var writer = new StreamWriter(stream);
+        writer.Write(json);
+        writer.Flush();
+    }
+
+    protected override void Map(ClassificationInput input, TOutput output)
+    {
+        if (_model == null)
+            throw new InvalidOperationException("Model is not trained.");
+        var featureArray = input.Features.ToArray();
+        var intFeatures = new int[featureArray.Length];
+        for (var i = 0; i < featureArray.Length; i++)
+        {
+            if (_featureValueMappings.Length <= i ||
+                !_featureValueMappings[i].TryGetValue(featureArray[i],
+                    out var intValue))
+                // Handle unknown feature value
+                intValue = -1; // or some other default value
+
+            intFeatures[i] = intValue;
+        }
+
+        if (_model.Genotype is not global::Italbytz.AI.Evolutionary.Individuals.IPredictingGenotype<int> genotype)
+            throw new InvalidOperationException(
+                "Model genotype does not support prediction.");
+        var prediction = genotype.PredictClass(intFeatures);
+        if (!_reverseLabelMapping.TryGetValue(prediction, out var label))
+            throw new InvalidOperationException(
+                "Predicted label not found in reverse mapping.");
+        switch (output)
+        {
+            case IBinaryClassificationOutput binaryOutput:
+                binaryOutput.PredictedLabel =
+                    label;
+                binaryOutput.Score =
+                    prediction == 1
+                        ? 1f
+                        : 0f;
+                binaryOutput.Probability =
+                    prediction == 1
+                        ? 1f
+                        : 0f;
+                break;
+            case IMulticlassClassificationOutput multiclassOutput:
+            {
+                multiclassOutput.PredictedLabel = label;
+                var scores = new float[_classes];
+                scores[label - 1] = 1f;
+                var probabilities = new float[_classes];
+                probabilities[label - 1] = 1f;
+                multiclassOutput.Score =
+                    new VBuffer<float>(scores.Length, scores);
+                multiclassOutput.Probability =
+                    new VBuffer<float>(probabilities.Length, probabilities);
+                break;
+            }
+            default:
+                throw new ArgumentException(
+                    "The destination is not of type IBinaryClassificationOutput or IMulticlassClassificationOutput");
+        }
+    }
+
+    protected override void PrepareForFit(IDataView input)
+    {
+        var excerpt = input.GetDataExcerpt();
+        var features = excerpt.Features;
+        var labels = excerpt.Labels;
+        (_labelMapping, _reverseLabelMapping) =
+            MappingHelper.CreateLabelMapping(labels);
+        (_featureValueMappings, _reverseFeatureValueMappings) =
+            MappingHelper.CreateFeatureValueMappings(features);
+        var result = RunStrategy?.Run(input, _featureValueMappings, _labelMapping)
+                     ?? throw new InvalidOperationException(
+                         "Run strategy is not configured.");
+        _model = result.Item1;
+        _finalPopulation = result.Item2;
+    }
+
+    public static LogicGpTrainer<TOutput>? Load(Stream stream)
+    {
+        var trainerJson =
+            JsonSerializer.Deserialize<global::Italbytz.AI.ML.LogicGp.Internal.Trainer.LogicGpLoadedTrainer<TOutput>>(
+                stream,
+                new JsonSerializerOptions
+                {
+                    Converters = { new ModelJsonConverter() }
+                });
+        return trainerJson;
+    }
+}
