@@ -2,7 +2,7 @@
 
 [![Documentation](https://img.shields.io/badge/Documentation-GitHub%20Pages-blue?style=for-the-badge)](https://italbytz.github.io/nuget-ai/)
 
-`nuget-ai` is the target repository for the refactored `Italbytz.AI.*` package family.
+`nuget-ai` provides the `Italbytz.AI.*` package family for reusable AI contracts, algorithms, agents, planning, learning, and ML integrations.
 
 ## Which package should I use?
 

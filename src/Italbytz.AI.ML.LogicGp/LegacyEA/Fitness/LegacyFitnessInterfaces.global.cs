@@ -1,1 +1,1 @@
-global using Italbytz.EA.Fitness;
+global using Italbytz.AI.Evolutionary.Fitness;

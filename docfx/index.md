@@ -1,10 +1,10 @@
 # nuget-ai
 
-`nuget-ai` is the consolidation repository for the refactored `Italbytz.AI.*` package family.
+`nuget-ai` provides reusable AI contracts, algorithms, and ML integrations for .NET applications.
 
-## Current Phase 2 slices
+This documentation is intended for package consumers who want to choose the right `Italbytz.AI.*` packages and navigate the available guides and API reference.
 
-The migration currently includes:
+## Packages at a glance
 
 - `Italbytz.AI.Abstractions`
 - `Italbytz.AI`
@@ -24,17 +24,18 @@ The migration currently includes:
 - `Italbytz.AI.ML`
 - `Italbytz.AI.ML.UciDatasets`
 
-## Current follow-up work
+## Recommended guides
 
-- remaining benchmark helpers and targeted ML-configuration refinements on top of the now-available `Italbytz.AI.ML.*` trainer, explainer, interpreter, configuration foundation, and curated UCI dataset descriptors (`IrisDataset`, `HeartDiseaseDataset`, `WineQualityDataset`, `BreastCancerWisconsinDiagnosticDataset`)
+- `Guides > Architecture` explains the package split between abstractions and concrete implementations.
+- `Guides > AIMA algorithm index` maps textbook-oriented topics onto the current package structure.
+- `Guides > Getting started with ML helpers` shows how to work with `LeastSquaresTrainer`, `Explainer`, and `Interpreter`.
 
-## Guides restored from the legacy repositories
+## Use nuget-ai if you want to
 
-The old `nuget-ports-algorithms-ai`, `nuget-ports-algorithms-aima`, and `nuget-adapters-algorithms-aima` repositories already contained useful orientation material. The most relevant parts are now carried forward in this docfx site:
-
-- `Guides > Architecture` explains the original Ports-and-Adapters / Hexagonal-Architecture rationale behind the split into `*.Abstractions` and concrete packages.
-- `Guides > AIMA algorithm index` keeps the textbook-oriented cross-reference from the former AIMA docs and maps it onto the consolidated `Italbytz.AI.*` structure.
-- `Guides > Getting started with ML helpers` shows how to use `LeastSquaresTrainer`, `Explainer`, and `Interpreter` without having to reverse-engineer the test suite first.
+- build on shared abstractions for search, CSP, planning, learning, and evolutionary algorithms
+- reuse concrete helper packages for agents, solvers, and ML.NET integrations
+- load curated UCI-style datasets and inspect trained models
+- navigate generated API documentation for the full package family
 
 ## Local validation
 
