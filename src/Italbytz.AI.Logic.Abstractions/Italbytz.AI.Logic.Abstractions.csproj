@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <Version>1.0.0-preview.5</Version>
+    <PackageId>Italbytz.AI.Logic.Abstractions</PackageId>
+    <Title>Italbytz.AI.Logic.Abstractions</Title>
+    <Description>Abstractions for propositional and first-order logic inference in the Italbytz AI library.</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Italbytz.AI.Planning.Abstractions\Italbytz.AI.Planning.Abstractions.csproj" />
+  </ItemGroup>
+</Project>

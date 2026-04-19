@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <Version>1.0.0-preview.5</Version>
+    <PackageId>Italbytz.AI.Logic</PackageId>
+    <Title>Italbytz.AI.Logic</Title>
+    <Description>Propositional and first-order logic inference algorithms for the Italbytz AI library.</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Italbytz.AI\Italbytz.AI.csproj" />
+    <ProjectReference Include="..\Italbytz.AI.Logic.Abstractions\Italbytz.AI.Logic.Abstractions.csproj" />
+  </ItemGroup>
+</Project>

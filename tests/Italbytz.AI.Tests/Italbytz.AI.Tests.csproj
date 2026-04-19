@@ -28,6 +28,10 @@
     <ProjectReference Include="..\..\src\Italbytz.AI.ML.Core\Italbytz.AI.ML.Core.csproj" />
     <ProjectReference Include="..\..\src\Italbytz.AI.ML\Italbytz.AI.ML.csproj" />
     <ProjectReference Include="..\..\src\Italbytz.AI.ML.UciDatasets\Italbytz.AI.ML.UciDatasets.csproj" />
+    <ProjectReference Include="..\..\src\Italbytz.AI.Probability\Italbytz.AI.Probability.csproj" />
+    <ProjectReference Include="..\..\src\Italbytz.AI.Logic\Italbytz.AI.Logic.csproj" />
+    <ProjectReference Include="..\..\src\Italbytz.AI.NLP\Italbytz.AI.NLP.csproj" />
+    <ProjectReference Include="..\..\src\Italbytz.AI.Robotics\Italbytz.AI.Robotics.csproj" />
   </ItemGroup>
 
 </Project>

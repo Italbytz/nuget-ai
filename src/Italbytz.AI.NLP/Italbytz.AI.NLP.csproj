@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <Version>1.0.0-preview.5</Version>
+    <PackageId>Italbytz.AI.NLP</PackageId>
+    <Title>Italbytz.AI.NLP</Title>
+    <Description>Natural language processing algorithms for the Italbytz AI library.</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Italbytz.AI\Italbytz.AI.csproj" />
+    <ProjectReference Include="..\Italbytz.AI.NLP.Abstractions\Italbytz.AI.NLP.Abstractions.csproj" />
+  </ItemGroup>
+</Project>

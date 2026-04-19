@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <PackageId>Italbytz.AI.Probability</PackageId>
+    <Description>Probability inference implementations: Bayesian networks, HMMs, MDPs, and sampling algorithms.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Italbytz.AI\Italbytz.AI.csproj" />
+    <ProjectReference Include="..\Italbytz.AI.Probability.Abstractions\Italbytz.AI.Probability.Abstractions.csproj" />
+  </ItemGroup>
+
+</Project>
