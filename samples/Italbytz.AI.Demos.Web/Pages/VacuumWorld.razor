@@ -1,0 +1,174 @@
+@page "/vacuum-world"
+@using Italbytz.AI.Demos.Web.Demos
+
+<PageTitle>Vacuum World demo</PageTitle>
+
+<section class="demo-hero">
+    <div>
+        <p class="eyebrow">Agents demo</p>
+        <h1>Vacuum World</h1>
+        <p class="hero-copy">Compare the classic reflex vacuum agent with its model-based variant. Step through the two-room environment, inspect the chosen action, and track the cumulative performance measure.</p>
+    </div>
+
+    <div class="stat-grid">
+        <article>
+            <span class="stat-label">Agent</span>
+            <strong>@CurrentAgent.Name</strong>
+        </article>
+        <article>
+            <span class="stat-label">Current action</span>
+            <strong>@(CurrentStepModel?.ActionLabel ?? "Ready")</strong>
+        </article>
+        <article>
+            <span class="stat-label">Performance</span>
+            <strong>@CurrentPerformance</strong>
+        </article>
+        <article>
+            <span class="stat-label">Visible step</span>
+            <strong>@VisibleProgressLabel</strong>
+        </article>
+    </div>
+</section>
+
+<section class="control-panel">
+    <div class="button-row">
+        @foreach (var agent in _agents)
+        {
+            <button class="@(agent.Key == _selectedAgentKey ? "choice-button selected" : "choice-button")"
+                    @onclick="() => SelectAgent(agent.Key)">
+                @agent.Name
+            </button>
+        }
+    </div>
+
+    <div class="secondary-controls">
+        <div class="selection-copy">
+            <p class="selection-summary">@CurrentAgent.Summary</p>
+            <p class="selection-summary">Package linkage: this demo executes agents built on <code>Italbytz.AI.Agent.SimpleAgent</code> inside a custom <code>AbstractEnvironment</code>.</p>
+        </div>
+
+        <div class="step-buttons">
+            <button class="ghost-button" @onclick="PreviousStep" disabled="@(_currentStep == 0)">Previous</button>
+            <button class="primary-button" @onclick="NextStep" disabled="@(_currentStep >= CurrentAgent.Steps.Count)">Next</button>
+            <button class="ghost-button" @onclick="ShowCompleteRun" disabled="@(_currentStep >= CurrentAgent.Steps.Count)">Complete run</button>
+            <button class="ghost-button" @onclick="Reset">Reset</button>
+        </div>
+    </div>
+
+    <p class="step-summary">@CurrentSummary</p>
+</section>
+
+<section class="demo-grid">
+    <article class="surface-card vacuum-card">
+        <div class="section-heading">
+            <h2>Environment</h2>
+            <p>The two rooms keep their current cleanliness state while the active agent location is highlighted.</p>
+        </div>
+
+        <div class="vacuum-grid">
+            <div class="vacuum-room @(CurrentAgentLocation == "A" ? "vacuum-room-active" : string.Empty)">
+                <p class="eyebrow">Room A</p>
+                <div class="vacuum-state @(CurrentLocationAState == "Clean" ? "vacuum-state-clean" : "vacuum-state-dirty")">@CurrentLocationAState</div>
+                @if (CurrentAgentLocation == "A")
+                {
+                    <div class="vacuum-agent-marker">Agent</div>
+                }
+            </div>
+
+            <div class="vacuum-room @(CurrentAgentLocation == "B" ? "vacuum-room-active" : string.Empty)">
+                <p class="eyebrow">Room B</p>
+                <div class="vacuum-state @(CurrentLocationBState == "Clean" ? "vacuum-state-clean" : "vacuum-state-dirty")">@CurrentLocationBState</div>
+                @if (CurrentAgentLocation == "B")
+                {
+                    <div class="vacuum-agent-marker">Agent</div>
+                }
+            </div>
+        </div>
+
+        <div class="inspector-grid">
+            <article class="inspector-box">
+                <p class="eyebrow">Action</p>
+                <h3>@(CurrentStepModel?.ActionLabel ?? "Ready")</h3>
+                <p>@CurrentAgentLocationLabel</p>
+            </article>
+            <article class="inspector-box @(IsDone ? "inspector-box-active" : string.Empty)">
+                <p class="eyebrow">Performance</p>
+                <h3>@CurrentPerformance</h3>
+                <p>Done: @(IsDone ? "Yes" : "No")</p>
+            </article>
+        </div>
+    </article>
+
+    <article class="surface-card inspector-card">
+        <div class="section-heading">
+            <h2>Trace</h2>
+            <p>Each step shows the selected action, the resulting world state, and the cumulative score.</p>
+        </div>
+
+        <ol class="trace-list step-trace-list">
+            @foreach (var step in CurrentAgent.Steps)
+            {
+                <li class="@(step.Number == _currentStep ? "trace-step-active" : string.Empty)">
+                    <strong>@step.Number. @step.Summary</strong>
+                    <span>@step.Description</span>
+                </li>
+            }
+        </ol>
+    </article>
+</section>
+
+@code {
+    private static readonly IReadOnlyList<VacuumWorldAgentDemo> _agents = VacuumWorldDemoFactory.BuildAll();
+
+    private string _selectedAgentKey = _agents[0].Key;
+    private int _currentStep;
+
+    private VacuumWorldAgentDemo CurrentAgent => _agents.First(agent => agent.Key == _selectedAgentKey);
+
+    private VacuumWorldStep? CurrentStepModel => _currentStep > 0 && CurrentAgent.Steps.Count > 0
+        ? CurrentAgent.Steps[Math.Min(_currentStep - 1, CurrentAgent.Steps.Count - 1)]
+        : null;
+
+    private string CurrentAgentLocation => CurrentStepModel?.AgentLocation ?? CurrentAgent.InitialLocation;
+    private string CurrentLocationAState => CurrentStepModel?.LocationAState ?? CurrentAgent.InitialLocationAState;
+    private string CurrentLocationBState => CurrentStepModel?.LocationBState ?? CurrentAgent.InitialLocationBState;
+    private int CurrentPerformance => CurrentStepModel?.PerformanceMeasure ?? 0;
+    private bool IsDone => string.Equals(CurrentStepModel?.ActionLabel, "No-Op", StringComparison.Ordinal);
+    private string CurrentAgentLocationLabel => $"Agent at {CurrentAgentLocation}";
+    private string VisibleProgressLabel => CurrentAgent.Steps.Count == 0 ? "0 / 0" : $"{_currentStep} / {CurrentAgent.Steps.Count}";
+    private string CurrentSummary => _currentStep == 0
+        ? "Choose an agent type and step through its behavior one action at a time."
+        : CurrentStepModel?.Description ?? string.Empty;
+
+    private void SelectAgent(string key)
+    {
+        _selectedAgentKey = key;
+        _currentStep = 0;
+    }
+
+    private void PreviousStep()
+    {
+        if (_currentStep > 0)
+        {
+            _currentStep--;
+        }
+    }
+
+    private void NextStep()
+    {
+        if (_currentStep < CurrentAgent.Steps.Count)
+        {
+            _currentStep++;
+        }
+    }
+
+    private void ShowCompleteRun()
+    {
+        _currentStep = CurrentAgent.Steps.Count;
+    }
+
+    private void Reset()
+    {
+        _currentStep = 0;
+    }
+}
