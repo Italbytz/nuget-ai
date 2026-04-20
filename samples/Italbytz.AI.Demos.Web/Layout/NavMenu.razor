@@ -1,0 +1,21 @@
+﻿<div class="top-nav-shell">
+    <button title="Navigation menu" class="nav-toggle" @onclick="ToggleNavMenu">Menu</button>
+
+    <nav class="@NavMenuCssClass" aria-label="Demo navigation">
+        <NavLink class="nav-link" href="" Match="NavLinkMatch.All">Overview</NavLink>
+        <NavLink class="nav-link" href="romania-search">Romania search</NavLink>
+        <NavLink class="nav-link" href="vacuum-world">Vacuum World</NavLink>
+        <NavLink class="nav-link" href="n-queens">N-Queens</NavLink>
+    </nav>
+</div>
+
+@code {
+    private bool collapseNavMenu = true;
+
+    private string NavMenuCssClass => collapseNavMenu ? "top-nav collapsed" : "top-nav";
+
+    private void ToggleNavMenu()
+    {
+        collapseNavMenu = !collapseNavMenu;
+    }
+}
