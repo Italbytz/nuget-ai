@@ -10,8 +10,14 @@
       items:
         - name: Overview
           href: docs/interactive-demos.md
+        - name: Burglary network
+          href: docs/demos/burglary-network.md
+        - name: Map coloring
+          href: docs/demos/map-coloring.md
         - name: Romania search
           href: docs/demos/romania-search.md
+        - name: Weighted graph
+          href: docs/demos/weighted-graph.md
     - name: Getting started with ML helpers
       href: docs/getting-started-ml.md
 - name: API Reference
