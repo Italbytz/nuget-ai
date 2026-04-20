@@ -2,6 +2,7 @@ using Italbytz.AI.ML.Core;
 using Italbytz.AI.ML.LogicGp.Internal.Fitness;
 using Italbytz.AI.ML.LogicGp.Internal.Trainer.Bioinformatics;
 using Italbytz.AI.ML.LogicGp.Internal.Trainer.Gecco;
+using BioinformaticsLogicGpGraph = Italbytz.AI.ML.LogicGp.Internal.Trainer.Bioinformatics.LogicGpGraph;
 
 namespace Italbytz.AI.ML.LogicGp;
 
@@ -58,7 +59,7 @@ public class LogicGpRlcwMacroMulticlassTrainer<TOutput>
         ConfusionAndSizeFitnessValue.UsedMetric =
             (ClassMetric.F1, Averaging.Macro);
         RunStrategy = new RlcwRunStrategy(
-            new LogicGpGraph(maxIndividuals, crossoverIndividuals,
+            new BioinformaticsLogicGpGraph(maxIndividuals, crossoverIndividuals,
                 mutationIndividuals),
             phase1Time,
             phase2Time,
@@ -83,7 +84,7 @@ public class LogicGpRlcwMicroMulticlassTrainer<TOutput>
         ConfusionAndSizeFitnessValue.UsedMetric =
             (ClassMetric.F1, Averaging.Micro);
         RunStrategy = new RlcwRunStrategy(
-            new LogicGpGraph(maxIndividuals, crossoverIndividuals,
+            new BioinformaticsLogicGpGraph(maxIndividuals, crossoverIndividuals,
                 mutationIndividuals),
             phase1Time,
             phase2Time,
