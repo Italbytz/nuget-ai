@@ -43,6 +43,11 @@ internal sealed record VacuumWorldAgentDemo(
     string InitialLocationBState,
     IReadOnlyList<VacuumWorldStep> Steps);
 
+internal sealed record VacuumWorldScenario(
+    string InitialLocation,
+    VacuumLocationState InitialLocationAState,
+    VacuumLocationState InitialLocationBState);
+
 internal static class VacuumWorldDemoFactory
 {
     private const string LocationA = "A";
@@ -51,11 +56,42 @@ internal static class VacuumWorldDemoFactory
 
     public static IReadOnlyList<VacuumWorldAgentDemo> BuildAll()
     {
+        return BuildAll(CreateDefaultScenario());
+    }
+
+    public static IReadOnlyList<VacuumWorldAgentDemo> BuildAll(VacuumWorldScenario scenario)
+    {
         return
         [
-            Simulate(VacuumDemoAgentKind.ReflexAgent, LocationA, VacuumLocationState.Dirty, VacuumLocationState.Dirty),
-            Simulate(VacuumDemoAgentKind.ModelBasedReflexAgent, LocationA, VacuumLocationState.Dirty, VacuumLocationState.Dirty)
+            Simulate(VacuumDemoAgentKind.ReflexAgent, scenario.InitialLocation, scenario.InitialLocationAState, scenario.InitialLocationBState),
+            Simulate(VacuumDemoAgentKind.ModelBasedReflexAgent, scenario.InitialLocation, scenario.InitialLocationAState, scenario.InitialLocationBState)
         ];
+    }
+
+    public static VacuumWorldScenario CreateRandomScenario(Random random)
+    {
+        var initialLocation = random.Next(2) == 0 ? LocationA : LocationB;
+        var initialA = random.Next(2) == 0 ? VacuumLocationState.Clean : VacuumLocationState.Dirty;
+        var initialB = random.Next(2) == 0 ? VacuumLocationState.Clean : VacuumLocationState.Dirty;
+
+        if (initialA == VacuumLocationState.Clean && initialB == VacuumLocationState.Clean)
+        {
+            if (initialLocation == LocationA)
+            {
+                initialA = VacuumLocationState.Dirty;
+            }
+            else
+            {
+                initialB = VacuumLocationState.Dirty;
+            }
+        }
+
+        return new VacuumWorldScenario(initialLocation, initialA, initialB);
+    }
+
+    private static VacuumWorldScenario CreateDefaultScenario()
+    {
+        return new VacuumWorldScenario(LocationA, VacuumLocationState.Dirty, VacuumLocationState.Dirty);
     }
 
     private static VacuumWorldAgentDemo Simulate(
