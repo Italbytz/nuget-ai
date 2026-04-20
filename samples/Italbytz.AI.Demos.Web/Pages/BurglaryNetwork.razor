@@ -1,0 +1,278 @@
+@page "/burglary-network"
+@using Italbytz.AI.Demos.Web.Demos
+
+<PageTitle>Burglary network demo</PageTitle>
+
+<section class="demo-hero">
+    <div>
+        <p class="eyebrow">Probability demo</p>
+        <h1>Burglary Network</h1>
+        <p class="hero-copy">Inspect the classic AIMA burglary-alarm Bayesian network, change evidence live, and compare exact and approximate posterior inference for burglary.</p>
+    </div>
+
+    <div class="stat-grid">
+        <article>
+            <span class="stat-label">Query</span>
+            <strong>P(Burglary = true | evidence)</strong>
+        </article>
+        <article>
+            <span class="stat-label">Evidence count</span>
+            <strong>@EvidenceCount</strong>
+        </article>
+        <article>
+            <span class="stat-label">Best exact estimate</span>
+            <strong>@BurglaryNetworkDemoFactory.FormatProbability(ExactReference.ProbabilityTrue)</strong>
+        </article>
+        <article>
+            <span class="stat-label">Approx. delta</span>
+            <strong>@MaximumApproximationDelta</strong>
+        </article>
+    </div>
+</section>
+
+<section class="control-panel">
+    <div class="secondary-controls evidence-controls">
+        <div class="selection-copy">
+            <p class="selection-summary">The page uses <code>EnumerationAsk</code>, <code>EliminationAsk</code>, <code>LikelihoodWeighting</code>, and <code>GibbsAsk</code> from <code>Italbytz.AI.Probability</code> against the same Burglary network.</p>
+            <p class="selection-summary">Current evidence: @EvidenceSummary</p>
+        </div>
+
+        <div class="evidence-grid">
+            <label>
+                Earthquake
+                <select value="@BurglaryNetworkDemoFactory.FormatEvidence(_evidence.Earthquake)" @onchange="HandleEarthquakeChanged">
+                    @foreach (var option in EvidenceOptions)
+                    {
+                        <option value="@option">@option</option>
+                    }
+                </select>
+            </label>
+            <label>
+                Alarm
+                <select value="@BurglaryNetworkDemoFactory.FormatEvidence(_evidence.Alarm)" @onchange="HandleAlarmChanged">
+                    @foreach (var option in EvidenceOptions)
+                    {
+                        <option value="@option">@option</option>
+                    }
+                </select>
+            </label>
+            <label>
+                JohnCalls
+                <select value="@BurglaryNetworkDemoFactory.FormatEvidence(_evidence.JohnCalls)" @onchange="HandleJohnChanged">
+                    @foreach (var option in EvidenceOptions)
+                    {
+                        <option value="@option">@option</option>
+                    }
+                </select>
+            </label>
+            <label>
+                MaryCalls
+                <select value="@BurglaryNetworkDemoFactory.FormatEvidence(_evidence.MaryCalls)" @onchange="HandleMaryChanged">
+                    @foreach (var option in EvidenceOptions)
+                    {
+                        <option value="@option">@option</option>
+                    }
+                </select>
+            </label>
+        </div>
+    </div>
+
+    <div class="step-buttons probability-buttons">
+        <button class="ghost-button" @onclick="LoadCanonicalEvidence">Canonical evidence</button>
+        <button class="ghost-button" @onclick="RandomizeEvidence">Randomize evidence</button>
+    </div>
+
+    <p class="step-summary">Toggle evidence between unknown, true, and false to see how the posterior changes and how closely the sampling methods follow the exact solvers.</p>
+</section>
+
+<section class="demo-grid">
+    <article class="surface-card network-card">
+        <div class="section-heading">
+            <h2>Bayes network</h2>
+            <p>Each node shows the currently selected evidence state. The alarm acts as the shared parent of both call variables.</p>
+        </div>
+
+        <div class="network-layout">
+            <div class="network-node node-burglary @GetNodeStateCss(BurglaryNetworkDemoFactory.FormatEvidence(null))">
+                <strong>Burglary</strong>
+                <span>query</span>
+            </div>
+            <div class="network-node node-earthquake @GetNodeStateCss(BurglaryNetworkDemoFactory.FormatEvidence(_evidence.Earthquake))">
+                <strong>Earthquake</strong>
+                <span>@BurglaryNetworkDemoFactory.FormatEvidence(_evidence.Earthquake)</span>
+            </div>
+            <div class="network-node node-alarm @GetNodeStateCss(BurglaryNetworkDemoFactory.FormatEvidence(_evidence.Alarm))">
+                <strong>Alarm</strong>
+                <span>@BurglaryNetworkDemoFactory.FormatEvidence(_evidence.Alarm)</span>
+            </div>
+            <div class="network-node node-john @GetNodeStateCss(BurglaryNetworkDemoFactory.FormatEvidence(_evidence.JohnCalls))">
+                <strong>JohnCalls</strong>
+                <span>@BurglaryNetworkDemoFactory.FormatEvidence(_evidence.JohnCalls)</span>
+            </div>
+            <div class="network-node node-mary @GetNodeStateCss(BurglaryNetworkDemoFactory.FormatEvidence(_evidence.MaryCalls))">
+                <strong>MaryCalls</strong>
+                <span>@BurglaryNetworkDemoFactory.FormatEvidence(_evidence.MaryCalls)</span>
+            </div>
+            <div class="network-edge edge-burglary-alarm"></div>
+            <div class="network-edge edge-earthquake-alarm"></div>
+            <div class="network-edge edge-alarm-john"></div>
+            <div class="network-edge edge-alarm-mary"></div>
+        </div>
+
+        <div class="inspector-grid">
+            <article class="inspector-box inspector-box-active">
+                <p class="eyebrow">Posterior</p>
+                <h3>@BurglaryNetworkDemoFactory.FormatProbability(ExactReference.ProbabilityTrue)</h3>
+                <p>Exact enumeration reference for burglary being true.</p>
+            </article>
+            <article class="inspector-box">
+                <p class="eyebrow">Evidence pattern</p>
+                <h3>@EvidenceCount observed</h3>
+                <p>@EvidenceSummary</p>
+            </article>
+        </div>
+    </article>
+
+    <article class="surface-card inspector-card">
+        <div class="section-heading">
+            <h2>Inference comparison</h2>
+            <p>Exact algorithms should match closely, while the two sampling methods fluctuate around the same posterior.</p>
+        </div>
+
+        <div class="probability-results">
+            @foreach (var result in _results)
+            {
+                <article class="probability-card @(result.Approximate ? "probability-card-approx" : "probability-card-exact")">
+                    <p class="eyebrow">@result.Name</p>
+                    <h3>@BurglaryNetworkDemoFactory.FormatProbability(result.ProbabilityTrue)</h3>
+                    <p>@result.Summary</p>
+                    <p>false: @BurglaryNetworkDemoFactory.FormatProbability(result.ProbabilityFalse)</p>
+                    @if (result.Approximate)
+                    {
+                        <p>delta to exact: @BurglaryNetworkDemoFactory.FormatProbability(Math.Abs(result.ProbabilityTrue - ExactReference.ProbabilityTrue))</p>
+                    }
+                </article>
+            }
+        </div>
+
+        <div class="section-heading cpt-heading">
+            <h2>Conditional tables</h2>
+            <p>These CPTs are read directly from the package-backed network definition.</p>
+        </div>
+
+        <div class="cpt-list">
+            @foreach (var node in _nodes)
+            {
+                <article class="cpt-card">
+                    <h3>@node.Name</h3>
+                    <p class="selection-summary">Parents: @(node.Parents.Length == 0 ? "none" : string.Join(", ", node.Parents))</p>
+                    <p class="selection-summary">Markov blanket: @string.Join(", ", node.MarkovBlanket)</p>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Condition</th>
+                                <th>true</th>
+                                <th>false</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var row in node.ConditionalTable)
+                            {
+                                <tr>
+                                    <td>@row[0]</td>
+                                    <td>@row[1]</td>
+                                    <td>@row[2]</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </article>
+            }
+        </div>
+    </article>
+</section>
+
+@code {
+    private static readonly string[] EvidenceOptions = ["unknown", "true", "false"];
+
+    private readonly Random _random = new();
+    private BurglaryEvidenceConfiguration _evidence = BurglaryNetworkDemoFactory.CreateDefaultEvidence();
+    private int _seed = 42;
+    private IReadOnlyList<BurglaryInferenceResult> _results = BurglaryNetworkDemoFactory.BuildInferenceResults(BurglaryNetworkDemoFactory.CreateDefaultEvidence(), 42);
+    private readonly IReadOnlyList<BurglaryNetworkNodeView> _nodes = BurglaryNetworkDemoFactory.BuildNodeViews();
+
+    private BurglaryInferenceResult ExactReference => _results.First(result => result.Key == "Enumeration");
+    private int EvidenceCount => new[] { _evidence.Earthquake, _evidence.Alarm, _evidence.JohnCalls, _evidence.MaryCalls }.Count(value => value.HasValue);
+    private string EvidenceSummary => string.Join(", ",
+        new[]
+        {
+            $"Earthquake={BurglaryNetworkDemoFactory.FormatEvidence(_evidence.Earthquake)}",
+            $"Alarm={BurglaryNetworkDemoFactory.FormatEvidence(_evidence.Alarm)}",
+            $"JohnCalls={BurglaryNetworkDemoFactory.FormatEvidence(_evidence.JohnCalls)}",
+            $"MaryCalls={BurglaryNetworkDemoFactory.FormatEvidence(_evidence.MaryCalls)}"
+        });
+    private string MaximumApproximationDelta => BurglaryNetworkDemoFactory.FormatProbability(
+        _results.Where(result => result.Approximate).Select(result => Math.Abs(result.ProbabilityTrue - ExactReference.ProbabilityTrue)).DefaultIfEmpty(0).Max());
+
+    private void HandleEarthquakeChanged(ChangeEventArgs args)
+    {
+        _evidence = _evidence with { Earthquake = ParseEvidence(args.Value?.ToString()) };
+        Recalculate();
+    }
+
+    private void HandleAlarmChanged(ChangeEventArgs args)
+    {
+        _evidence = _evidence with { Alarm = ParseEvidence(args.Value?.ToString()) };
+        Recalculate();
+    }
+
+    private void HandleJohnChanged(ChangeEventArgs args)
+    {
+        _evidence = _evidence with { JohnCalls = ParseEvidence(args.Value?.ToString()) };
+        Recalculate();
+    }
+
+    private void HandleMaryChanged(ChangeEventArgs args)
+    {
+        _evidence = _evidence with { MaryCalls = ParseEvidence(args.Value?.ToString()) };
+        Recalculate();
+    }
+
+    private void LoadCanonicalEvidence()
+    {
+        _evidence = BurglaryNetworkDemoFactory.CreateDefaultEvidence();
+        Recalculate();
+    }
+
+    private void RandomizeEvidence()
+    {
+        _seed = _random.Next(1000, 99999);
+        _evidence = BurglaryNetworkDemoFactory.CreateRandomEvidence(_random);
+        Recalculate();
+    }
+
+    private void Recalculate()
+    {
+        _results = BurglaryNetworkDemoFactory.BuildInferenceResults(_evidence, _seed);
+    }
+
+    private static bool? ParseEvidence(string? value)
+    {
+        return value switch
+        {
+            "true" => true,
+            "false" => false,
+            _ => null
+        };
+    }
+
+    private static string GetNodeStateCss(string state)
+    {
+        return state switch
+        {
+            "true" => "node-state-true",
+            "false" => "node-state-false",
+            _ => "node-state-unknown"
+        };
+    }
+}
