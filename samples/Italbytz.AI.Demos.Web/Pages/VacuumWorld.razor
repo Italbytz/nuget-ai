@@ -45,9 +45,11 @@
         <div class="selection-copy">
             <p class="selection-summary">@CurrentAgent.Summary</p>
             <p class="selection-summary">Package linkage: this demo executes agents built on <code>Italbytz.AI.Agent.SimpleAgent</code> inside a custom <code>AbstractEnvironment</code>.</p>
+            <p class="selection-summary">Current setup: agent starts in room @CurrentAgent.InitialLocation, room A is @CurrentAgent.InitialLocationAState, room B is @CurrentAgent.InitialLocationBState.</p>
         </div>
 
         <div class="step-buttons">
+            <button class="ghost-button" @onclick="RandomizeScenario">Randomize setup</button>
             <button class="ghost-button" @onclick="PreviousStep" disabled="@(_currentStep == 0)">Previous</button>
             <button class="primary-button" @onclick="NextStep" disabled="@(_currentStep >= CurrentAgent.Steps.Count)">Next</button>
             <button class="ghost-button" @onclick="ShowCompleteRun" disabled="@(_currentStep >= CurrentAgent.Steps.Count)">Complete run</button>
@@ -102,28 +104,36 @@
     <article class="surface-card inspector-card">
         <div class="section-heading">
             <h2>Trace</h2>
-            <p>Each step shows the selected action, the resulting world state, and the cumulative score.</p>
+            <p>Reveal the run step by step so the trace only grows when you advance the agent.</p>
         </div>
 
-        <ol class="trace-list step-trace-list">
-            @foreach (var step in CurrentAgent.Steps)
-            {
-                <li class="@(step.Number == _currentStep ? "trace-step-active" : string.Empty)">
-                    <strong>@step.Number. @step.Summary</strong>
-                    <span>@step.Description</span>
-                </li>
-            }
-        </ol>
+        @if (VisibleTraceSteps.Count == 0)
+        {
+            <p class="empty-copy">No step revealed yet. Use Next to show the first action in the trace.</p>
+        }
+        else
+        {
+            <ol class="trace-list step-trace-list">
+                @foreach (var step in VisibleTraceSteps)
+                {
+                    <li class="@(step.Number == _currentStep ? "trace-step-active" : string.Empty)">
+                        <strong>@step.Number. @step.Summary</strong>
+                        <span>@step.Description</span>
+                    </li>
+                }
+            </ol>
+        }
     </article>
 </section>
 
 @code {
-    private static readonly IReadOnlyList<VacuumWorldAgentDemo> _agents = VacuumWorldDemoFactory.BuildAll();
-
-    private string _selectedAgentKey = _agents[0].Key;
+    private readonly Random _random = new();
+    private IReadOnlyList<VacuumWorldAgentDemo> _agents = VacuumWorldDemoFactory.BuildAll();
+    private string _selectedAgentKey = "ReflexAgent";
     private int _currentStep;
 
     private VacuumWorldAgentDemo CurrentAgent => _agents.First(agent => agent.Key == _selectedAgentKey);
+    private IReadOnlyList<VacuumWorldStep> VisibleTraceSteps => CurrentAgent.Steps.Take(_currentStep).ToArray();
 
     private VacuumWorldStep? CurrentStepModel => _currentStep > 0 && CurrentAgent.Steps.Count > 0
         ? CurrentAgent.Steps[Math.Min(_currentStep - 1, CurrentAgent.Steps.Count - 1)]
@@ -165,6 +175,12 @@
     private void ShowCompleteRun()
     {
         _currentStep = CurrentAgent.Steps.Count;
+    }
+
+    private void RandomizeScenario()
+    {
+        _agents = VacuumWorldDemoFactory.BuildAll(VacuumWorldDemoFactory.CreateRandomScenario(_random));
+        _currentStep = 0;
     }
 
     private void Reset()
