@@ -1,0 +1,230 @@
+@page "/map-coloring"
+@using Italbytz.AI.Demos.Web.Demos
+
+<PageTitle>Map coloring demo</PageTitle>
+
+<section class="demo-hero">
+    <div>
+        <p class="eyebrow">CSP demo</p>
+        <h1>Map Coloring</h1>
+        <p class="hero-copy">Color the classic Australia map with three colors while comparing plain backtracking, heuristic backtracking, and min-conflicts repair on the same constraint graph.</p>
+    </div>
+
+    <div class="stat-grid">
+        <article>
+            <span class="stat-label">Algorithm</span>
+            <strong>@CurrentAlgorithm.Name</strong>
+        </article>
+        <article>
+            <span class="stat-label">Assigned regions</span>
+            <strong>@CurrentAssignedCount / 7</strong>
+        </article>
+        <article>
+            <span class="stat-label">Conflicts</span>
+            <strong>@CurrentConflictCount</strong>
+        </article>
+        <article>
+            <span class="stat-label">Visible step</span>
+            <strong>@VisibleProgressLabel</strong>
+        </article>
+    </div>
+</section>
+
+<section class="control-panel">
+    <div class="button-row">
+        @foreach (var algorithm in _algorithms)
+        {
+            <button class="@(algorithm.Key == _selectedAlgorithmKey ? "choice-button selected" : "choice-button")"
+                    @onclick="() => SelectAlgorithm(algorithm.Key)">
+                @algorithm.Name
+            </button>
+        }
+    </div>
+
+    <div class="secondary-controls">
+        <div class="selection-copy">
+            <p class="selection-summary">@CurrentAlgorithm.Summary</p>
+            <p class="selection-summary">Current seed: @_scenarioSeed. Region tie order: @string.Join(" -> ", CurrentAlgorithm.RegionOrder). Color preference: @string.Join(", ", CurrentAlgorithm.ColorOrder.Select(MapColoringDemoFactory.FormatColorLabel)).</p>
+        </div>
+
+        <div class="step-buttons">
+            <button class="ghost-button" @onclick="RandomizeRun">Randomize run</button>
+            <button class="ghost-button" @onclick="PreviousStep" disabled="@(_currentStep == 0)">Previous</button>
+            <button class="primary-button" @onclick="NextStep" disabled="@(_currentStep >= CurrentAlgorithm.Steps.Count)">Next</button>
+            <button class="ghost-button" @onclick="ShowCompleteRun" disabled="@(_currentStep >= CurrentAlgorithm.Steps.Count)">Complete run</button>
+            <button class="ghost-button" @onclick="Reset">Reset</button>
+        </div>
+    </div>
+
+    <p class="step-summary">@CurrentSummary</p>
+</section>
+
+<section class="demo-grid">
+    <article class="surface-card map-card">
+        <div class="section-heading">
+            <h2>Australia map</h2>
+            <p>Each region shows its current assigned color. Neighbor conflicts are highlighted directly on the map.</p>
+        </div>
+
+        <div class="australia-map">
+            @foreach (var region in Regions)
+            {
+                <div class="@GetRegionCssClass(region)" title="@GetRegionTitle(region)">
+                    <strong>@region</strong>
+                    <span>@GetRegionColor(region)</span>
+                </div>
+            }
+        </div>
+
+        <div class="inspector-grid">
+            <article class="inspector-box @(CurrentStepModel?.Solved == true ? "inspector-box-active" : string.Empty)">
+                <p class="eyebrow">Current move</p>
+                <h3>@(CurrentStepModel?.Summary ?? "Initial state")</h3>
+                <p>@(CurrentStepModel?.Metric ?? "assigned=0/7, conflicts=0")</p>
+            </article>
+            <article class="inspector-box @(CurrentStepModel?.Backtracking == true ? "inspector-box-warning" : string.Empty)">
+                <p class="eyebrow">Focus region</p>
+                <h3>@(CurrentStepModel?.CurrentRegion ?? "None")</h3>
+                <p>@(CurrentStepModel?.CurrentColor is null ? "No color committed yet." : $"Color: {MapColoringDemoFactory.FormatColorLabel(CurrentStepModel.CurrentColor)}")</p>
+            </article>
+        </div>
+    </article>
+
+    <article class="surface-card inspector-card">
+        <div class="section-heading">
+            <h2>Trace</h2>
+            <p>Reveal the solver trace step by step and inspect when the search commits, rejects, repairs, or backtracks.</p>
+        </div>
+
+        @if (VisibleTraceSteps.Count == 0)
+        {
+            <p class="empty-copy">No step revealed yet. Advance the solver to add the first trace entry.</p>
+        }
+        else
+        {
+            <ol class="trace-list step-trace-list">
+                @foreach (var step in VisibleTraceSteps)
+                {
+                    <li class="@(step.Number == _currentStep ? "trace-step-active" : string.Empty)">
+                        <strong>@step.Number. @step.Summary</strong>
+                        <span>@step.Description</span>
+                        <span class="trace-metric">@step.Metric</span>
+                    </li>
+                }
+            </ol>
+        }
+    </article>
+</section>
+
+@code {
+    private static readonly string[] Regions = ["WA", "NT", "SA", "Q", "NSW", "V", "T"];
+
+    private readonly Random _random = new();
+    private IReadOnlyList<MapColoringAlgorithmDemo> _algorithms = MapColoringDemoFactory.BuildAll(42);
+    private string _selectedAlgorithmKey = "StandardBacktracking";
+    private int _scenarioSeed = 42;
+    private int _currentStep;
+
+    private MapColoringAlgorithmDemo CurrentAlgorithm => _algorithms.First(algorithm => algorithm.Key == _selectedAlgorithmKey);
+    private IReadOnlyList<MapColoringStep> VisibleTraceSteps => CurrentAlgorithm.Steps.Take(_currentStep).ToArray();
+    private MapColoringStep? CurrentStepModel => _currentStep > 0 && CurrentAlgorithm.Steps.Count > 0
+        ? CurrentAlgorithm.Steps[Math.Min(_currentStep - 1, CurrentAlgorithm.Steps.Count - 1)]
+        : null;
+
+    private IReadOnlyDictionary<string, string> CurrentAssignments => CurrentStepModel?.Assignments ?? new Dictionary<string, string>(StringComparer.Ordinal);
+    private IReadOnlyList<string> CurrentConflictedRegions => CurrentStepModel?.ConflictedRegions ?? [];
+    private int CurrentAssignedCount => CurrentAssignments.Count;
+    private int CurrentConflictCount => CurrentStepModel?.ConflictCount ?? 0;
+    private string VisibleProgressLabel => CurrentAlgorithm.Steps.Count == 0 ? "0 / 0" : $"{_currentStep} / {CurrentAlgorithm.Steps.Count}";
+    private string CurrentSummary => _currentStep == 0
+        ? "Choose a CSP strategy and reveal how the map gets colored region by region."
+        : CurrentStepModel?.Description ?? string.Empty;
+
+    private void SelectAlgorithm(string key)
+    {
+        _selectedAlgorithmKey = key;
+        _currentStep = 0;
+    }
+
+    private void RandomizeRun()
+    {
+        _scenarioSeed = _random.Next(1000, 99999);
+        _algorithms = MapColoringDemoFactory.BuildAll(_scenarioSeed);
+        _currentStep = 0;
+    }
+
+    private void PreviousStep()
+    {
+        if (_currentStep > 0)
+        {
+            _currentStep--;
+        }
+    }
+
+    private void NextStep()
+    {
+        if (_currentStep < CurrentAlgorithm.Steps.Count)
+        {
+            _currentStep++;
+        }
+    }
+
+    private void ShowCompleteRun()
+    {
+        _currentStep = CurrentAlgorithm.Steps.Count;
+    }
+
+    private void Reset()
+    {
+        _currentStep = 0;
+    }
+
+    private string GetRegionCssClass(string region)
+    {
+        var cssClass = $"region-chip region-chip-{region.ToLowerInvariant()}";
+        var color = GetRegionColor(region).ToLowerInvariant();
+        if (CurrentAssignments.ContainsKey(region))
+        {
+            cssClass += $" region-assigned region-{color}";
+        }
+        else
+        {
+            cssClass += " region-unassigned";
+        }
+
+        if (CurrentConflictedRegions.Contains(region, StringComparer.Ordinal))
+        {
+            cssClass += " region-conflicted";
+        }
+
+        if (string.Equals(CurrentStepModel?.CurrentRegion, region, StringComparison.Ordinal))
+        {
+            cssClass += " region-current";
+        }
+
+        return cssClass;
+    }
+
+    private string GetRegionTitle(string region)
+    {
+        var neighbors = region switch
+        {
+            "WA" => "NT, SA",
+            "NT" => "WA, SA, Q",
+            "SA" => "WA, NT, Q, NSW, V",
+            "Q" => "NT, SA, NSW",
+            "NSW" => "Q, SA, V",
+            "V" => "SA, NSW",
+            _ => "No mainland neighbor constraints"
+        };
+
+        return $"{region}: {GetRegionColor(region)}. Neighbors: {neighbors}.";
+    }
+
+    private string GetRegionColor(string region)
+    {
+        return CurrentAssignments.TryGetValue(region, out var color)
+            ? MapColoringDemoFactory.FormatColorLabel(color)
+            : "Unassigned";
+    }
+}
