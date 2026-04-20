@@ -1,0 +1,388 @@
+@page "/romania-search"
+@using Italbytz.AI.Search.Demos.Romania
+@using Italbytz.Graph
+@using Italbytz.Graph.Abstractions
+@using Italbytz.Graph.Visualization
+
+<PageTitle>Romania search demo</PageTitle>
+
+<section class="demo-hero">
+    <div>
+        <p class="eyebrow">Search demo</p>
+        <h1>Romania search</h1>
+        <p class="hero-copy">A public step-by-step showcase for <code>Italbytz.AI.Search</code>. Compare breadth-first search, uniform-cost search, and A* while inspecting frontier ordering, explored states, and the current path to Bucharest.</p>
+    </div>
+
+    <div class="stat-grid">
+        <article>
+            <span class="stat-label">Algorithm</span>
+            <strong>@AlgorithmLabel(_selectedAlgorithm)</strong>
+        </article>
+        <article>
+            <span class="stat-label">Start</span>
+            <strong>@_selectedStartCity</strong>
+        </article>
+        <article>
+            <span class="stat-label">Goal</span>
+            <strong>@RomaniaMap.Bucharest</strong>
+        </article>
+        <article>
+            <span class="stat-label">Visible step</span>
+            <strong>@VisibleProgressLabel</strong>
+        </article>
+    </div>
+</section>
+
+<section class="control-panel">
+    <div class="button-row">
+        @foreach (var algorithm in _algorithms)
+        {
+            <button class="@(algorithm == _selectedAlgorithm ? "choice-button selected" : "choice-button")"
+                    @onclick="() => SelectAlgorithm(algorithm)">
+                @AlgorithmLabel(algorithm)
+            </button>
+        }
+    </div>
+
+    <div class="secondary-controls">
+        <label>
+            Start city
+            <select value="@_selectedStartCity" @onchange="HandleStartCityChanged">
+                @foreach (var city in _startCities)
+                {
+                    <option value="@city">@city</option>
+                }
+            </select>
+        </label>
+
+        <div class="step-buttons">
+            <button class="ghost-button" @onclick="PreviousStep" disabled="@(_currentStep == 0)">Previous</button>
+            <button class="primary-button" @onclick="NextStep" disabled="@(_currentStep >= _steps.Count)">Next</button>
+            <button class="ghost-button" @onclick="ShowCompleteSolution" disabled="@(_currentStep >= _steps.Count)">Complete solution</button>
+            <button class="ghost-button" @onclick="Reset">Reset</button>
+        </div>
+    </div>
+    <p class="step-summary">@CurrentSummary</p>
+</section>
+
+<section class="demo-grid">
+    <article class="surface-card map-card">
+        <div class="section-heading">
+            <h2>State map</h2>
+            <p>Nodes, roads, and queue state of the classic AIMA Romania route problem rendered through <code>Italbytz.Graph.Blazor</code>. The detailed walkthrough stays in the panel on the right.</p>
+        </div>
+
+        <GraphViewport Graph="@_graphView"
+                       ActiveEdgeKeys="@CurrentGraphState.ActiveEdgeKeys"
+                       ActiveNodeKeys="@CurrentGraphState.ActiveNodeIds"
+                       FrontierNodeKeys="@CurrentGraphState.FrontierNodeIds"
+                       ExploredNodeKeys="@CurrentGraphState.ExploredNodeIds"
+                       CurrentNodeKey="@CurrentGraphState.CurrentNodeId"
+                       SuccessorEdgeKeys="@CurrentGraphState.SuccessorEdgeKeys"
+                       DirectedActiveEdgeIds="@CurrentGraphState.DirectedActiveEdgeIds"
+                       DirectedSuccessorEdgeIds="@CurrentGraphState.DirectedSuccessorEdgeIds"
+                       Title="Romania search map"
+                       ZoomInLabel="Zoom in"
+                       ZoomOutLabel="Zoom out"
+                       FitLabel="Fit graph"
+                       ResetLabel="Reset"
+                       InteractionHint="Use the graph itself to inspect nodes, edges and the current search state."
+                       ActiveLegendLabel="Active path"
+                       SuccessorLegendLabel="Candidate edges"
+                       CurrentNodeLegendLabel="Current node"
+                       FrontierLegendLabel="Frontier"
+                       ExploredLegendLabel="Explored"
+                       SolutionLegendLabel="Goal path"
+                       DefaultLegendLabel="Alternative edge"
+                       InspectorTitle="Inspector"
+                       NoSelectionTitle="Nothing selected"
+                       NoSelectionText="Select a node or edge in the graph to inspect its current role."
+                       NodeLabel="Node"
+                       EdgeLabel="Edge"
+                       WeightLabel="Weight"
+                       ConnectionsLabel="Connections"
+                       StateLabel="State" />
+    </article>
+
+    <article class="surface-card inspector-card">
+        <div class="section-heading">
+            <h2>Inspector</h2>
+            <p>Trace the expanded node, current path, successor generation, and frontier ordering.</p>
+        </div>
+
+        <div class="inspector-grid">
+            <article class="inspector-box">
+                <p class="eyebrow">Expanded node</p>
+                <h3>@(CurrentStepModel?.ExpandedNode.State ?? _selectedStartCity)</h3>
+                <p>g = @(CurrentStepModel?.ExpandedNode.PathCost.ToString("0") ?? "0") / priority = @(CurrentStepModel?.ExpandedNode.Priority.ToString("0") ?? "0")</p>
+                @if (ShowHeuristicDetails)
+                {
+                    <p>h = @CurrentExpandedHeuristic.ToString("0") / f = @CurrentExpandedEvaluation.ToString("0")</p>
+                }
+            </article>
+            <article class="inspector-box">
+                <p class="eyebrow">Current path</p>
+                <h3>@string.Join(" -> ", CurrentPathStates)</h3>
+                <p>@(IsGoalReached ? "Goal reached." : "Current best visible path through the expanded node.")</p>
+                @if (ShowHeuristicDetails)
+                {
+                    <p>Luftlinie to Bucharest for current node: @CurrentExpandedHeuristic.ToString("0")</p>
+                }
+            </article>
+            <article class="inspector-box">
+                <p class="eyebrow">Frontier size</p>
+                <h3>@CurrentFrontier.Count</h3>
+                <p>Ordered by the active queue rule of the selected algorithm.</p>
+            </article>
+            <article class="inspector-box">
+                <p class="eyebrow">Explored states</p>
+                <h3>@CurrentExplored.Count</h3>
+                <p>@(CurrentExplored.Count == 0 ? "No explored state yet." : string.Join(", ", CurrentExplored))</p>
+            </article>
+        </div>
+
+        <div class="trace-columns">
+            <div>
+                <h3>Frontier</h3>
+                @if (CurrentFrontier.Count == 0)
+                {
+                    <p class="empty-copy">No queued nodes.</p>
+                }
+                else
+                {
+                    <ol class="trace-list">
+                        @foreach (var node in CurrentFrontier)
+                        {
+                            <li>
+                                <strong>@node.State</strong>
+                                <span>@FormatTraceNode(node)</span>
+                            </li>
+                        }
+                    </ol>
+                }
+            </div>
+
+            <div>
+                <h3>Successors</h3>
+                @if (CurrentSuccessors.Count == 0)
+                {
+                    <p class="empty-copy">No successors generated at this step.</p>
+                }
+                else
+                {
+                    <ol class="trace-list">
+                        @foreach (var node in CurrentSuccessors)
+                        {
+                            <li>
+                                <strong>@node.State</strong>
+                                <span>@FormatTraceNode(node)</span>
+                            </li>
+                        }
+                    </ol>
+                }
+            </div>
+        </div>
+    </article>
+</section>
+
+@code {
+    private static readonly IReadOnlyList<RomaniaSearchAlgorithm> _algorithms =
+    [
+        RomaniaSearchAlgorithm.BreadthFirstSearch,
+        RomaniaSearchAlgorithm.UniformCostSearch,
+        RomaniaSearchAlgorithm.AStarSearch
+    ];
+
+    private static readonly IReadOnlyList<string> _startCities = RomaniaMap.Cities.Where(city => city != RomaniaMap.Bucharest).ToArray();
+    private static readonly IUndirectedGraph<string, ITaggedEdge<string, double>> _graph = CreateGraph();
+
+    private readonly RomaniaSearchSimulator _simulator = new();
+    private readonly GraphViewModel _graphView = GraphViewFactory.BuildSvgGraphView(_graph, Array.Empty<string>());
+    private IReadOnlyList<RomaniaSearchStep> _steps = [];
+    private IReadOnlyList<GraphStateViewModel> _graphStates = [new(string.Empty, [], [], [], [], [], [], [])];
+    private RomaniaSearchAlgorithm _selectedAlgorithm = RomaniaSearchAlgorithm.AStarSearch;
+    private string _selectedStartCity = RomaniaMap.Arad;
+    private int _currentStep;
+
+    private RomaniaSearchStep? CurrentStepModel => _currentStep > 0 && _steps.Count > 0
+        ? _steps[Math.Min(_currentStep - 1, _steps.Count - 1)]
+        : null;
+
+    private GraphStateViewModel CurrentGraphState => _graphStates.Count == 0
+        ? new GraphStateViewModel(string.Empty, [], [], [], [], [], [], [])
+        : _graphStates[Math.Min(_currentStep, _graphStates.Count - 1)];
+
+    private IReadOnlyList<string> CurrentPathStates => CurrentStepModel?.PathStates ?? [_selectedStartCity];
+    private IReadOnlyList<RomaniaSearchTraceNode> CurrentFrontier => CurrentStepModel?.Frontier ?? [];
+    private IReadOnlyList<RomaniaSearchTraceNode> CurrentSuccessors => CurrentStepModel?.Successors ?? [];
+    private IReadOnlyList<string> CurrentExplored => CurrentStepModel?.ExploredStates ?? [];
+    private bool IsGoalReached => CurrentStepModel?.GoalReached == true;
+    private bool ShowHeuristicDetails => _selectedAlgorithm == RomaniaSearchAlgorithm.AStarSearch;
+    private double CurrentExpandedHeuristic => RomaniaMap.HeuristicToBucharest(CurrentStepModel?.ExpandedNode.State ?? _selectedStartCity);
+    private double CurrentExpandedEvaluation => (CurrentStepModel?.ExpandedNode.PathCost ?? 0) + CurrentExpandedHeuristic;
+    private string VisibleProgressLabel => _steps.Count == 0 ? "0 / 0" : $"{_currentStep} / {_steps.Count}";
+
+    private string CurrentSummary => _currentStep switch
+    {
+        0 => "Start with the initial city, then step through the active queue discipline to see how the search evolves.",
+        _ when IsGoalReached => $"Goal reached after expanding {CurrentStepModel?.ExpandedNode.State}. The resulting path is {string.Join(" -> ", CurrentPathStates)}.",
+        _ => $"Step {_currentStep}: expand {CurrentStepModel?.ExpandedNode.State}, inspect successors, and compare the remaining frontier ordering."
+    };
+
+    protected override void OnInitialized()
+    {
+        RecalculateSteps();
+    }
+
+    private void SelectAlgorithm(RomaniaSearchAlgorithm algorithm)
+    {
+        _selectedAlgorithm = algorithm;
+        _currentStep = 0;
+        RecalculateSteps();
+    }
+
+    private void HandleStartCityChanged(ChangeEventArgs args)
+    {
+        _selectedStartCity = args.Value?.ToString() ?? RomaniaMap.Arad;
+        _currentStep = 0;
+        RecalculateSteps();
+    }
+
+    private void PreviousStep()
+    {
+        if (_currentStep > 0)
+        {
+            _currentStep--;
+        }
+    }
+
+    private void NextStep()
+    {
+        if (_currentStep < _steps.Count)
+        {
+            _currentStep++;
+        }
+    }
+
+    private void ShowCompleteSolution()
+    {
+        _currentStep = _steps.Count;
+    }
+
+    private void Reset()
+    {
+        _currentStep = 0;
+    }
+
+    private void RecalculateSteps()
+    {
+        _steps = _simulator.Simulate(_selectedStartCity, _selectedAlgorithm);
+        _graphStates = BuildRomaniaSearchStates(_graph, _steps, _selectedStartCity);
+    }
+
+    private static string AlgorithmLabel(RomaniaSearchAlgorithm algorithm) => algorithm switch
+    {
+        RomaniaSearchAlgorithm.BreadthFirstSearch => "Breadth-first search",
+        RomaniaSearchAlgorithm.UniformCostSearch => "Uniform-cost search",
+        RomaniaSearchAlgorithm.AStarSearch => "A* search",
+        _ => algorithm.ToString()
+    };
+
+    private string FormatTraceNode(RomaniaSearchTraceNode node)
+    {
+        if (!ShowHeuristicDetails)
+        {
+            return $"g={node.PathCost.ToString("0")} / p={node.Priority.ToString("0")}";
+        }
+
+        var heuristic = RomaniaMap.HeuristicToBucharest(node.State);
+        return $"g={node.PathCost.ToString("0")} / h={heuristic.ToString("0")} / f={node.Priority.ToString("0")}";
+    }
+
+    private static IUndirectedGraph<string, ITaggedEdge<string, double>> CreateGraph()
+    {
+        return new UndirectedGraph<string, ITaggedEdge<string, double>>
+        {
+            Edges = RomaniaMap.Roads
+                .Select(road => (ITaggedEdge<string, double>)new TaggedEdge<string, double>(road.From, road.To, road.Cost))
+                .ToArray()
+        };
+    }
+
+    private static IReadOnlyList<GraphStateViewModel> BuildRomaniaSearchStates(
+        IUndirectedGraph<string, ITaggedEdge<string, double>> graph,
+        IReadOnlyList<RomaniaSearchStep> steps,
+        string startCity)
+    {
+        var states = new List<GraphStateViewModel>
+        {
+            new(
+                startCity,
+                [startCity],
+                [startCity],
+                [],
+                [],
+                [],
+                [],
+                [])
+        };
+
+        foreach (var step in steps)
+        {
+            var activeEdgeKeys = BuildPathEdgeKeys(graph, step.PathStates);
+            var successorEdgeKeys = BuildSuccessorEdgeKeys(graph, step.ExpandedNode.State, step.Successors);
+
+            states.Add(new GraphStateViewModel(
+                step.ExpandedNode.State,
+                step.PathStates.ToArray(),
+                step.Frontier.Select(node => node.State).Distinct(StringComparer.Ordinal).OrderBy(node => node, StringComparer.Ordinal).ToArray(),
+                step.ExploredStates.Where(state => !string.Equals(state, step.ExpandedNode.State, StringComparison.Ordinal)).ToArray(),
+                activeEdgeKeys,
+                successorEdgeKeys,
+                BuildDirectedPathEdgeIds(step.PathStates),
+                step.Successors.Select(successor => GraphViewKeys.CreateDirectedEdgeId(step.ExpandedNode.State, successor.State)).ToArray()));
+        }
+
+        return states;
+    }
+
+    private static string[] BuildPathEdgeKeys(
+        IUndirectedGraph<string, ITaggedEdge<string, double>> graph,
+        IReadOnlyList<string> pathStates)
+    {
+        return pathStates
+            .Zip(pathStates.Skip(1), (from, to) => FindEdge(graph, from, to))
+            .Where(edge => edge is not null)
+            .Select(edge => GraphViewKeys.CreateUndirectedEdgeKey(edge!.Source, edge.Target, edge.Tag))
+            .ToArray();
+    }
+
+    private static string[] BuildSuccessorEdgeKeys(
+        IUndirectedGraph<string, ITaggedEdge<string, double>> graph,
+        string currentState,
+        IReadOnlyList<RomaniaSearchTraceNode> successors)
+    {
+        return successors
+            .Select(successor => FindEdge(graph, currentState, successor.State))
+            .Where(edge => edge is not null)
+            .Select(edge => GraphViewKeys.CreateUndirectedEdgeKey(edge!.Source, edge.Target, edge.Tag))
+            .ToArray();
+    }
+
+    private static string[] BuildDirectedPathEdgeIds(IReadOnlyList<string> pathStates)
+    {
+        return pathStates.Zip(pathStates.Skip(1), (from, to) => GraphViewKeys.CreateDirectedEdgeId(from, to)).ToArray();
+    }
+
+    private static ITaggedEdge<string, double>? FindEdge(
+        IUndirectedGraph<string, ITaggedEdge<string, double>> graph,
+        string from,
+        string to)
+    {
+        return graph.Edges.FirstOrDefault(edge =>
+            (string.Equals(edge.Source, from, StringComparison.Ordinal) && string.Equals(edge.Target, to, StringComparison.Ordinal))
+            || (string.Equals(edge.Source, to, StringComparison.Ordinal) && string.Equals(edge.Target, from, StringComparison.Ordinal)));
+    }
+
+    private readonly record struct MapPoint(double X, double Y);
+}
