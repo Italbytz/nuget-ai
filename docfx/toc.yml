@@ -6,6 +6,12 @@
       href: docs/architecture.md
     - name: AIMA algorithm index
       href: docs/aima-algorithm-index.md
+    - name: Interactive demos
+      items:
+        - name: Overview
+          href: docs/interactive-demos.md
+        - name: Romania search
+          href: docs/demos/romania-search.md
     - name: Getting started with ML helpers
       href: docs/getting-started-ml.md
 - name: API Reference
