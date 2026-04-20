@@ -1,0 +1,270 @@
+.demo-hero,
+.control-panel,
+.surface-card {
+    background: rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(23, 50, 74, 0.1);
+    border-radius: 1.4rem;
+    box-shadow: 0 22px 56px rgba(23, 50, 74, 0.08);
+}
+
+.demo-hero {
+    display: grid;
+    grid-template-columns: 1.35fr 1fr;
+    gap: 1rem;
+    padding: 1.4rem;
+}
+
+.demo-hero h1,
+.section-heading h2,
+.inspector-box h3,
+.chart-cell strong {
+    color: #17324a;
+}
+
+.hero-copy,
+.section-heading p,
+.step-summary,
+.selection-summary,
+.trace-list span,
+.inspector-box p,
+.empty-copy,
+table td,
+table th,
+.chart-cell,
+.token-row span {
+    color: #4d5a66;
+}
+
+.stat-grid,
+.inspector-grid,
+.demo-grid {
+    display: grid;
+    gap: 0.85rem;
+}
+
+.stat-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.stat-grid article,
+.inspector-box,
+.chart-cell {
+    padding: 1rem;
+    border-radius: 1rem;
+    background: #f7f2e8;
+    border: 1px solid rgba(23, 50, 74, 0.08);
+}
+
+.stat-label {
+    display: block;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: #6c766f;
+    margin-bottom: 0.2rem;
+}
+
+.control-panel {
+    margin-top: 1rem;
+    padding: 1rem 1.2rem;
+}
+
+.button-row,
+.secondary-controls,
+.step-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.secondary-controls {
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 0.9rem;
+}
+
+.selection-copy {
+    display: grid;
+    gap: 0.35rem;
+    max-width: 44rem;
+}
+
+.selection-summary {
+    margin: 0;
+}
+
+.choice-button,
+.primary-button,
+.ghost-button {
+    border-radius: 999px;
+    padding: 0.8rem 1rem;
+    font-weight: 600;
+}
+
+.choice-button,
+.ghost-button {
+    background: #fff;
+    color: #17324a;
+    border: 1px solid rgba(23, 50, 74, 0.16);
+}
+
+.choice-button.selected,
+.primary-button {
+    background: #17324a;
+    color: #fff;
+    border: 1px solid #17324a;
+}
+
+.step-summary {
+    margin: 0.9rem 0 0;
+}
+
+.demo-grid {
+    grid-template-columns: 1.1fr 1fr;
+    margin-top: 1rem;
+}
+
+.surface-card {
+    padding: 1.25rem;
+}
+
+.chart-card {
+    background: rgba(246, 243, 236, 0.94);
+}
+
+.chart-shell {
+    display: grid;
+    gap: 0.65rem;
+    margin-top: 1rem;
+}
+
+.chart-row {
+    display: grid;
+    gap: 0.65rem;
+}
+
+.chart-cell {
+    min-height: 5.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    justify-content: space-between;
+    opacity: 0.5;
+}
+
+.chart-cell-visible {
+    opacity: 1;
+}
+
+.chart-cell-active {
+    outline: 3px solid #17324a;
+    outline-offset: 2px;
+}
+
+.chart-cell-empty {
+    background: #efe1d2;
+}
+
+.cell-label {
+    font-size: 0.8rem;
+}
+
+.cell-entry {
+    font-size: 0.86rem;
+}
+
+.token-row {
+    display: grid;
+    gap: 0.65rem;
+    grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+    margin-top: 0.8rem;
+}
+
+.token-row span {
+    padding: 0.65rem 0.75rem;
+    background: #fff;
+    border-radius: 0.85rem;
+    border: 1px solid rgba(23, 50, 74, 0.1);
+    text-align: center;
+}
+
+.inspector-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin-top: 1rem;
+}
+
+.inspector-box-active {
+    background: #17324a;
+    color: #fff;
+}
+
+.inspector-box-active p,
+.inspector-box-active h3,
+.inspector-box-active .eyebrow {
+    color: inherit;
+}
+
+.trace-heading {
+    margin-top: 1rem;
+}
+
+.step-trace-list {
+    margin: 0.8rem 0 0;
+    padding-left: 1.2rem;
+}
+
+.step-trace-list li {
+    margin-bottom: 0.8rem;
+    padding: 0.35rem 0.25rem;
+    border-radius: 0.75rem;
+}
+
+.trace-step-active {
+    background: rgba(23, 50, 74, 0.08);
+}
+
+.trace-list strong {
+    display: block;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 0.8rem;
+}
+
+th,
+td {
+    text-align: left;
+    padding: 0.45rem 0.5rem;
+    border-bottom: 1px solid rgba(23, 50, 74, 0.1);
+}
+
+.empty-copy {
+    margin: 0;
+    padding: 0.9rem 1rem;
+    border-radius: 0.9rem;
+    background: #f7f2e8;
+    border: 1px dashed rgba(23, 50, 74, 0.16);
+}
+
+@media (max-width: 1100px) {
+    .demo-grid,
+    .demo-hero,
+    .stat-grid,
+    .inspector-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 780px) {
+    .control-panel,
+    .surface-card,
+    .demo-hero {
+        padding: 1rem;
+    }
+
+    .secondary-controls {
+        align-items: stretch;
+    }
+}
