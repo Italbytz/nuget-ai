@@ -41,6 +41,12 @@ internal sealed record NQueensAlgorithmDemo(
     int[] InitialQueenRows,
     IReadOnlyList<NQueensStep> Steps);
 
+internal sealed record NQueensDemoConfiguration(
+    int BoardSize,
+    int[] HillClimbingInitialBoard,
+    int[] SimulatedAnnealingInitialBoard,
+    int GeneticSeed);
+
 internal static class NQueensDemoFactory
 {
     private static readonly int[] HillClimbingInitialBoard = [5, 7, 0, 1, 1, 7, 7, 2];
@@ -54,17 +60,31 @@ internal static class NQueensDemoFactory
 
     public static IReadOnlyList<NQueensAlgorithmDemo> BuildAll(int boardSize = 8)
     {
+        return BuildAll(CreateDefaultConfiguration(boardSize));
+    }
+
+    public static IReadOnlyList<NQueensAlgorithmDemo> BuildAll(NQueensDemoConfiguration configuration)
+    {
         return
         [
-            SimulateHillClimbing(boardSize),
-            SimulateSimulatedAnnealing(boardSize),
-            SimulateGeneticAlgorithm(boardSize)
+            SimulateHillClimbing(configuration),
+            SimulateSimulatedAnnealing(configuration),
+            SimulateGeneticAlgorithm(configuration)
         ];
     }
 
-    private static NQueensAlgorithmDemo SimulateHillClimbing(int boardSize)
+    public static NQueensDemoConfiguration CreateRandomConfiguration(int boardSize, Random random)
     {
-        var current = CreateBoard(boardSize, HillClimbingInitialBoard);
+        return new NQueensDemoConfiguration(
+            boardSize,
+            CreateInterestingRandomBoard(boardSize, random),
+            CreateInterestingRandomBoard(boardSize, random),
+            random.Next());
+    }
+
+    private static NQueensAlgorithmDemo SimulateHillClimbing(NQueensDemoConfiguration configuration)
+    {
+        var current = CreateBoard(configuration.BoardSize, configuration.HillClimbingInitialBoard);
         var steps = new List<NQueensStep>
         {
             CreateStep(1, NQueensAlgorithmKind.HillClimbing, NQueensStepKind.Initial, current, null, null, null, null, true, false)
@@ -77,14 +97,14 @@ internal static class NQueensDemoFactory
             if (currentConflicts == 0)
             {
                 steps.Add(CreateStep(stepNumber, NQueensAlgorithmKind.HillClimbing, NQueensStepKind.Solved, current, null, null, null, Fitness(current), true, true));
-                return new NQueensAlgorithmDemo("HillClimbing", "Hill climbing", "Greedy local search that always applies the best improving queen move.", boardSize, CreateBoard(boardSize, HillClimbingInitialBoard), steps);
+                return new NQueensAlgorithmDemo("HillClimbing", "Hill climbing", "Greedy local search that always applies the best improving queen move.", configuration.BoardSize, CreateBoard(configuration.BoardSize, configuration.HillClimbingInitialBoard), steps);
             }
 
             var bestMove = FindBestHillClimbingMove(current);
             if (bestMove is null || bestMove.ConflictCount >= currentConflicts)
             {
                 steps.Add(CreateStep(stepNumber, NQueensAlgorithmKind.HillClimbing, NQueensStepKind.Stopped, current, null, null, null, Fitness(current), true, false));
-                return new NQueensAlgorithmDemo("HillClimbing", "Hill climbing", "Greedy local search that always applies the best improving queen move.", boardSize, CreateBoard(boardSize, HillClimbingInitialBoard), steps);
+                return new NQueensAlgorithmDemo("HillClimbing", "Hill climbing", "Greedy local search that always applies the best improving queen move.", configuration.BoardSize, CreateBoard(configuration.BoardSize, configuration.HillClimbingInitialBoard), steps);
             }
 
             current[bestMove.Column] = bestMove.Row;
@@ -93,9 +113,9 @@ internal static class NQueensDemoFactory
         }
     }
 
-    private static NQueensAlgorithmDemo SimulateSimulatedAnnealing(int boardSize)
+    private static NQueensAlgorithmDemo SimulateSimulatedAnnealing(NQueensDemoConfiguration configuration)
     {
-        var current = CreateBoard(boardSize, AnnealingInitialBoard);
+        var current = CreateBoard(configuration.BoardSize, configuration.SimulatedAnnealingInitialBoard);
         var steps = new List<NQueensStep>
         {
             CreateStep(1, NQueensAlgorithmKind.SimulatedAnnealing, NQueensStepKind.Initial, current, null, null, 18.0, Fitness(current), true, false)
@@ -113,7 +133,7 @@ internal static class NQueensDemoFactory
             if (currentConflicts == 0)
             {
                 steps.Add(CreateStep(steps.Count + 1, NQueensAlgorithmKind.SimulatedAnnealing, NQueensStepKind.Solved, current, null, null, TemperatureAt(iteration, initialTemperature, coolingFactor), Fitness(current), true, true));
-                return new NQueensAlgorithmDemo("SimulatedAnnealing", "Simulated annealing", "Can accept worse moves while the temperature is still high enough to escape local optima.", boardSize, CreateBoard(boardSize, AnnealingInitialBoard), steps);
+                return new NQueensAlgorithmDemo("SimulatedAnnealing", "Simulated annealing", "Can accept worse moves while the temperature is still high enough to escape local optima.", configuration.BoardSize, CreateBoard(configuration.BoardSize, configuration.SimulatedAnnealingInitialBoard), steps);
             }
 
             var temperature = TemperatureAt(iteration, initialTemperature, coolingFactor);
@@ -122,14 +142,14 @@ internal static class NQueensDemoFactory
                 break;
             }
 
-            var candidateColumn = random.Next(boardSize);
-            var candidateRow = random.Next(boardSize - 1);
+            var candidateColumn = random.Next(configuration.BoardSize);
+            var candidateRow = random.Next(configuration.BoardSize - 1);
             if (candidateRow >= current[candidateColumn])
             {
                 candidateRow++;
             }
 
-            var candidate = CreateBoard(boardSize, current);
+            var candidate = CreateBoard(configuration.BoardSize, current);
             candidate[candidateColumn] = candidateRow;
 
             var candidateConflicts = CountConflicts(candidate);
@@ -149,17 +169,17 @@ internal static class NQueensDemoFactory
 
         var solved = CountConflicts(current) == 0;
         steps.Add(CreateStep(steps.Count + 1, NQueensAlgorithmKind.SimulatedAnnealing, solved ? NQueensStepKind.Solved : NQueensStepKind.Stopped, current, null, null, minimumTemperature, Fitness(current), true, solved));
-        return new NQueensAlgorithmDemo("SimulatedAnnealing", "Simulated annealing", "Can accept worse moves while the temperature is still high enough to escape local optima.", boardSize, CreateBoard(boardSize, AnnealingInitialBoard), steps);
+        return new NQueensAlgorithmDemo("SimulatedAnnealing", "Simulated annealing", "Can accept worse moves while the temperature is still high enough to escape local optima.", configuration.BoardSize, CreateBoard(configuration.BoardSize, configuration.SimulatedAnnealingInitialBoard), steps);
     }
 
-    private static NQueensAlgorithmDemo SimulateGeneticAlgorithm(int boardSize)
+    private static NQueensAlgorithmDemo SimulateGeneticAlgorithm(NQueensDemoConfiguration configuration)
     {
         const int populationSize = 24;
         const int maxGenerations = 30;
         const double mutationRate = 0.14;
-        var random = new Random(113);
+        var random = new Random(configuration.GeneticSeed);
         var population = Enumerable.Range(0, populationSize)
-            .Select(_ => Enumerable.Range(0, boardSize).Select(__ => random.Next(boardSize)).ToArray())
+            .Select(_ => Enumerable.Range(0, configuration.BoardSize).Select(__ => random.Next(configuration.BoardSize)).ToArray())
             .ToList();
 
         var initialBest = population.OrderBy(CountConflicts).First();
@@ -177,16 +197,16 @@ internal static class NQueensDemoFactory
             steps.Add(CreateStep(steps.Count + 1, NQueensAlgorithmKind.GeneticAlgorithm, solved ? NQueensStepKind.Solved : NQueensStepKind.Generation, best, null, generation, null, Fitness(best), true, solved));
             if (solved)
             {
-                return new NQueensAlgorithmDemo("GeneticAlgorithm", "Genetic algorithm", "Evolves a population of boards through selection, crossover and mutation.", boardSize, CreateBoard(boardSize, initialBest), steps);
+                return new NQueensAlgorithmDemo("GeneticAlgorithm", "Genetic algorithm", "Evolves a population of boards through selection, crossover and mutation.", configuration.BoardSize, CreateBoard(configuration.BoardSize, initialBest), steps);
             }
 
-            var nextPopulation = new List<int[]> { CreateBoard(boardSize, best) };
+            var nextPopulation = new List<int[]> { CreateBoard(configuration.BoardSize, best) };
             while (nextPopulation.Count < populationSize)
             {
                 var parentA = TournamentSelect(population, random);
                 var parentB = TournamentSelect(population, random);
                 var child = Crossover(parentA, parentB, random);
-                Mutate(child, boardSize, mutationRate, random);
+                Mutate(child, configuration.BoardSize, mutationRate, random);
                 nextPopulation.Add(child);
             }
 
@@ -195,7 +215,37 @@ internal static class NQueensDemoFactory
 
         var finalBest = population.OrderBy(CountConflicts).First();
         steps.Add(CreateStep(steps.Count + 1, NQueensAlgorithmKind.GeneticAlgorithm, NQueensStepKind.Stopped, finalBest, null, maxGenerations + 1, null, Fitness(finalBest), true, false));
-        return new NQueensAlgorithmDemo("GeneticAlgorithm", "Genetic algorithm", "Evolves a population of boards through selection, crossover and mutation.", boardSize, CreateBoard(boardSize, initialBest), steps);
+        return new NQueensAlgorithmDemo("GeneticAlgorithm", "Genetic algorithm", "Evolves a population of boards through selection, crossover and mutation.", configuration.BoardSize, CreateBoard(configuration.BoardSize, initialBest), steps);
+    }
+
+    private static NQueensDemoConfiguration CreateDefaultConfiguration(int boardSize)
+    {
+        return new NQueensDemoConfiguration(
+            boardSize,
+            CreateBoard(boardSize, HillClimbingInitialBoard),
+            CreateBoard(boardSize, AnnealingInitialBoard),
+            113);
+    }
+
+    private static int[] CreateInterestingRandomBoard(int boardSize, Random random)
+    {
+        for (var attempt = 0; attempt < 16; attempt++)
+        {
+            var board = Enumerable.Range(0, boardSize)
+                .Select(_ => random.Next(boardSize))
+                .ToArray();
+
+            if (CountConflicts(board) > 0)
+            {
+                return board;
+            }
+        }
+
+        var fallback = Enumerable.Range(0, boardSize)
+            .Select(index => index % boardSize)
+            .ToArray();
+        fallback[0] = (fallback[0] + 1) % boardSize;
+        return fallback;
     }
 
     private static NQueensStep CreateStep(
