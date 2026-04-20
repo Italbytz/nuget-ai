@@ -12,6 +12,10 @@
           href: docs/interactive-demos.md
         - name: Burglary network
           href: docs/demos/burglary-network.md
+        - name: CYK parser
+          href: docs/demos/cyk-parser.md
+        - name: GridWorld MDP
+          href: docs/demos/gridworld-mdp.md
         - name: Map coloring
           href: docs/demos/map-coloring.md
         - name: Romania search
