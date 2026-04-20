@@ -16,6 +16,8 @@
           href: docs/demos/map-coloring.md
         - name: Romania search
           href: docs/demos/romania-search.md
+        - name: Umbrella world
+          href: docs/demos/umbrella-world.md
         - name: Weighted graph
           href: docs/demos/weighted-graph.md
     - name: Getting started with ML helpers
