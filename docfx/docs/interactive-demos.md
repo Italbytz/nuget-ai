@@ -31,6 +31,7 @@ The demo area is intended to help package consumers:
 - CSP: `Map Coloring` uses `Italbytz.AI.CSP` to compare constructive backtracking and min-conflicts repair on the Australia map.
 - CSP: `N-Queens` uses `Italbytz.AI.CSP` for constraint-aware board evaluation and a package-backed `MinConflictsSolver` reference solution, with randomized starts and progressively revealed traces.
 - Probability: `Burglary Network` uses `Italbytz.AI.Probability` to compare exact and approximate Bayesian inference on the same evidence assignment.
+- Probability: `Umbrella World` uses `Italbytz.AI.Probability.HMM` to compare filtered and smoothed rain beliefs across an observation timeline.
 
 ## Initial showcase set
 
@@ -47,6 +48,7 @@ The currently available public demos are:
 - `Burglary Network`: `https://italbytz.github.io/nuget-ai/demos/burglary-network`
 - `Map Coloring`: `https://italbytz.github.io/nuget-ai/demos/map-coloring`
 - `Romania search`: `https://italbytz.github.io/nuget-ai/demos/romania-search`
+- `Umbrella World`: `https://italbytz.github.io/nuget-ai/demos/umbrella-world`
 - `Vacuum World`: `https://italbytz.github.io/nuget-ai/demos/vacuum-world`
 - `N-Queens`: `https://italbytz.github.io/nuget-ai/demos/n-queens`
 - `Weighted Graph`: `https://italbytz.github.io/nuget-ai/demos/weighted-graph`
@@ -56,6 +58,7 @@ The currently available public demos are:
 - `Burglary Network`: compare exact and approximate posteriors for `P(Burglary | evidence)` while switching evidence on intermediate nodes and observed calls.
 - `Map Coloring`: compare backtracking, heuristic variable ordering, and min-conflicts repair on the same CSP while randomizing tie orders between runs.
 - `Romania search`: compare how the queue discipline changes between breadth-first search, uniform-cost search, and A* while trying different randomized start cities.
+- `Umbrella World`: compare filtered and smoothed `P(Rain)` values to see how later evidence revises earlier hidden-state estimates.
 - `Vacuum World`: compare reactive behavior versus model-based stopping in the same two-room environment while revealing the action trace one step at a time.
 - `N-Queens`: compare local and evolutionary search traces while checking conflicts against a CSP-backed baseline and revealing each run progressively.
 - `Weighted Graph`: inspect accepted versus rejected relaxations, changing frontier priorities, and the shortest-path tree that emerges from the weighted graph.
