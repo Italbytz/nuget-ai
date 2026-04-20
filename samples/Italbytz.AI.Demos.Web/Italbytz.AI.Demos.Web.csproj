@@ -10,6 +10,7 @@
   <ItemGroup>
     <ProjectReference Include="../../src/Italbytz.AI.Agent/Italbytz.AI.Agent.csproj" />
     <ProjectReference Include="../../src/Italbytz.AI.CSP/Italbytz.AI.CSP.csproj" />
+    <ProjectReference Include="../../src/Italbytz.AI.Probability/Italbytz.AI.Probability.csproj" />
     <ProjectReference Include="../../src/Italbytz.AI.Search/Italbytz.AI.Search.csproj" />
     <PackageReference Include="Italbytz.Graph" />
     <PackageReference Include="Italbytz.Graph.Blazor" />
