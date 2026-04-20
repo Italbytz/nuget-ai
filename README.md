@@ -46,15 +46,21 @@ If the URL still returns `404`, wait until the `CI` workflow on `main` has compl
 
 The GitHub Pages site also exposes a public demo host under `/demos/`.
 
+- Probability: `Burglary Network` uses `Italbytz.AI.Probability` to compare exact and approximate Bayesian inference for the classic burglary-alarm network on the same evidence assignment.
+- Search: `Weighted Graph` uses `Italbytz.AI.Search.Demos.WeightedGraph` to reveal Dijkstra relaxations, frontier updates, and the shortest-path tree step by step.
 - Search: `Romania search` uses `Italbytz.AI.Search` together with the `nuget-graph` viewport for visible frontier and path state, including randomized start cities.
+- CSP: `Map Coloring` uses `Italbytz.AI.CSP` to compare backtracking, heuristic ordering, and min-conflicts on the classic Australia map.
 - Agents: `Vacuum World` uses `Italbytz.AI.Agent` base types such as `SimpleAgent` and `AbstractEnvironment` for a randomized, stepwise action loop.
 - CSP: `N-Queens` compares three search styles while grounding conflict evaluation and a reference solution in `Italbytz.AI.CSP`, with randomized setups and progressively revealed traces.
 
 Public demo routes:
 
+- `https://italbytz.github.io/nuget-ai/demos/burglary-network`
+- `https://italbytz.github.io/nuget-ai/demos/map-coloring`
 - `https://italbytz.github.io/nuget-ai/demos/romania-search`
 - `https://italbytz.github.io/nuget-ai/demos/vacuum-world`
 - `https://italbytz.github.io/nuget-ai/demos/n-queens`
+- `https://italbytz.github.io/nuget-ai/demos/weighted-graph`
 
 ## Quality checks
 
