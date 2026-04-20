@@ -2,13 +2,14 @@
 
 The Romania search demo is the first public interactive showcase in the `nuget-ai` demo host.
 
-It illustrates the `Italbytz.AI.Search` package family with the standard AIMA route-finding example from Arad to Bucharest.
+It illustrates the `Italbytz.AI.Search` package family with the standard AIMA route-finding example to Bucharest, including randomized start cities.
 
 ## What the demo shows
 
 - breadth-first search
 - uniform-cost search
 - A* search
+- randomized start cities
 - current path progression
 - frontier ordering
 - explored states and generated successors
