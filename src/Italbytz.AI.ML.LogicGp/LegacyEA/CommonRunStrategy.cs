@@ -91,7 +91,10 @@ internal abstract class CommonRunStrategy : global::Italbytz.AI.ML.Core.Control.
             labelMapping);
         var individuals = RunSpecificLogicGp(convertedTrainFeatures,
             convertedTrainLabels).Result;
-        individuals.Freeze();
+        foreach (var individual in individuals)
+        {
+            (individual.Genotype as global::Italbytz.AI.Evolutionary.Individuals.IFreezable)?.Freeze();
+        }
         // Validate
         var validationExcerpt = validationSet.GetDataExcerpt();
         var validationFeatures = validationExcerpt.Features;
