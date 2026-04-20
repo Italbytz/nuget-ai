@@ -56,6 +56,7 @@
         </label>
 
         <div class="step-buttons">
+            <button class="ghost-button" @onclick="RandomizeStartCity">Randomize start</button>
             <button class="ghost-button" @onclick="PreviousStep" disabled="@(_currentStep == 0)">Previous</button>
             <button class="primary-button" @onclick="NextStep" disabled="@(_currentStep >= _steps.Count)">Next</button>
             <button class="ghost-button" @onclick="ShowCompleteSolution" disabled="@(_currentStep >= _steps.Count)">Complete solution</button>
@@ -198,6 +199,7 @@
 
     private readonly RomaniaSearchSimulator _simulator = new();
     private readonly GraphViewModel _graphView = GraphViewFactory.BuildSvgGraphView(_graph, Array.Empty<string>());
+    private readonly Random _random = new();
     private IReadOnlyList<RomaniaSearchStep> _steps = [];
     private IReadOnlyList<GraphStateViewModel> _graphStates = [new(string.Empty, [], [], [], [], [], [], [])];
     private RomaniaSearchAlgorithm _selectedAlgorithm = RomaniaSearchAlgorithm.AStarSearch;
@@ -267,6 +269,21 @@
     private void ShowCompleteSolution()
     {
         _currentStep = _steps.Count;
+    }
+
+    private void RandomizeStartCity()
+    {
+        if (_startCities.Count == 0)
+        {
+            return;
+        }
+
+        var candidates = _startCities.Where(city => !string.Equals(city, _selectedStartCity, StringComparison.Ordinal)).ToArray();
+        _selectedStartCity = candidates.Length == 0
+            ? _startCities[0]
+            : candidates[_random.Next(candidates.Length)];
+        _currentStep = 0;
+        RecalculateSteps();
     }
 
     private void Reset()
