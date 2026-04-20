@@ -1,0 +1,224 @@
+.demo-hero,
+.control-panel,
+.surface-card {
+    background: rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(23, 50, 74, 0.1);
+    border-radius: 1.4rem;
+    box-shadow: 0 22px 56px rgba(23, 50, 74, 0.08);
+}
+
+.demo-hero {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: 1rem;
+    padding: 1.4rem;
+}
+
+.demo-hero h1,
+.section-heading h2,
+.inspector-box h3,
+.trace-columns h3 {
+    color: #17324a;
+}
+
+.hero-copy,
+.section-heading p,
+.step-summary,
+.trace-list span,
+.empty-copy,
+.inspector-box p {
+    color: #4d5a66;
+}
+
+.stat-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.85rem;
+}
+
+.stat-grid article,
+.inspector-box {
+    padding: 1rem;
+    border-radius: 1rem;
+    background: #f7f2e8;
+    border: 1px solid rgba(23, 50, 74, 0.08);
+}
+
+.stat-label {
+    display: block;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: #6c766f;
+    margin-bottom: 0.2rem;
+}
+
+.control-panel {
+    margin-top: 1rem;
+    padding: 1rem 1.2rem;
+}
+
+.button-row,
+.secondary-controls,
+.step-buttons,
+.legend-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.secondary-controls {
+    justify-content: space-between;
+    margin-top: 0.9rem;
+    align-items: end;
+}
+
+.secondary-controls label {
+    display: grid;
+    gap: 0.45rem;
+    font-weight: 600;
+    color: #17324a;
+}
+
+.secondary-controls select {
+    min-width: 14rem;
+    padding: 0.8rem 0.95rem;
+    border-radius: 0.9rem;
+    border: 1px solid rgba(23, 50, 74, 0.16);
+    background: #fff;
+}
+
+.choice-button,
+.primary-button,
+.ghost-button {
+    border-radius: 999px;
+    padding: 0.8rem 1rem;
+    font-weight: 600;
+}
+
+.choice-button,
+.ghost-button {
+    background: #fff;
+    color: #17324a;
+    border: 1px solid rgba(23, 50, 74, 0.16);
+}
+
+.choice-button.selected,
+.primary-button {
+    background: #17324a;
+    color: #fff;
+    border: 1px solid #17324a;
+}
+
+.choice-button:disabled,
+.primary-button:disabled,
+.ghost-button:disabled {
+    opacity: 0.5;
+}
+
+.step-summary {
+    margin: 0.9rem 0 0;
+}
+
+.demo-grid {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.surface-card {
+    padding: 1.25rem;
+}
+
+.map-card :deep(.graph-viewport-shell) {
+    background: linear-gradient(180deg, #f7f2e8 0%, #ece6d8 100%);
+    border-radius: 1rem;
+}
+
+.map-card :deep(.graph-viewport-toolbar),
+.map-card :deep(.graph-viewport-footer) {
+    background: transparent;
+}
+
+.map-card :deep(.graph-viewport-inspector) {
+    display: none;
+}
+
+.map-card :deep(.graph-viewport-footer) {
+    justify-content: flex-start;
+}
+
+.map-card :deep(.graph-viewport-status) {
+    margin-bottom: 0.75rem;
+}
+
+.map-card :deep(.graph-viewport-stage) {
+    min-height: 34rem;
+}
+
+.section-heading {
+    margin-bottom: 1rem;
+}
+
+.section-heading h2,
+.inspector-box h3,
+.trace-columns h3 {
+    margin: 0;
+}
+
+.section-heading p,
+.inspector-box p {
+    margin: 0.4rem 0 0;
+}
+
+.inspector-grid,
+.trace-columns {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.85rem;
+}
+
+.trace-columns {
+    margin-top: 1rem;
+}
+
+.trace-list {
+    margin: 0.75rem 0 0;
+    padding-left: 1.2rem;
+}
+
+.trace-list li {
+    margin-bottom: 0.55rem;
+}
+
+.trace-list strong,
+.inspector-box h3 {
+    display: block;
+}
+
+@media (max-width: 1100px) {
+    .demo-grid,
+    .demo-hero,
+    .inspector-grid,
+    .trace-columns {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 780px) {
+    .control-panel,
+    .surface-card,
+    .demo-hero {
+        padding: 1rem;
+    }
+
+    .secondary-controls {
+        align-items: stretch;
+    }
+
+    .secondary-controls select {
+        min-width: 0;
+        width: 100%;
+    }
+}
