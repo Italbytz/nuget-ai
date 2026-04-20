@@ -25,6 +25,7 @@ The demo area is intended to help package consumers:
 
 ## Current category map
 
+- Decision making: `GridWorld MDP` uses `ValueIteration` and `PolicyIteration` to compare utilities and greedy policies on the classic stochastic grid world.
 - Search: `Romania search` shows how `Italbytz.AI.Search` drives frontier-based state expansion and path evaluation, including randomized start cities.
 - Search: `Weighted Graph` uses `WeightedGraphSearchSimulator` to reveal Dijkstra relaxations, distance updates, and predecessor-tree growth step by step.
 - Agents: `Vacuum World` uses `Italbytz.AI.Agent` base types such as `SimpleAgent` and `AbstractEnvironment` for a randomized visible action loop.
@@ -32,6 +33,7 @@ The demo area is intended to help package consumers:
 - CSP: `N-Queens` uses `Italbytz.AI.CSP` for constraint-aware board evaluation and a package-backed `MinConflictsSolver` reference solution, with randomized starts and progressively revealed traces.
 - Probability: `Burglary Network` uses `Italbytz.AI.Probability` to compare exact and approximate Bayesian inference on the same evidence assignment.
 - Probability: `Umbrella World` uses `Italbytz.AI.Probability.HMM` to compare filtered and smoothed rain beliefs across an observation timeline.
+- NLP: `CYK Parser` uses `Italbytz.AI.NLP` to reveal a probabilistic chart parser over a small CNF grammar.
 
 ## Initial showcase set
 
@@ -46,6 +48,8 @@ Each demo should be paired with a short guide that explains the scenario, the re
 The currently available public demos are:
 
 - `Burglary Network`: `https://italbytz.github.io/nuget-ai/demos/burglary-network`
+- `CYK Parser`: `https://italbytz.github.io/nuget-ai/demos/cyk-parser`
+- `GridWorld MDP`: `https://italbytz.github.io/nuget-ai/demos/gridworld-mdp`
 - `Map Coloring`: `https://italbytz.github.io/nuget-ai/demos/map-coloring`
 - `Romania search`: `https://italbytz.github.io/nuget-ai/demos/romania-search`
 - `Umbrella World`: `https://italbytz.github.io/nuget-ai/demos/umbrella-world`
@@ -56,6 +60,8 @@ The currently available public demos are:
 ## What to look for in each demo
 
 - `Burglary Network`: compare exact and approximate posteriors for `P(Burglary | evidence)` while switching evidence on intermediate nodes and observed calls.
+- `CYK Parser`: inspect which non-terminals survive in each chart cell and how a complete parse emerges only when the start symbol reaches the full sentence span.
+- `GridWorld MDP`: compare utility landscapes and greedy policies from value iteration and policy iteration while inspecting stochastic action outcomes state by state.
 - `Map Coloring`: compare backtracking, heuristic variable ordering, and min-conflicts repair on the same CSP while randomizing tie orders between runs.
 - `Romania search`: compare how the queue discipline changes between breadth-first search, uniform-cost search, and A* while trying different randomized start cities.
 - `Umbrella World`: compare filtered and smoothed `P(Rain)` values to see how later evidence revises earlier hidden-state estimates.
