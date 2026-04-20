@@ -30,4 +30,5 @@ It is intended as a quick bridge between **Artificial Intelligence: A Modern App
 - Burglary network: `https://italbytz.github.io/nuget-ai/demos/burglary-network`
 - Map coloring: `https://italbytz.github.io/nuget-ai/demos/map-coloring`
 - Romania search: `https://italbytz.github.io/nuget-ai/demos/romania-search`
+- Umbrella world: `https://italbytz.github.io/nuget-ai/demos/umbrella-world`
 - Weighted graph: `https://italbytz.github.io/nuget-ai/demos/weighted-graph`
