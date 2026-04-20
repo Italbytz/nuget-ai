@@ -1,0 +1,255 @@
+@page "/cyk-parser"
+@using Italbytz.AI.Demos.Web.Demos
+
+<PageTitle>CYK parser demo</PageTitle>
+
+<section class="demo-hero">
+    <div>
+        <p class="eyebrow">NLP demo</p>
+        <h1>CYK Parser</h1>
+        <p class="hero-copy">Reveal the probabilistic CYK chart cell by cell and inspect which non-terminals survive for each span under a small CNF grammar.</p>
+    </div>
+
+    <div class="stat-grid">
+        <article>
+            <span class="stat-label">Example</span>
+            <strong>@CurrentExample.Name</strong>
+        </article>
+        <article>
+            <span class="stat-label">Sentence</span>
+            <strong>@string.Join(' ', CurrentExample.Words)</strong>
+        </article>
+        <article>
+            <span class="stat-label">Start symbol</span>
+            <strong>@(CurrentExample.Parsable ? CykParserDemoFactory.FormatProbability(CurrentExample.StartProbability) : "no parse")</strong>
+        </article>
+        <article>
+            <span class="stat-label">Visible cell</span>
+            <strong>@VisibleProgressLabel</strong>
+        </article>
+    </div>
+</section>
+
+<section class="control-panel">
+    <div class="button-row">
+        @foreach (var example in _examples)
+        {
+            <button class="@(example.Key == _selectedExampleKey ? "choice-button selected" : "choice-button")"
+                    @onclick="() => SelectExample(example.Key)">
+                @example.Name
+            </button>
+        }
+    </div>
+
+    <div class="secondary-controls">
+        <div class="selection-copy">
+            <p class="selection-summary">@CurrentExample.Summary</p>
+            <p class="selection-summary">The page uses the package-backed <code>CYKParser</code> over the same toy CNF grammar that already appears in the NLP tests.</p>
+        </div>
+
+        <div class="step-buttons">
+            <button class="ghost-button" @onclick="RandomizeExample">Randomize example</button>
+            <button class="ghost-button" @onclick="PreviousStep" disabled="@(_currentStep == 0)">Previous</button>
+            <button class="primary-button" @onclick="NextStep" disabled="@(_currentStep >= CurrentExample.Steps.Count)">Next</button>
+            <button class="ghost-button" @onclick="ShowCompleteRun" disabled="@(_currentStep >= CurrentExample.Steps.Count)">Complete chart</button>
+            <button class="ghost-button" @onclick="Reset">Reset</button>
+        </div>
+    </div>
+
+    <p class="step-summary">@CurrentSummary</p>
+</section>
+
+<section class="demo-grid">
+    <article class="surface-card chart-card">
+        <div class="section-heading">
+            <h2>CYK chart</h2>
+            <p>Cells are filled by increasing span length. Each revealed cell lists the non-terminals that can derive the corresponding substring.</p>
+        </div>
+
+        <div class="chart-shell">
+            @for (var span = CurrentExample.Words.Count; span >= 1; span--)
+            {
+                <div class="chart-row" style="grid-template-columns: repeat(@(CurrentExample.Words.Count - span + 1), minmax(0, 1fr));">
+                    @for (var start = 0; start <= CurrentExample.Words.Count - span; start++)
+                    {
+                        var step = GetStep(span, start);
+                        <article class="@GetCellCssClass(step)">
+                            <span class="cell-label">@step.Label</span>
+                            @if (step.Number <= _currentStep)
+                            {
+                                if (step.Entries.Count == 0)
+                                {
+                                    <strong>∅</strong>
+                                }
+                                else
+                                {
+                                    @foreach (var entry in step.Entries.Take(3))
+                                    {
+                                        <div class="cell-entry">@entry.NonTerminal: @CykParserDemoFactory.FormatProbability(entry.LogProbability)</div>
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                <strong>?</strong>
+                            }
+                        </article>
+                    }
+                </div>
+            }
+        </div>
+
+        <div class="token-row">
+            @foreach (var word in CurrentExample.Words)
+            {
+                <span>@word</span>
+            }
+        </div>
+
+        <div class="inspector-grid">
+            <article class="inspector-box @(CurrentStepModel is null ? string.Empty : "inspector-box-active")">
+                <p class="eyebrow">Current cell</p>
+                <h3>@(CurrentStepModel?.Label ?? "-")</h3>
+                <p>@(CurrentStepModel?.Summary ?? "Advance the parser to inspect the first lexical chart cell.")</p>
+            </article>
+            <article class="inspector-box">
+                <p class="eyebrow">Parse result</p>
+                <h3>@(CurrentExample.Parsable ? "parsable" : "not parsable")</h3>
+                <p>@(CurrentExample.Parsable ? "The start symbol S reaches the full sentence." : "The top chart cell remains empty for the start symbol S.")</p>
+            </article>
+        </div>
+    </article>
+
+    <article class="surface-card inspector-card">
+        <div class="section-heading">
+            <h2>Current entries</h2>
+            <p>The current cell lists all surviving non-terminals with their probabilities converted back from log space.</p>
+        </div>
+
+        @if (CurrentStepModel is null)
+        {
+            <p class="empty-copy">No chart cell revealed yet. Advance the parser to inspect the lexical base case.</p>
+        }
+        else if (CurrentStepModel.Entries.Count == 0)
+        {
+            <p class="empty-copy">This cell stays empty because no grammar rule can derive the current substring.</p>
+        }
+        else
+        {
+            <table>
+                <thead>
+                    <tr>
+                        <th>Non-terminal</th>
+                        <th>Probability</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var entry in CurrentStepModel.Entries)
+                    {
+                        <tr>
+                            <td>@entry.NonTerminal</td>
+                            <td>@CykParserDemoFactory.FormatProbability(entry.LogProbability)</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+
+        <div class="section-heading trace-heading">
+            <h2>Trace</h2>
+            <p>Chart cells are processed from lexical spans to the full sentence.</p>
+        </div>
+
+        <ol class="trace-list step-trace-list">
+            @foreach (var step in VisibleTraceSteps)
+            {
+                <li class="@(step.Number == _currentStep ? "trace-step-active" : string.Empty)">
+                    <strong>@step.Number. span @step.Span</strong>
+                    <span>@step.Summary</span>
+                </li>
+            }
+        </ol>
+    </article>
+</section>
+
+@code {
+    private readonly Random _random = new();
+    private IReadOnlyList<CykExampleDemo> _examples = CykParserDemoFactory.BuildExamples();
+    private string _selectedExampleKey = "Canonical";
+    private int _currentStep;
+
+    private CykExampleDemo CurrentExample => _examples.First(example => example.Key == _selectedExampleKey);
+    private IReadOnlyList<CykChartStep> VisibleTraceSteps => CurrentExample.Steps.Take(_currentStep).ToArray();
+    private CykChartStep? CurrentStepModel => _currentStep > 0 ? CurrentExample.Steps[_currentStep - 1] : null;
+    private string VisibleProgressLabel => $"{_currentStep} / {CurrentExample.Steps.Count}";
+    private string CurrentSummary => _currentStep == 0
+        ? "Choose a sentence and reveal how the CYK chart fills from single tokens to the full sentence."
+        : CurrentStepModel?.Summary ?? string.Empty;
+
+    private void SelectExample(string key)
+    {
+        _selectedExampleKey = key;
+        _currentStep = 0;
+    }
+
+    private void RandomizeExample()
+    {
+        var randomExample = CykParserDemoFactory.CreateRandomExample(_random);
+        _examples = CykParserDemoFactory.BuildExamples();
+        _selectedExampleKey = randomExample.Key;
+        _currentStep = 0;
+    }
+
+    private void PreviousStep()
+    {
+        if (_currentStep > 0)
+        {
+            _currentStep--;
+        }
+    }
+
+    private void NextStep()
+    {
+        if (_currentStep < CurrentExample.Steps.Count)
+        {
+            _currentStep++;
+        }
+    }
+
+    private void ShowCompleteRun()
+    {
+        _currentStep = CurrentExample.Steps.Count;
+    }
+
+    private void Reset()
+    {
+        _currentStep = 0;
+    }
+
+    private CykChartStep GetStep(int span, int start)
+    {
+        return CurrentExample.Steps.First(step => step.Span == span && step.Start == start);
+    }
+
+    private string GetCellCssClass(CykChartStep step)
+    {
+        var cssClass = "chart-cell";
+
+        if (step.Number <= _currentStep)
+        {
+            cssClass += " chart-cell-visible";
+        }
+
+        if (step.Number == _currentStep)
+        {
+            cssClass += " chart-cell-active";
+        }
+
+        if (step.Entries.Count == 0)
+        {
+            cssClass += " chart-cell-empty";
+        }
+
+        return cssClass;
+    }
+}
