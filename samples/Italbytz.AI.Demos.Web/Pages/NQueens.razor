@@ -45,9 +45,11 @@
         <div class="selection-copy">
             <p class="selection-summary">@CurrentAlgorithm.Summary</p>
             <p class="selection-summary">Package-backed baseline: <code>Italbytz.AI.CSP.MinConflictsSolver</code> on the same 8-queens CSP yields @NQueensDemoFactory.PackageReferenceSummary.</p>
+            <p class="selection-summary">Current start: @InitialBoardLabel</p>
         </div>
 
         <div class="step-buttons">
+            <button class="ghost-button" @onclick="RandomizeBoards">Randomize setup</button>
             <button class="ghost-button" @onclick="PreviousStep" disabled="@(_currentStep == 0)">Previous</button>
             <button class="primary-button" @onclick="NextStep" disabled="@(_currentStep >= CurrentAlgorithm.Steps.Count)">Next</button>
             <button class="ghost-button" @onclick="ShowCompleteRun" disabled="@(_currentStep >= CurrentAlgorithm.Steps.Count)">Complete run</button>
@@ -99,29 +101,37 @@
     <article class="surface-card inspector-card">
         <div class="section-heading">
             <h2>Trace</h2>
-            <p>Switch algorithms and inspect how each search strategy changes assignments and conflicts over time.</p>
+            <p>Switch algorithms and reveal each search trace incrementally instead of showing the whole run immediately.</p>
         </div>
 
-        <ol class="trace-list step-trace-list">
-            @foreach (var step in CurrentAlgorithm.Steps)
-            {
-                <li class="@(step.Number == _currentStep ? "trace-step-active" : string.Empty)">
-                    <strong>@step.Number. @step.Summary</strong>
-                    <span>@step.Description</span>
-                    <span class="trace-metric">@step.Metric</span>
-                </li>
-            }
-        </ol>
+        @if (VisibleTraceSteps.Count == 0)
+        {
+            <p class="empty-copy">No step revealed yet. Advance the algorithm to add the next trace entry.</p>
+        }
+        else
+        {
+            <ol class="trace-list step-trace-list">
+                @foreach (var step in VisibleTraceSteps)
+                {
+                    <li class="@(step.Number == _currentStep ? "trace-step-active" : string.Empty)">
+                        <strong>@step.Number. @step.Summary</strong>
+                        <span>@step.Description</span>
+                        <span class="trace-metric">@step.Metric</span>
+                    </li>
+                }
+            </ol>
+        }
     </article>
 </section>
 
 @code {
-    private static readonly IReadOnlyList<NQueensAlgorithmDemo> _algorithms = NQueensDemoFactory.BuildAll();
-
-    private string _selectedAlgorithmKey = _algorithms[0].Key;
+    private readonly Random _random = new();
+    private IReadOnlyList<NQueensAlgorithmDemo> _algorithms = NQueensDemoFactory.BuildAll();
+    private string _selectedAlgorithmKey = "HillClimbing";
     private int _currentStep;
 
     private NQueensAlgorithmDemo CurrentAlgorithm => _algorithms.First(algorithm => algorithm.Key == _selectedAlgorithmKey);
+    private IReadOnlyList<NQueensStep> VisibleTraceSteps => CurrentAlgorithm.Steps.Take(_currentStep).ToArray();
 
     private NQueensStep? CurrentStepModel => _currentStep > 0 && CurrentAlgorithm.Steps.Count > 0
         ? CurrentAlgorithm.Steps[Math.Min(_currentStep - 1, CurrentAlgorithm.Steps.Count - 1)]
@@ -132,6 +142,7 @@
     private string CurrentActionTitle => CurrentStepModel?.Summary ?? "Initial board";
     private string CurrentMetric => CurrentStepModel?.Metric ?? $"fitness={NQueensDemoFactory.FormatFitnessForBoard(CurrentBoardRows)}";
     private string CurrentMetricShort => CurrentMetric.Replace(", ", " | ", StringComparison.Ordinal);
+    private string InitialBoardLabel => string.Join(", ", CurrentAlgorithm.InitialQueenRows.Select((row, column) => $"Q{column + 1}->{row + 1}"));
     private string VisibleProgressLabel => CurrentAlgorithm.Steps.Count == 0 ? "0 / 0" : $"{_currentStep} / {CurrentAlgorithm.Steps.Count}";
     private string CurrentSummary => _currentStep == 0
         ? "Choose an algorithm and advance one step at a time to compare local and evolutionary search behavior."
@@ -162,6 +173,12 @@
     private void ShowCompleteRun()
     {
         _currentStep = CurrentAlgorithm.Steps.Count;
+    }
+
+    private void RandomizeBoards()
+    {
+        _algorithms = NQueensDemoFactory.BuildAll(NQueensDemoFactory.CreateRandomConfiguration(CurrentAlgorithm.BoardSize, _random));
+        _currentStep = 0;
     }
 
     private void Reset()
