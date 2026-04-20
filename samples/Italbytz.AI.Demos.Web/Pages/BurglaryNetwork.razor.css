@@ -1,0 +1,331 @@
+.demo-hero,
+.control-panel,
+.surface-card {
+    background: rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(23, 50, 74, 0.1);
+    border-radius: 1.4rem;
+    box-shadow: 0 22px 56px rgba(23, 50, 74, 0.08);
+}
+
+.demo-hero {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: 1rem;
+    padding: 1.4rem;
+}
+
+.demo-hero h1,
+.section-heading h2,
+.inspector-box h3,
+.probability-card h3,
+.cpt-card h3 {
+    color: #17324a;
+}
+
+.hero-copy,
+.section-heading p,
+.step-summary,
+.selection-summary,
+.inspector-box p,
+.empty-copy,
+.probability-card p,
+.cpt-card td,
+.cpt-card th {
+    color: #4d5a66;
+}
+
+.stat-grid,
+.inspector-grid,
+.demo-grid,
+.probability-results,
+.cpt-list {
+    display: grid;
+    gap: 0.85rem;
+}
+
+.stat-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.stat-grid article,
+.inspector-box,
+.probability-card,
+.cpt-card {
+    padding: 1rem;
+    border-radius: 1rem;
+    background: #f7f2e8;
+    border: 1px solid rgba(23, 50, 74, 0.08);
+}
+
+.stat-label {
+    display: block;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: #6c766f;
+    margin-bottom: 0.2rem;
+}
+
+.control-panel {
+    margin-top: 1rem;
+    padding: 1rem 1.2rem;
+}
+
+.secondary-controls,
+.step-buttons,
+.probability-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.secondary-controls {
+    justify-content: space-between;
+    margin-top: 0.2rem;
+    align-items: start;
+}
+
+.selection-summary {
+    margin: 0;
+    max-width: 42rem;
+}
+
+.selection-copy {
+    display: grid;
+    gap: 0.35rem;
+    max-width: 42rem;
+}
+
+.ghost-button {
+    border-radius: 999px;
+    padding: 0.8rem 1rem;
+    font-weight: 600;
+    background: #fff;
+    color: #17324a;
+    border: 1px solid rgba(23, 50, 74, 0.16);
+}
+
+.step-summary {
+    margin: 0.9rem 0 0;
+}
+
+.evidence-controls {
+    gap: 1rem;
+}
+
+.evidence-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(10rem, 1fr));
+    gap: 0.75rem;
+}
+
+.evidence-grid label {
+    display: grid;
+    gap: 0.3rem;
+    color: #17324a;
+    font-weight: 600;
+}
+
+.evidence-grid select {
+    border-radius: 0.8rem;
+    border: 1px solid rgba(23, 50, 74, 0.18);
+    padding: 0.7rem 0.8rem;
+    background: #fff;
+    color: #17324a;
+}
+
+.demo-grid {
+    grid-template-columns: 1.05fr 1fr;
+    margin-top: 1rem;
+}
+
+.surface-card {
+    padding: 1.25rem;
+}
+
+.network-card {
+    background: rgba(246, 243, 236, 0.94);
+}
+
+.network-layout {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-rows: repeat(3, minmax(5.5rem, auto));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.network-node {
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.25rem;
+    padding: 0.9rem;
+    border-radius: 1rem;
+    border: 1px solid rgba(23, 50, 74, 0.1);
+    background: #f7f2e8;
+}
+
+.network-node strong {
+    color: #17324a;
+}
+
+.node-burglary {
+    grid-column: 1;
+    grid-row: 1;
+}
+
+.node-earthquake {
+    grid-column: 3;
+    grid-row: 1;
+}
+
+.node-alarm {
+    grid-column: 2;
+    grid-row: 2;
+}
+
+.node-john {
+    grid-column: 1;
+    grid-row: 3;
+}
+
+.node-mary {
+    grid-column: 3;
+    grid-row: 3;
+}
+
+.node-state-true {
+    background: #dcebd8;
+    color: #24552d;
+}
+
+.node-state-false {
+    background: #f5d9d4;
+    color: #7f2d23;
+}
+
+.node-state-unknown {
+    background: #ece4d7;
+}
+
+.network-edge {
+    position: absolute;
+    border-top: 3px solid rgba(23, 50, 74, 0.24);
+    transform-origin: left center;
+}
+
+.edge-burglary-alarm {
+    left: 20%;
+    top: 27%;
+    width: 28%;
+    transform: rotate(31deg);
+}
+
+.edge-earthquake-alarm {
+    right: 20%;
+    top: 27%;
+    width: 28%;
+    transform: rotate(-31deg);
+}
+
+.edge-alarm-john {
+    left: 24%;
+    top: 63%;
+    width: 24%;
+    transform: rotate(145deg);
+}
+
+.edge-alarm-mary {
+    right: 24%;
+    top: 63%;
+    width: 24%;
+    transform: rotate(35deg);
+}
+
+.inspector-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin-top: 1rem;
+}
+
+.inspector-box-active {
+    background: #17324a;
+    color: #fff;
+}
+
+.inspector-box-active p,
+.inspector-box-active h3,
+.inspector-box-active .eyebrow {
+    color: inherit;
+}
+
+.probability-results {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.probability-card-exact {
+    background: #e8eef5;
+}
+
+.probability-card-approx {
+    background: #f5eadd;
+}
+
+.cpt-heading {
+    margin-top: 1rem;
+}
+
+.cpt-list {
+    margin-top: 0.8rem;
+}
+
+.cpt-card table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 0.6rem;
+}
+
+.cpt-card th,
+.cpt-card td {
+    text-align: left;
+    padding: 0.45rem 0.5rem;
+    border-bottom: 1px solid rgba(23, 50, 74, 0.1);
+}
+
+@media (max-width: 1100px) {
+    .demo-grid,
+    .demo-hero,
+    .stat-grid,
+    .inspector-grid,
+    .probability-results {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 780px) {
+    .control-panel,
+    .surface-card,
+    .demo-hero {
+        padding: 1rem;
+    }
+
+    .evidence-grid,
+    .network-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .node-burglary,
+    .node-earthquake,
+    .node-alarm,
+    .node-john,
+    .node-mary {
+        grid-column: auto;
+        grid-row: auto;
+    }
+
+    .network-edge {
+        display: none;
+    }
+}
