@@ -1,0 +1,16 @@
+﻿<Router AppAssembly="@typeof(App).Assembly">
+    <Found Context="routeData">
+        <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />
+        <FocusOnNavigate RouteData="@routeData" Selector="h1" />
+    </Found>
+    <NotFound>
+        <PageTitle>Demo not found</PageTitle>
+        <LayoutView Layout="@typeof(MainLayout)">
+            <section class="empty-state">
+                <p class="eyebrow">nuget-ai demos</p>
+                <h1>Demo page not found</h1>
+                <p>This route does not exist in the current public demo host.</p>
+            </section>
+        </LayoutView>
+    </NotFound>
+</Router>
