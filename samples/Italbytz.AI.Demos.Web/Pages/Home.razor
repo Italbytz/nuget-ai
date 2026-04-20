@@ -1,0 +1,41 @@
+﻿@page "/"
+
+<PageTitle>nuget-ai demos</PageTitle>
+
+<section class="hero-panel">
+	<div>
+		<p class="eyebrow">Public showcase area</p>
+		<h1>Interactive AIMA demos for nuget-ai</h1>
+		<p class="hero-copy">This host turns selected <code>Italbytz.AI.*</code> packages into public, browser-based demonstrations. The current slice is organized by category: search via <code>Italbytz.AI.Search</code>, agents via <code>Italbytz.AI.Agent</code>, and CSP via <code>Italbytz.AI.CSP</code>.</p>
+	</div>
+
+	<div class="hero-actions">
+		<a class="primary-link" href="romania-search">Open Romania search</a>
+		<a class="ghost-link" href="vacuum-world">Open Vacuum World</a>
+		<a class="ghost-link" href="n-queens">Open N-Queens</a>
+		<a class="ghost-link" href="https://italbytz.github.io/nuget-ai/docs/interactive-demos.html" target="_blank" rel="noreferrer">Read demo guide</a>
+	</div>
+</section>
+
+<section class="overview-grid">
+	<article class="demo-card featured-card">
+		<p class="eyebrow">Search</p>
+		<h2>Romania search</h2>
+		<p>Compare breadth-first search, uniform-cost search, and A* on the standard AIMA Romania map with visible frontier, explored states, priorities, and path progression. Built around <code>Italbytz.AI.Search</code>.</p>
+		<a class="primary-link" href="romania-search">Launch demo</a>
+	</article>
+
+	<article class="demo-card accent-card">
+		<p class="eyebrow">Agents</p>
+		<h2>Vacuum World</h2>
+		<p>Follow the reflex and model-based reflex agents through the two-room environment and compare their action traces and performance measure. Built on <code>Italbytz.AI.Agent</code>.</p>
+		<a class="primary-link" href="vacuum-world">Launch demo</a>
+	</article>
+
+	<article class="demo-card muted-card">
+		<p class="eyebrow">CSP</p>
+		<h2>N-Queens</h2>
+		<p>Compare hill climbing, simulated annealing, and a genetic algorithm on the same 8-queens board with visible conflicts and step-by-step metrics. Constraint evaluation is tied to <code>Italbytz.AI.CSP</code>.</p>
+		<a class="primary-link" href="n-queens">Launch demo</a>
+	</article>
+</section>
