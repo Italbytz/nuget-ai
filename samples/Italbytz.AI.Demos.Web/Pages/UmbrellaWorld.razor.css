@@ -1,0 +1,264 @@
+.demo-hero,
+.control-panel,
+.surface-card {
+    background: rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(23, 50, 74, 0.1);
+    border-radius: 1.4rem;
+    box-shadow: 0 22px 56px rgba(23, 50, 74, 0.08);
+}
+
+.demo-hero {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: 1rem;
+    padding: 1.4rem;
+}
+
+.demo-hero h1,
+.section-heading h2,
+.timeline-step h3,
+.inspector-box h3 {
+    color: #17324a;
+}
+
+.hero-copy,
+.section-heading p,
+.step-summary,
+.selection-summary,
+.timeline-step p,
+.inspector-box p,
+table td,
+table th,
+.probability-row span {
+    color: #4d5a66;
+}
+
+.stat-grid,
+.inspector-grid,
+.demo-grid,
+.timeline-grid,
+.probability-list {
+    display: grid;
+    gap: 0.85rem;
+}
+
+.stat-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.stat-grid article,
+.timeline-step,
+.inspector-box,
+.probability-card {
+    padding: 1rem;
+    border-radius: 1rem;
+    background: #f7f2e8;
+    border: 1px solid rgba(23, 50, 74, 0.08);
+}
+
+.stat-label {
+    display: block;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: #6c766f;
+    margin-bottom: 0.2rem;
+}
+
+.control-panel {
+    margin-top: 1rem;
+    padding: 1rem 1.2rem;
+}
+
+.secondary-controls,
+.step-buttons,
+.probability-header,
+.probability-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.secondary-controls {
+    justify-content: space-between;
+    align-items: center;
+}
+
+.selection-copy {
+    display: grid;
+    gap: 0.35rem;
+    max-width: 44rem;
+}
+
+.selection-summary {
+    margin: 0;
+}
+
+.ghost-button,
+.primary-button {
+    border-radius: 999px;
+    padding: 0.8rem 1rem;
+    font-weight: 600;
+}
+
+.ghost-button {
+    background: #fff;
+    color: #17324a;
+    border: 1px solid rgba(23, 50, 74, 0.16);
+}
+
+.primary-button {
+    background: #17324a;
+    color: #fff;
+    border: 1px solid #17324a;
+}
+
+.step-summary {
+    margin: 0.9rem 0 0;
+}
+
+.demo-grid {
+    grid-template-columns: 1.05fr 1fr;
+    margin-top: 1rem;
+}
+
+.surface-card {
+    padding: 1.25rem;
+}
+
+.timeline-card {
+    background: rgba(246, 243, 236, 0.94);
+}
+
+.timeline-grid {
+    grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+    margin-top: 1rem;
+}
+
+.timeline-step {
+    opacity: 0.5;
+}
+
+.timeline-step-visible {
+    opacity: 1;
+}
+
+.timeline-step-active {
+    box-shadow: inset 0 0 0 3px rgba(23, 50, 74, 0.16);
+}
+
+.timeline-step-umbrella {
+    background: #d8e4f2;
+}
+
+.inspector-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin-top: 1rem;
+}
+
+.inspector-box-active {
+    background: #17324a;
+    color: #fff;
+}
+
+.inspector-box-active p,
+.inspector-box-active h3,
+.inspector-box-active .eyebrow {
+    color: inherit;
+}
+
+.probability-list {
+    margin-top: 0.8rem;
+}
+
+.probability-card-active {
+    border-color: rgba(23, 50, 74, 0.22);
+}
+
+.probability-header {
+    justify-content: space-between;
+    align-items: baseline;
+}
+
+.probability-row {
+    align-items: center;
+    margin-top: 0.5rem;
+}
+
+.probability-row span {
+    min-width: 5rem;
+}
+
+.probability-row strong {
+    min-width: 4rem;
+    text-align: right;
+    color: #17324a;
+}
+
+.probability-bar-shell {
+    flex: 1;
+    min-width: 10rem;
+    height: 0.85rem;
+    border-radius: 999px;
+    background: rgba(23, 50, 74, 0.08);
+    overflow: hidden;
+}
+
+.probability-bar {
+    height: 100%;
+    border-radius: 999px;
+}
+
+.filtered-bar {
+    background: #c95e39;
+}
+
+.smoothed-bar {
+    background: #0b5c7a;
+}
+
+.matrix-heading {
+    margin-top: 1rem;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 0.8rem;
+}
+
+th,
+td {
+    text-align: left;
+    padding: 0.45rem 0.5rem;
+    border-bottom: 1px solid rgba(23, 50, 74, 0.1);
+}
+
+.empty-copy {
+    margin: 0.8rem 0 0;
+    padding: 0.9rem 1rem;
+    border-radius: 0.9rem;
+    background: #f7f2e8;
+    border: 1px dashed rgba(23, 50, 74, 0.16);
+}
+
+@media (max-width: 1100px) {
+    .demo-grid,
+    .demo-hero,
+    .stat-grid,
+    .inspector-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 780px) {
+    .control-panel,
+    .surface-card,
+    .demo-hero {
+        padding: 1rem;
+    }
+
+    .secondary-controls {
+        align-items: stretch;
+    }
+}
