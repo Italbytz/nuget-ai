@@ -47,6 +47,8 @@ If the URL still returns `404`, wait until the `CI` workflow on `main` has compl
 The GitHub Pages site also exposes a public demo host under `/demos/`.
 
 - Probability: `Burglary Network` uses `Italbytz.AI.Probability` to compare exact and approximate Bayesian inference for the classic burglary-alarm network on the same evidence assignment.
+- NLP: `CYK Parser` uses `Italbytz.AI.NLP` to reveal a probabilistic chart parser over a small CNF grammar.
+- Decision making: `GridWorld MDP` uses `Italbytz.AI.Probability.MDP` to compare value iteration and policy iteration on the classic stochastic grid world.
 - Probability: `Umbrella World` uses `Italbytz.AI.Probability.HMM` to compare filtering and smoothing on the classic temporal umbrella sequence.
 - Search: `Weighted Graph` uses `Italbytz.AI.Search.Demos.WeightedGraph` to reveal Dijkstra relaxations, frontier updates, and the shortest-path tree step by step.
 - Search: `Romania search` uses `Italbytz.AI.Search` together with the `nuget-graph` viewport for visible frontier and path state, including randomized start cities.
@@ -57,6 +59,8 @@ The GitHub Pages site also exposes a public demo host under `/demos/`.
 Public demo routes:
 
 - `https://italbytz.github.io/nuget-ai/demos/burglary-network`
+- `https://italbytz.github.io/nuget-ai/demos/cyk-parser`
+- `https://italbytz.github.io/nuget-ai/demos/gridworld-mdp`
 - `https://italbytz.github.io/nuget-ai/demos/map-coloring`
 - `https://italbytz.github.io/nuget-ai/demos/romania-search`
 - `https://italbytz.github.io/nuget-ai/demos/umbrella-world`
