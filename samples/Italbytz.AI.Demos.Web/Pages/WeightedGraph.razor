@@ -1,0 +1,290 @@
+@page "/weighted-graph"
+@using Italbytz.AI.Demos.Web.Demos
+@using Italbytz.AI.Search.Demos.WeightedGraph
+
+<PageTitle>Weighted graph demo</PageTitle>
+
+<section class="demo-hero">
+    <div>
+        <p class="eyebrow">Search demo</p>
+        <h1>Weighted Graph</h1>
+        <p class="hero-copy">Step through a Dijkstra-style uniform-cost search on a small weighted graph and inspect every relaxation, frontier reorder, and shortest-path update.</p>
+    </div>
+
+    <div class="stat-grid">
+        <article>
+            <span class="stat-label">Scenario</span>
+            <strong>@_scenario.Name</strong>
+        </article>
+        <article>
+            <span class="stat-label">Start node</span>
+            <strong>@_scenario.StartNode</strong>
+        </article>
+        <article>
+            <span class="stat-label">Expanded node</span>
+            <strong>@(CurrentStep?.ExpandedNode.State ?? _scenario.StartNode)</strong>
+        </article>
+        <article>
+            <span class="stat-label">Visible step</span>
+            <strong>@VisibleProgressLabel</strong>
+        </article>
+    </div>
+</section>
+
+<section class="control-panel">
+    <div class="secondary-controls">
+        <div class="selection-copy">
+            <p class="selection-summary">@_scenario.Summary</p>
+            <p class="selection-summary">This page is driven by the package-level <code>WeightedGraphSearchSimulator</code> and mirrors the queue discipline of uniform-cost search / Dijkstra.</p>
+        </div>
+
+        <div class="step-buttons">
+            <button class="ghost-button" @onclick="RandomizeScenario">Randomize setup</button>
+            <button class="ghost-button" @onclick="PreviousStep" disabled="@(_currentStep == 0)">Previous</button>
+            <button class="primary-button" @onclick="NextStep" disabled="@(_currentStep >= _result.Steps.Count)">Next</button>
+            <button class="ghost-button" @onclick="ShowCompleteRun" disabled="@(_currentStep >= _result.Steps.Count)">Complete run</button>
+            <button class="ghost-button" @onclick="Reset">Reset</button>
+        </div>
+    </div>
+
+    <p class="step-summary">@CurrentSummary</p>
+</section>
+
+<section class="demo-grid">
+    <article class="surface-card graph-card">
+        <div class="section-heading">
+            <h2>Graph</h2>
+            <p>Nodes display their current best-known distance. Accepted relaxations and the current shortest-path tree are highlighted as you advance.</p>
+        </div>
+
+        <div class="graph-shell">
+            <svg viewBox="0 0 640 360" class="graph-svg" aria-label="Weighted graph">
+                @foreach (var edge in _scenario.Edges)
+                {
+                    <line x1="@NodePositions[edge.FromNode].X" y1="@NodePositions[edge.FromNode].Y" x2="@NodePositions[edge.ToNode].X" y2="@NodePositions[edge.ToNode].Y" class="@GetEdgeClass(edge)" />
+                    <foreignObject x="@(((NodePositions[edge.FromNode].X + NodePositions[edge.ToNode].X) / 2) - 20)" y="@(((NodePositions[edge.FromNode].Y + NodePositions[edge.ToNode].Y) / 2) - 20)" width="40" height="24">
+                        <div class="edge-weight-label">@edge.Cost</div>
+                    </foreignObject>
+                }
+
+                @foreach (var vertex in _scenario.Vertices)
+                {
+                    <circle cx="@NodePositions[vertex].X" cy="@NodePositions[vertex].Y" r="28" class="@GetNodeClass(vertex)" />
+                    <foreignObject x="@(NodePositions[vertex].X - 26)" y="@(NodePositions[vertex].Y - 22)" width="52" height="20">
+                        <div class="node-label-text">@vertex</div>
+                    </foreignObject>
+                    <foreignObject x="@(NodePositions[vertex].X - 28)" y="@(NodePositions[vertex].Y + 2)" width="56" height="18">
+                        <div class="node-distance-text">@GetDistanceLabel(vertex)</div>
+                    </foreignObject>
+                }
+            </svg>
+        </div>
+
+        <div class="inspector-grid">
+            <article class="inspector-box @(CurrentStep is null ? string.Empty : "inspector-box-active")">
+                <p class="eyebrow">Expanded node</p>
+                <h3>@(CurrentStep?.ExpandedNode.State ?? _scenario.StartNode)</h3>
+                <p>distance = @(CurrentStep is null ? "0" : CurrentStep.ExpandedNode.PathCost.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture))</p>
+            </article>
+            <article class="inspector-box @(CurrentRelaxations.Any(relaxation => relaxation.Accepted) ? string.Empty : "inspector-box-warning")">
+                <p class="eyebrow">Accepted relaxations</p>
+                <h3>@CurrentRelaxations.Count(relaxation => relaxation.Accepted)</h3>
+                <p>@(CurrentRelaxations.Count == 0 ? "No relaxation yet." : "Check the table on the right for candidate distances.")</p>
+            </article>
+        </div>
+    </article>
+
+    <article class="surface-card inspector-card">
+        <div class="section-heading">
+            <h2>Trace and distances</h2>
+            <p>Reveal the run step by step and inspect both the queue state and the current shortest-path table.</p>
+        </div>
+
+        @if (VisibleSteps.Count == 0)
+        {
+            <p class="empty-copy">No step revealed yet. Advance the search to expand the first node.</p>
+        }
+        else
+        {
+            <ol class="trace-list step-trace-list">
+                @foreach (var step in VisibleSteps)
+                {
+                    <li class="@(step.StepNumber == _currentStep ? "trace-step-active" : string.Empty)">
+                        <strong>@step.StepNumber. Expand @step.ExpandedNode.State</strong>
+                        <span>Frontier: @(step.Frontier.Count == 0 ? "empty" : string.Join(", ", step.Frontier.Select(node => $"{node.State}({node.Priority:0.##})")))</span>
+                    </li>
+                }
+            </ol>
+        }
+
+        <div class="trace-columns">
+            <div>
+                <h3>Distances</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Node</th>
+                            <th>Distance</th>
+                            <th>Prev</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var distance in CurrentDistances)
+                        {
+                            <tr class="@(string.Equals(distance.Node, CurrentStep?.ExpandedNode.State, StringComparison.Ordinal) ? "distance-row-active" : string.Empty)">
+                                <td>@distance.Node</td>
+                                <td>@WeightedGraphDemoFactory.FormatDistance(distance.Distance)</td>
+                                <td>@(distance.PreviousNode ?? "-")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <div>
+                <h3>Relaxations</h3>
+                @if (CurrentRelaxations.Count == 0)
+                {
+                    <p class="empty-copy">No relaxation visible at the current step.</p>
+                }
+                else
+                {
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Edge</th>
+                                <th>Candidate</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var relaxation in CurrentRelaxations)
+                            {
+                                <tr class="@(relaxation.Accepted ? "relaxation-accepted" : "relaxation-rejected")">
+                                    <td>@relaxation.FromNode -> @relaxation.ToNode</td>
+                                    <td>@relaxation.CandidateDistance.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)</td>
+                                    <td>@(relaxation.Accepted ? "accepted" : "rejected")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+            </div>
+        </div>
+    </article>
+</section>
+
+@code {
+    private static readonly Dictionary<string, (double X, double Y)> NodePositions = new(StringComparer.Ordinal)
+    {
+        ["A"] = (90, 70),
+        ["B"] = (255, 70),
+        ["C"] = (170, 180),
+        ["D"] = (385, 165),
+        ["E"] = (520, 80),
+        ["F"] = (540, 250)
+    };
+
+    private readonly Random _random = new();
+    private WeightedGraphScenario _scenario = WeightedGraphDemoFactory.BuildScenarios()[0];
+    private WeightedGraphSearchResult _result = new WeightedGraphSearchSimulator().SimulateDijkstra(
+        WeightedGraphDemoFactory.BuildScenarios()[0].StartNode,
+        WeightedGraphDemoFactory.BuildScenarios()[0].Vertices,
+        WeightedGraphDemoFactory.BuildScenarios()[0].Edges);
+    private int _currentStep;
+
+    private IReadOnlyList<WeightedGraphSearchStep> VisibleSteps => _result.Steps.Take(_currentStep).ToArray();
+    private WeightedGraphSearchStep? CurrentStep => _currentStep > 0 && _result.Steps.Count > 0 ? _result.Steps[_currentStep - 1] : null;
+    private IReadOnlyList<WeightedGraphDistanceState> CurrentDistances => CurrentStep?.Distances ?? _result.Distances;
+    private IReadOnlyList<WeightedGraphRelaxation> CurrentRelaxations => CurrentStep?.Relaxations ?? [];
+    private string VisibleProgressLabel => _result.Steps.Count == 0 ? "0 / 0" : $"{_currentStep} / {_result.Steps.Count}";
+    private string CurrentSummary => _currentStep == 0
+        ? "Advance the search to inspect how Dijkstra relaxes outgoing edges and reorders the frontier."
+        : $"Step {_currentStep}: expand {CurrentStep?.ExpandedNode.State} and inspect accepted versus rejected relaxations.";
+
+    private void RandomizeScenario()
+    {
+        _scenario = WeightedGraphDemoFactory.CreateRandomScenario(_random);
+        _result = new WeightedGraphSearchSimulator().SimulateDijkstra(_scenario.StartNode, _scenario.Vertices, _scenario.Edges);
+        _currentStep = 0;
+    }
+
+    private void PreviousStep()
+    {
+        if (_currentStep > 0)
+        {
+            _currentStep--;
+        }
+    }
+
+    private void NextStep()
+    {
+        if (_currentStep < _result.Steps.Count)
+        {
+            _currentStep++;
+        }
+    }
+
+    private void ShowCompleteRun()
+    {
+        _currentStep = _result.Steps.Count;
+    }
+
+    private void Reset()
+    {
+        _currentStep = 0;
+    }
+
+    private string GetDistanceLabel(string vertex)
+    {
+        return WeightedGraphDemoFactory.FormatDistance(CurrentDistances.FirstOrDefault(distance => string.Equals(distance.Node, vertex, StringComparison.Ordinal))?.Distance);
+    }
+
+    private string GetNodeClass(string vertex)
+    {
+        var cssClass = "graph-node";
+
+        if (string.Equals(vertex, _scenario.StartNode, StringComparison.Ordinal))
+        {
+            cssClass += " graph-node-start";
+        }
+
+        if (string.Equals(vertex, CurrentStep?.ExpandedNode.State, StringComparison.Ordinal))
+        {
+            cssClass += " graph-node-current";
+        }
+
+        if (CurrentStep?.Frontier.Any(node => string.Equals(node.State, vertex, StringComparison.Ordinal)) == true)
+        {
+            cssClass += " graph-node-frontier";
+        }
+
+        if (CurrentDistances.Any(distance => string.Equals(distance.Node, vertex, StringComparison.Ordinal) && distance.Distance.HasValue))
+        {
+            cssClass += " graph-node-reached";
+        }
+
+        return cssClass;
+    }
+
+    private string GetEdgeClass(WeightedGraphEdge edge)
+    {
+        var cssClass = "graph-edge";
+        var previous = CurrentDistances.FirstOrDefault(distance => string.Equals(distance.Node, edge.ToNode, StringComparison.Ordinal))?.PreviousNode;
+        var reversePrevious = CurrentDistances.FirstOrDefault(distance => string.Equals(distance.Node, edge.FromNode, StringComparison.Ordinal))?.PreviousNode;
+
+        if (string.Equals(previous, edge.FromNode, StringComparison.Ordinal) || string.Equals(reversePrevious, edge.ToNode, StringComparison.Ordinal))
+        {
+            cssClass += " graph-edge-tree";
+        }
+
+        if (CurrentRelaxations.Any(relaxation => relaxation.Accepted &&
+            ((string.Equals(relaxation.FromNode, edge.FromNode, StringComparison.Ordinal) && string.Equals(relaxation.ToNode, edge.ToNode, StringComparison.Ordinal))
+            || (string.Equals(relaxation.FromNode, edge.ToNode, StringComparison.Ordinal) && string.Equals(relaxation.ToNode, edge.FromNode, StringComparison.Ordinal)))))
+        {
+            cssClass += " graph-edge-active";
+        }
+
+        return cssClass;
+    }
+}
