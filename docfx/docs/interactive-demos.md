@@ -25,9 +25,9 @@ The demo area is intended to help package consumers:
 
 ## Current category map
 
-- Search: `Romania search` shows how `Italbytz.AI.Search` drives frontier-based state expansion and path evaluation.
-- Agents: `Vacuum World` uses `Italbytz.AI.Agent` base types such as `SimpleAgent` and `AbstractEnvironment` for the visible action loop.
-- CSP: `N-Queens` uses `Italbytz.AI.CSP` for constraint-aware board evaluation and a package-backed `MinConflictsSolver` reference solution.
+- Search: `Romania search` shows how `Italbytz.AI.Search` drives frontier-based state expansion and path evaluation, including randomized start cities.
+- Agents: `Vacuum World` uses `Italbytz.AI.Agent` base types such as `SimpleAgent` and `AbstractEnvironment` for a randomized visible action loop.
+- CSP: `N-Queens` uses `Italbytz.AI.CSP` for constraint-aware board evaluation and a package-backed `MinConflictsSolver` reference solution, with randomized starts and progressively revealed traces.
 
 ## Initial showcase set
 
@@ -47,9 +47,9 @@ The currently available public demos are:
 
 ## What to look for in each demo
 
-- `Romania search`: compare how the queue discipline changes between breadth-first search, uniform-cost search, and A*.
-- `Vacuum World`: compare reactive behavior versus model-based stopping in the same two-room environment.
-- `N-Queens`: compare local and evolutionary search traces while checking conflicts against a CSP-backed baseline.
+- `Romania search`: compare how the queue discipline changes between breadth-first search, uniform-cost search, and A* while trying different randomized start cities.
+- `Vacuum World`: compare reactive behavior versus model-based stopping in the same two-room environment while revealing the action trace one step at a time.
+- `N-Queens`: compare local and evolutionary search traces while checking conflicts against a CSP-backed baseline and revealing each run progressively.
 
 ## Site model
 
