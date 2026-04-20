@@ -24,3 +24,7 @@ It is intended as a quick bridge between **Artificial Intelligence: A Modern App
 - The original documentation pointed to separate `Ports` and `Adapters` repositories. The same content is now grouped by **domain** under `Italbytz.AI.*`.
 - The official `aimacode` repositories (`aima-csharp`, `aima-python`, `aima-java`) remain useful references when you want broader textbook coverage.
 - The current repo focuses on the slices that were actively migrated and verified during the refactoring wave.
+
+## Public interactive demos
+
+- Romania search: `https://italbytz.github.io/nuget-ai/demos/romania-search`
