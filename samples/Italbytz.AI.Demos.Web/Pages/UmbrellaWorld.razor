@@ -1,0 +1,229 @@
+@page "/umbrella-world"
+@using Italbytz.AI.Demos.Web.Demos
+
+<PageTitle>Umbrella World demo</PageTitle>
+
+<section class="demo-hero">
+    <div>
+        <p class="eyebrow">Probability demo</p>
+        <h1>Umbrella World</h1>
+        <p class="hero-copy">Inspect Hidden-Markov smoothing on the classic umbrella world and compare what the model believes after each observation versus after seeing the full sequence.</p>
+    </div>
+
+    <div class="stat-grid">
+        <article>
+            <span class="stat-label">Sequence</span>
+            <strong>@_run.Name</strong>
+        </article>
+        <article>
+            <span class="stat-label">Visible day</span>
+            <strong>@VisibleProgressLabel</strong>
+        </article>
+        <article>
+            <span class="stat-label">Current observation</span>
+            <strong>@(CurrentStep is null ? "not revealed" : UmbrellaWorldDemoFactory.FormatObservation(CurrentStep.UmbrellaObserved))</strong>
+        </article>
+        <article>
+            <span class="stat-label">Current smoothed rain</span>
+            <strong>@(CurrentStep is null ? "-" : UmbrellaWorldDemoFactory.FormatProbability(CurrentStep.RainSmoothed))</strong>
+        </article>
+    </div>
+</section>
+
+<section class="control-panel">
+    <div class="secondary-controls">
+        <div class="selection-copy">
+            <p class="selection-summary">The page uses the package-backed <code>UmbrellaWorld</code> HMM together with <code>ForwardBackwardAlgorithm</code> from <code>Italbytz.AI.Probability.HMM</code>.</p>
+            <p class="selection-summary">@_run.Summary</p>
+        </div>
+
+        <div class="step-buttons">
+            <button class="ghost-button" @onclick="LoadCanonicalRun">Canonical sequence</button>
+            <button class="ghost-button" @onclick="RandomizeRun">Randomize sequence</button>
+            <button class="ghost-button" @onclick="PreviousStep" disabled="@(_currentStep == 0)">Previous</button>
+            <button class="primary-button" @onclick="NextStep" disabled="@(_currentStep >= _run.Steps.Count)">Next</button>
+            <button class="ghost-button" @onclick="ShowCompleteRun" disabled="@(_currentStep >= _run.Steps.Count)">Complete run</button>
+            <button class="ghost-button" @onclick="Reset">Reset</button>
+        </div>
+    </div>
+
+    <p class="step-summary">@CurrentSummary</p>
+</section>
+
+<section class="demo-grid">
+    <article class="surface-card timeline-card">
+        <div class="section-heading">
+            <h2>Observation timeline</h2>
+            <p>Reveal the sequence day by day. Each card shows the raw observation and how much the smoothed posterior differs from the local filtered estimate.</p>
+        </div>
+
+        <div class="timeline-grid">
+            @foreach (var step in _run.Steps)
+            {
+                <article class="@GetTimelineCardCss(step)">
+                    <p class="eyebrow">Day @step.Day</p>
+                    <h3>@UmbrellaWorldDemoFactory.FormatObservation(step.UmbrellaObserved)</h3>
+                    @if (step.Day <= _currentStep)
+                    {
+                        <p>filtered rain: @UmbrellaWorldDemoFactory.FormatProbability(step.RainFiltered)</p>
+                        <p>smoothed rain: @UmbrellaWorldDemoFactory.FormatProbability(step.RainSmoothed)</p>
+                    }
+                    else
+                    {
+                        <p>Advance the run to reveal this day.</p>
+                    }
+                </article>
+            }
+        </div>
+
+        <div class="inspector-grid">
+            <article class="inspector-box @(CurrentStep is null ? string.Empty : "inspector-box-active")">
+                <p class="eyebrow">Current day</p>
+                <h3>@(CurrentStep?.Day.ToString() ?? "-")</h3>
+                <p>@(CurrentStep?.Summary ?? "No observation revealed yet.")</p>
+            </article>
+            <article class="inspector-box">
+                <p class="eyebrow">Sensor model</p>
+                <h3>P(Umbrella | Rain)</h3>
+                <p>umbrella: 0.9 if rain, 0.2 otherwise</p>
+            </article>
+        </div>
+    </article>
+
+    <article class="surface-card inspector-card">
+        <div class="section-heading">
+            <h2>Filtering vs. smoothing</h2>
+            <p>Filtering only uses evidence up to the current day. Smoothing revises earlier beliefs after the full sequence is known.</p>
+        </div>
+
+        @if (VisibleSteps.Count == 0)
+        {
+            <p class="empty-copy">No day revealed yet. Advance the run to inspect the first posterior update.</p>
+        }
+        else
+        {
+            <div class="probability-list">
+                @foreach (var step in VisibleSteps)
+                {
+                    <article class="probability-card @(step.Day == _currentStep ? "probability-card-active" : string.Empty)">
+                        <div class="probability-header">
+                            <strong>Day @step.Day</strong>
+                            <span>@UmbrellaWorldDemoFactory.FormatObservation(step.UmbrellaObserved)</span>
+                        </div>
+                        <div class="probability-row">
+                            <span>filtered</span>
+                            <div class="probability-bar-shell"><div class="probability-bar filtered-bar" style="width:@UmbrellaWorldDemoFactory.FormatPercent(step.RainFiltered)"></div></div>
+                            <strong>@UmbrellaWorldDemoFactory.FormatProbability(step.RainFiltered)</strong>
+                        </div>
+                        <div class="probability-row">
+                            <span>smoothed</span>
+                            <div class="probability-bar-shell"><div class="probability-bar smoothed-bar" style="width:@UmbrellaWorldDemoFactory.FormatPercent(step.RainSmoothed)"></div></div>
+                            <strong>@UmbrellaWorldDemoFactory.FormatProbability(step.RainSmoothed)</strong>
+                        </div>
+                        <p class="selection-summary">@step.Summary</p>
+                    </article>
+                }
+            </div>
+        }
+
+        <div class="section-heading matrix-heading">
+            <h2>Transition model</h2>
+            <p>The hidden state is Rain. The model prefers persistence, so today’s weather influences tomorrow’s prior strongly.</p>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>From / To</th>
+                    <th>Rain</th>
+                    <th>No rain</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Rain</td>
+                    <td>0.7</td>
+                    <td>0.3</td>
+                </tr>
+                <tr>
+                    <td>No rain</td>
+                    <td>0.3</td>
+                    <td>0.7</td>
+                </tr>
+            </tbody>
+        </table>
+    </article>
+</section>
+
+@code {
+    private readonly Random _random = new();
+    private UmbrellaWorldRun _run = UmbrellaWorldDemoFactory.BuildCanonicalRun();
+    private int _currentStep;
+
+    private IReadOnlyList<UmbrellaWorldStep> VisibleSteps => _run.Steps.Take(_currentStep).ToArray();
+    private UmbrellaWorldStep? CurrentStep => _currentStep > 0 ? _run.Steps[_currentStep - 1] : null;
+    private string VisibleProgressLabel => $"{_currentStep} / {_run.Steps.Count}";
+    private string CurrentSummary => _currentStep == 0
+        ? "Start with the first day to see the initial filtered posterior and how smoothing later revises it."
+        : CurrentStep?.Summary ?? string.Empty;
+
+    private void LoadCanonicalRun()
+    {
+        _run = UmbrellaWorldDemoFactory.BuildCanonicalRun();
+        _currentStep = 0;
+    }
+
+    private void RandomizeRun()
+    {
+        _run = UmbrellaWorldDemoFactory.BuildRandomRun(_random);
+        _currentStep = 0;
+    }
+
+    private void PreviousStep()
+    {
+        if (_currentStep > 0)
+        {
+            _currentStep--;
+        }
+    }
+
+    private void NextStep()
+    {
+        if (_currentStep < _run.Steps.Count)
+        {
+            _currentStep++;
+        }
+    }
+
+    private void ShowCompleteRun()
+    {
+        _currentStep = _run.Steps.Count;
+    }
+
+    private void Reset()
+    {
+        _currentStep = 0;
+    }
+
+    private string GetTimelineCardCss(UmbrellaWorldStep step)
+    {
+        var cssClass = "timeline-step";
+
+        if (step.Day <= _currentStep)
+        {
+            cssClass += " timeline-step-visible";
+        }
+
+        if (step.Day == _currentStep)
+        {
+            cssClass += " timeline-step-active";
+        }
+
+        if (step.UmbrellaObserved)
+        {
+            cssClass += " timeline-step-umbrella";
+        }
+
+        return cssClass;
+    }
+}
