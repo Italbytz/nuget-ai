@@ -46,9 +46,9 @@ If the URL still returns `404`, wait until the `CI` workflow on `main` has compl
 
 The GitHub Pages site also exposes a public demo host under `/demos/`.
 
-- Search: `Romania search` uses `Italbytz.AI.Search` together with the `nuget-graph` viewport for visible frontier and path state.
-- Agents: `Vacuum World` uses `Italbytz.AI.Agent` base types such as `SimpleAgent` and `AbstractEnvironment` for the stepwise action loop.
-- CSP: `N-Queens` compares three search styles while grounding conflict evaluation and a reference solution in `Italbytz.AI.CSP`.
+- Search: `Romania search` uses `Italbytz.AI.Search` together with the `nuget-graph` viewport for visible frontier and path state, including randomized start cities.
+- Agents: `Vacuum World` uses `Italbytz.AI.Agent` base types such as `SimpleAgent` and `AbstractEnvironment` for a randomized, stepwise action loop.
+- CSP: `N-Queens` compares three search styles while grounding conflict evaluation and a reference solution in `Italbytz.AI.CSP`, with randomized setups and progressively revealed traces.
 
 Public demo routes:
 
