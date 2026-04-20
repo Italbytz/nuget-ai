@@ -24,6 +24,7 @@
 .section-heading p,
 .step-summary,
 .trace-list span,
+.empty-copy,
 .inspector-box p,
 .selection-summary,
 .trace-metric {
@@ -225,6 +226,14 @@
 .trace-list strong,
 .trace-metric {
     display: block;
+}
+
+.empty-copy {
+    margin: 0;
+    padding: 0.9rem 1rem;
+    border-radius: 0.9rem;
+    background: #f7f2e8;
+    border: 1px dashed rgba(23, 50, 74, 0.16);
 }
 
 @media (max-width: 1100px) {
