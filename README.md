@@ -42,6 +42,20 @@ The doc site now also carries forward the most useful orientation material from 
 
 If the URL still returns `404`, wait until the `CI` workflow on `main` has completed the first Pages publish run.
 
+## Public demos
+
+The GitHub Pages site also exposes a public demo host under `/demos/`.
+
+- Search: `Romania search` uses `Italbytz.AI.Search` together with the `nuget-graph` viewport for visible frontier and path state.
+- Agents: `Vacuum World` uses `Italbytz.AI.Agent` base types such as `SimpleAgent` and `AbstractEnvironment` for the stepwise action loop.
+- CSP: `N-Queens` compares three search styles while grounding conflict evaluation and a reference solution in `Italbytz.AI.CSP`.
+
+Public demo routes:
+
+- `https://italbytz.github.io/nuget-ai/demos/romania-search`
+- `https://italbytz.github.io/nuget-ai/demos/vacuum-world`
+- `https://italbytz.github.io/nuget-ai/demos/n-queens`
+
 ## Quality checks
 
 This repository includes:
@@ -49,6 +63,7 @@ This repository includes:
 - a `GitHub Actions` workflow in `.github/workflows/ci.yml`
 - automated `restore`, `build`, `test`, `pack`, and docs generation
 - a `docfx` setup under `docfx/`
+- a root `Makefile` for fast local demo and Pages feedback loops
 
 ## Legacy consumer migrations
 
@@ -71,3 +86,23 @@ dotnet pack nuget-ai.sln -c Release -v minimal
 dotnet tool restore
 dotnet tool run docfx docfx/docfx.json
 ```
+
+## Local demo feedback loop
+
+For the interactive demo host and the combined GitHub Pages preview, use the root `Makefile`:
+
+```bash
+make demo-watch
+make pages-serve
+```
+
+Useful local targets:
+
+- `make demo-run` to run the Blazor demo host once on `http://localhost:5128`
+- `make demo-watch` for fast iteration with `dotnet watch`
+- `make demo-open` to open the running demo host in the browser
+- `make pages-prepare` to build the combined local Pages artifact under `artifacts/pages`
+- `make pages-serve` to preview the combined `docfx` plus demo site locally on `http://localhost:8080`
+- `make pages-open` to open the running local Pages preview in the browser
+- `make pages-serve-open` to start the local Pages preview in the background and open it immediately
+- `make feedback` to build the demo publish output, docs, and Pages artifact in one go
