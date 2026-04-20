@@ -1,0 +1,253 @@
+.demo-hero,
+.control-panel,
+.surface-card {
+    background: rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(23, 50, 74, 0.1);
+    border-radius: 1.4rem;
+    box-shadow: 0 22px 56px rgba(23, 50, 74, 0.08);
+}
+
+.demo-hero {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: 1rem;
+    padding: 1.4rem;
+}
+
+.demo-hero h1,
+.section-heading h2,
+.inspector-box h3 {
+    color: #17324a;
+}
+
+.hero-copy,
+.section-heading p,
+.step-summary,
+.trace-list span,
+.inspector-box p,
+.selection-summary,
+.trace-metric {
+    color: #4d5a66;
+}
+
+.stat-grid,
+.inspector-grid,
+.demo-grid {
+    display: grid;
+    gap: 0.85rem;
+}
+
+.stat-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.stat-grid article,
+.inspector-box {
+    padding: 1rem;
+    border-radius: 1rem;
+    background: #f7f2e8;
+    border: 1px solid rgba(23, 50, 74, 0.08);
+}
+
+.stat-label {
+    display: block;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: #6c766f;
+    margin-bottom: 0.2rem;
+}
+
+.control-panel {
+    margin-top: 1rem;
+    padding: 1rem 1.2rem;
+}
+
+.button-row,
+.secondary-controls,
+.step-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.secondary-controls {
+    justify-content: space-between;
+    margin-top: 0.9rem;
+    align-items: center;
+}
+
+.selection-summary {
+    margin: 0;
+    max-width: 42rem;
+}
+
+.selection-copy {
+    display: grid;
+    gap: 0.35rem;
+    max-width: 42rem;
+}
+
+.choice-button,
+.primary-button,
+.ghost-button {
+    border-radius: 999px;
+    padding: 0.8rem 1rem;
+    font-weight: 600;
+}
+
+.choice-button,
+.ghost-button {
+    background: #fff;
+    color: #17324a;
+    border: 1px solid rgba(23, 50, 74, 0.16);
+}
+
+.choice-button.selected,
+.primary-button {
+    background: #17324a;
+    color: #fff;
+    border: 1px solid #17324a;
+}
+
+.choice-button:disabled,
+.primary-button:disabled,
+.ghost-button:disabled {
+    opacity: 0.5;
+}
+
+.step-summary {
+    margin: 0.9rem 0 0;
+}
+
+.demo-grid {
+    grid-template-columns: 1.15fr 1fr;
+    margin-top: 1rem;
+}
+
+.surface-card {
+    padding: 1.25rem;
+}
+
+.board-card {
+    background: rgba(246, 243, 236, 0.94);
+}
+
+.board-shell {
+    overflow-x: auto;
+}
+
+.board {
+    display: grid;
+    grid-template-columns: repeat(var(--board-size), minmax(2.8rem, 1fr));
+    width: min(100%, 34rem);
+    border-radius: 1rem;
+    overflow: hidden;
+    border: 1px solid rgba(23, 50, 74, 0.12);
+}
+
+.board-cell {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.board-cell-light {
+    background: #f7f2e8;
+}
+
+.board-cell-dark {
+    background: #d7c6ab;
+}
+
+.board-cell-has-queen {
+    color: #17324a;
+    font-weight: 800;
+}
+
+.board-cell-conflicted {
+    background: #efcab8;
+    color: #7b2e18;
+}
+
+.board-cell-current::after {
+    content: "";
+    position: absolute;
+    inset: 0.22rem;
+    border: 3px solid #17324a;
+    border-radius: 0.4rem;
+}
+
+.queen {
+    font-size: 1.2rem;
+    position: relative;
+    z-index: 1;
+}
+
+.inspector-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin-top: 1rem;
+}
+
+.inspector-box-active {
+    background: #17324a;
+    color: #fff;
+}
+
+.inspector-box-warning {
+    background: #efe1d2;
+    border-color: rgba(130, 66, 32, 0.18);
+}
+
+.inspector-box-active p,
+.inspector-box-active h3,
+.inspector-box-active .eyebrow {
+    color: inherit;
+}
+
+.step-trace-list {
+    margin: 0;
+    padding-left: 1.2rem;
+}
+
+.step-trace-list li {
+    margin-bottom: 0.8rem;
+    padding: 0.35rem 0.25rem;
+    border-radius: 0.75rem;
+}
+
+.trace-step-active {
+    background: rgba(23, 50, 74, 0.08);
+}
+
+.trace-list strong,
+.trace-metric {
+    display: block;
+}
+
+@media (max-width: 1100px) {
+    .demo-grid,
+    .demo-hero,
+    .stat-grid,
+    .inspector-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 780px) {
+    .control-panel,
+    .surface-card,
+    .demo-hero {
+        padding: 1rem;
+    }
+
+    .secondary-controls {
+        align-items: stretch;
+    }
+
+    .board {
+        width: 100%;
+    }
+}
