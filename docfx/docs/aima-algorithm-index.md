@@ -28,6 +28,8 @@ It is intended as a quick bridge between **Artificial Intelligence: A Modern App
 ## Public interactive demos
 
 - Burglary network: `https://italbytz.github.io/nuget-ai/demos/burglary-network`
+- CYK parser: `https://italbytz.github.io/nuget-ai/demos/cyk-parser`
+- GridWorld MDP: `https://italbytz.github.io/nuget-ai/demos/gridworld-mdp`
 - Map coloring: `https://italbytz.github.io/nuget-ai/demos/map-coloring`
 - Romania search: `https://italbytz.github.io/nuget-ai/demos/romania-search`
 - Umbrella world: `https://italbytz.github.io/nuget-ai/demos/umbrella-world`
