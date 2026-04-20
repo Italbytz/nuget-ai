@@ -1,0 +1,206 @@
+@page "/n-queens"
+@using Italbytz.AI.Demos.Web.Demos
+
+<PageTitle>N-Queens demo</PageTitle>
+
+<section class="demo-hero">
+    <div>
+        <p class="eyebrow">CSP demo</p>
+        <h1>N-Queens</h1>
+        <p class="hero-copy">Compare hill climbing, simulated annealing, and a genetic algorithm on the same 8-queens problem. Track board changes, conflicts, and optimization metrics over time.</p>
+    </div>
+
+    <div class="stat-grid">
+        <article>
+            <span class="stat-label">Algorithm</span>
+            <strong>@CurrentAlgorithm.Name</strong>
+        </article>
+        <article>
+            <span class="stat-label">Conflicts</span>
+            <strong>@CurrentConflictCount</strong>
+        </article>
+        <article>
+            <span class="stat-label">Metric</span>
+            <strong>@CurrentMetricShort</strong>
+        </article>
+        <article>
+            <span class="stat-label">Visible step</span>
+            <strong>@VisibleProgressLabel</strong>
+        </article>
+    </div>
+</section>
+
+<section class="control-panel">
+    <div class="button-row">
+        @foreach (var algorithm in _algorithms)
+        {
+            <button class="@(algorithm.Key == _selectedAlgorithmKey ? "choice-button selected" : "choice-button")"
+                    @onclick="() => SelectAlgorithm(algorithm.Key)">
+                @algorithm.Name
+            </button>
+        }
+    </div>
+
+    <div class="secondary-controls">
+        <div class="selection-copy">
+            <p class="selection-summary">@CurrentAlgorithm.Summary</p>
+            <p class="selection-summary">Package-backed baseline: <code>Italbytz.AI.CSP.MinConflictsSolver</code> on the same 8-queens CSP yields @NQueensDemoFactory.PackageReferenceSummary.</p>
+        </div>
+
+        <div class="step-buttons">
+            <button class="ghost-button" @onclick="PreviousStep" disabled="@(_currentStep == 0)">Previous</button>
+            <button class="primary-button" @onclick="NextStep" disabled="@(_currentStep >= CurrentAlgorithm.Steps.Count)">Next</button>
+            <button class="ghost-button" @onclick="ShowCompleteRun" disabled="@(_currentStep >= CurrentAlgorithm.Steps.Count)">Complete run</button>
+            <button class="ghost-button" @onclick="Reset">Reset</button>
+        </div>
+    </div>
+
+    <p class="step-summary">@CurrentSummary</p>
+</section>
+
+<section class="demo-grid">
+    <article class="surface-card board-card">
+        <div class="section-heading">
+            <h2>Board</h2>
+            <p>Conflicted queens are highlighted, and the currently modified queen is outlined separately.</p>
+        </div>
+
+        <div class="board-shell">
+            <div class="board" style="--board-size:@CurrentAlgorithm.BoardSize">
+                @for (var row = 0; row < CurrentAlgorithm.BoardSize; row++)
+                {
+                    @for (var column = 0; column < CurrentAlgorithm.BoardSize; column++)
+                    {
+                        <div class="@GetBoardCellClass(column, row)" title="@GetBoardCellTitle(column, row)">
+                            @if (CurrentBoardRows[column] == row)
+                            {
+                                <span class="queen">Q</span>
+                            }
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+
+        <div class="inspector-grid">
+            <article class="inspector-box @(CurrentStepModel?.Solved == true ? "inspector-box-active" : string.Empty)">
+                <p class="eyebrow">Board size</p>
+                <h3>@CurrentAlgorithm.BoardSize x @CurrentAlgorithm.BoardSize</h3>
+                <p>Conflicts: @CurrentConflictCount</p>
+            </article>
+            <article class="inspector-box @(CurrentStepModel?.Stopped == true ? "inspector-box-warning" : string.Empty)">
+                <p class="eyebrow">Current move</p>
+                <h3>@CurrentActionTitle</h3>
+                <p>@CurrentMetric</p>
+            </article>
+        </div>
+    </article>
+
+    <article class="surface-card inspector-card">
+        <div class="section-heading">
+            <h2>Trace</h2>
+            <p>Switch algorithms and inspect how each search strategy changes assignments and conflicts over time.</p>
+        </div>
+
+        <ol class="trace-list step-trace-list">
+            @foreach (var step in CurrentAlgorithm.Steps)
+            {
+                <li class="@(step.Number == _currentStep ? "trace-step-active" : string.Empty)">
+                    <strong>@step.Number. @step.Summary</strong>
+                    <span>@step.Description</span>
+                    <span class="trace-metric">@step.Metric</span>
+                </li>
+            }
+        </ol>
+    </article>
+</section>
+
+@code {
+    private static readonly IReadOnlyList<NQueensAlgorithmDemo> _algorithms = NQueensDemoFactory.BuildAll();
+
+    private string _selectedAlgorithmKey = _algorithms[0].Key;
+    private int _currentStep;
+
+    private NQueensAlgorithmDemo CurrentAlgorithm => _algorithms.First(algorithm => algorithm.Key == _selectedAlgorithmKey);
+
+    private NQueensStep? CurrentStepModel => _currentStep > 0 && CurrentAlgorithm.Steps.Count > 0
+        ? CurrentAlgorithm.Steps[Math.Min(_currentStep - 1, CurrentAlgorithm.Steps.Count - 1)]
+        : null;
+
+    private IReadOnlyList<int> CurrentBoardRows => CurrentStepModel?.QueenRows ?? CurrentAlgorithm.InitialQueenRows;
+    private int CurrentConflictCount => CurrentStepModel?.ConflictCount ?? NQueensDemoFactory.CountConflictsForBoard(CurrentBoardRows);
+    private string CurrentActionTitle => CurrentStepModel?.Summary ?? "Initial board";
+    private string CurrentMetric => CurrentStepModel?.Metric ?? $"fitness={NQueensDemoFactory.FormatFitnessForBoard(CurrentBoardRows)}";
+    private string CurrentMetricShort => CurrentMetric.Replace(", ", " | ", StringComparison.Ordinal);
+    private string VisibleProgressLabel => CurrentAlgorithm.Steps.Count == 0 ? "0 / 0" : $"{_currentStep} / {CurrentAlgorithm.Steps.Count}";
+    private string CurrentSummary => _currentStep == 0
+        ? "Choose an algorithm and advance one step at a time to compare local and evolutionary search behavior."
+        : CurrentStepModel?.Description ?? string.Empty;
+
+    private void SelectAlgorithm(string key)
+    {
+        _selectedAlgorithmKey = key;
+        _currentStep = 0;
+    }
+
+    private void PreviousStep()
+    {
+        if (_currentStep > 0)
+        {
+            _currentStep--;
+        }
+    }
+
+    private void NextStep()
+    {
+        if (_currentStep < CurrentAlgorithm.Steps.Count)
+        {
+            _currentStep++;
+        }
+    }
+
+    private void ShowCompleteRun()
+    {
+        _currentStep = CurrentAlgorithm.Steps.Count;
+    }
+
+    private void Reset()
+    {
+        _currentStep = 0;
+    }
+
+    private string GetBoardCellClass(int column, int row)
+    {
+        var isDarkCell = (row + column) % 2 == 1;
+        var cssClass = isDarkCell ? "board-cell board-cell-dark" : "board-cell board-cell-light";
+
+        if (CurrentBoardRows[column] == row)
+        {
+            cssClass += " board-cell-has-queen";
+            if (CurrentStepModel?.ConflictedColumns.Contains(column) == true)
+            {
+                cssClass += " board-cell-conflicted";
+            }
+
+            if (CurrentStepModel?.CurrentColumn == column)
+            {
+                cssClass += " board-cell-current";
+            }
+        }
+
+        return cssClass;
+    }
+
+    private string GetBoardCellTitle(int column, int row)
+    {
+        if (CurrentBoardRows[column] != row)
+        {
+            return $"Column {column + 1}, row {row + 1}";
+        }
+
+        return CurrentStepModel?.CurrentColumn == column
+            ? $"Q{column + 1} is currently being modified"
+            : $"Q{column + 1} in row {row + 1}";
+    }
+
+}
