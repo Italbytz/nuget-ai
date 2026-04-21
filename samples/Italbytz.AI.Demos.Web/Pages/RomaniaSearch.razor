@@ -2,6 +2,7 @@
 @using Italbytz.AI.Search.Demos.Romania
 @using Italbytz.Graph
 @using Italbytz.Graph.Abstractions
+@using Italbytz.Graph.Visualization
 
 <PageTitle>Romania search demo</PageTitle>
 
@@ -69,46 +70,39 @@
     <article class="surface-card map-card">
         <div class="section-heading">
             <h2>State map</h2>
-            <p>Nodes, roads, and queue state of the classic AIMA Romania route problem as a compact textual graph snapshot. The detailed walkthrough stays in the panel on the right.</p>
+            <p>Nodes, roads, and queue state of the classic AIMA Romania route problem rendered through <code>Italbytz.Graph.Blazor</code>. The detailed walkthrough stays in the panel on the right.</p>
         </div>
 
-        <div class="trace-columns">
-            <div>
-                <h3>Current node and path</h3>
-                <ol class="trace-list">
-                    <li>
-                        <strong>Current node</strong>
-                        <span>@(string.IsNullOrWhiteSpace(CurrentGraphState.CurrentNodeId) ? "none" : CurrentGraphState.CurrentNodeId)</span>
-                    </li>
-                    <li>
-                        <strong>Active path</strong>
-                        <span>@(CurrentPathStates.Count == 0 ? "none" : string.Join(" -> ", CurrentPathStates))</span>
-                    </li>
-                </ol>
-            </div>
-
-            <div>
-                <h3>Graph state</h3>
-                <ol class="trace-list">
-                    <li>
-                        <strong>Frontier nodes</strong>
-                        <span>@(CurrentGraphState.FrontierNodeIds.Count == 0 ? "none" : string.Join(", ", CurrentGraphState.FrontierNodeIds))</span>
-                    </li>
-                    <li>
-                        <strong>Explored nodes</strong>
-                        <span>@(CurrentGraphState.ExploredNodeIds.Count == 0 ? "none" : string.Join(", ", CurrentGraphState.ExploredNodeIds))</span>
-                    </li>
-                    <li>
-                        <strong>Active edges</strong>
-                        <span>@(CurrentGraphState.ActiveEdgeKeys.Count == 0 ? "none" : string.Join(" | ", CurrentGraphState.ActiveEdgeKeys))</span>
-                    </li>
-                    <li>
-                        <strong>Candidate edges</strong>
-                        <span>@(CurrentGraphState.SuccessorEdgeKeys.Count == 0 ? "none" : string.Join(" | ", CurrentGraphState.SuccessorEdgeKeys))</span>
-                    </li>
-                </ol>
-            </div>
-        </div>
+        <GraphViewport Graph="@_graphView"
+                       ActiveEdgeKeys="@CurrentGraphState.ActiveEdgeKeys"
+                       ActiveNodeKeys="@CurrentGraphState.ActiveNodeIds"
+                       FrontierNodeKeys="@CurrentGraphState.FrontierNodeIds"
+                       ExploredNodeKeys="@CurrentGraphState.ExploredNodeIds"
+                       CurrentNodeKey="@CurrentGraphState.CurrentNodeId"
+                       SuccessorEdgeKeys="@CurrentGraphState.SuccessorEdgeKeys"
+                       DirectedActiveEdgeIds="@CurrentGraphState.DirectedActiveEdgeIds"
+                       DirectedSuccessorEdgeIds="@CurrentGraphState.DirectedSuccessorEdgeIds"
+                       Title="Romania search map"
+                       ZoomInLabel="Zoom in"
+                       ZoomOutLabel="Zoom out"
+                       FitLabel="Fit graph"
+                       ResetLabel="Reset"
+                       InteractionHint="Use the graph itself to inspect nodes, edges and the current search state."
+                       ActiveLegendLabel="Active path"
+                       SuccessorLegendLabel="Candidate edges"
+                       CurrentNodeLegendLabel="Current node"
+                       FrontierLegendLabel="Frontier"
+                       ExploredLegendLabel="Explored"
+                       SolutionLegendLabel="Goal path"
+                       DefaultLegendLabel="Alternative edge"
+                       InspectorTitle="Inspector"
+                       NoSelectionTitle="Nothing selected"
+                       NoSelectionText="Select a node or edge in the graph to inspect its current role."
+                       NodeLabel="Node"
+                       EdgeLabel="Edge"
+                       WeightLabel="Weight"
+                       ConnectionsLabel="Connections"
+                       StateLabel="State" />
     </article>
 
     <article class="surface-card inspector-card">
@@ -204,6 +198,7 @@
     private static readonly IUndirectedGraph<string, ITaggedEdge<string, double>> _graph = CreateGraph();
 
     private readonly RomaniaSearchSimulator _simulator = new();
+    private readonly GraphViewModel _graphView = GraphViewFactory.BuildSvgGraphView(_graph, Array.Empty<string>());
     private readonly Random _random = new();
     private IReadOnlyList<RomaniaSearchStep> _steps = [];
     private IReadOnlyList<GraphStateViewModel> _graphStates = [new(string.Empty, [], [], [], [], [], [], [])];
@@ -362,7 +357,7 @@
                 activeEdgeKeys,
                 successorEdgeKeys,
                 BuildDirectedPathEdgeIds(step.PathStates),
-                step.Successors.Select(successor => CreateDirectedEdgeId(step.ExpandedNode.State, successor.State)).ToArray()));
+                step.Successors.Select(successor => GraphViewKeys.CreateDirectedEdgeId(step.ExpandedNode.State, successor.State)).ToArray()));
         }
 
         return states;
@@ -375,7 +370,7 @@
         return pathStates
             .Zip(pathStates.Skip(1), (from, to) => FindEdge(graph, from, to))
             .Where(edge => edge is not null)
-            .Select(edge => CreateUndirectedEdgeKey(edge!.Source, edge.Target, edge.Tag))
+            .Select(edge => GraphViewKeys.CreateUndirectedEdgeKey(edge!.Source, edge.Target, edge.Tag))
             .ToArray();
     }
 
@@ -387,26 +382,13 @@
         return successors
             .Select(successor => FindEdge(graph, currentState, successor.State))
             .Where(edge => edge is not null)
-            .Select(edge => CreateUndirectedEdgeKey(edge!.Source, edge.Target, edge.Tag))
+            .Select(edge => GraphViewKeys.CreateUndirectedEdgeKey(edge!.Source, edge.Target, edge.Tag))
             .ToArray();
     }
 
     private static string[] BuildDirectedPathEdgeIds(IReadOnlyList<string> pathStates)
     {
-        return pathStates.Zip(pathStates.Skip(1), (from, to) => CreateDirectedEdgeId(from, to)).ToArray();
-    }
-
-    private static string CreateDirectedEdgeId(string from, string to)
-    {
-        return $"{from}->{to}";
-    }
-
-    private static string CreateUndirectedEdgeKey(string source, string target, double weight)
-    {
-        var (left, right) = string.CompareOrdinal(source, target) <= 0
-            ? (source, target)
-            : (target, source);
-        return $"{left}<->{right} ({weight.ToString("0")})";
+        return pathStates.Zip(pathStates.Skip(1), (from, to) => GraphViewKeys.CreateDirectedEdgeId(from, to)).ToArray();
     }
 
     private static ITaggedEdge<string, double>? FindEdge(
@@ -418,16 +400,6 @@
             (string.Equals(edge.Source, from, StringComparison.Ordinal) && string.Equals(edge.Target, to, StringComparison.Ordinal))
             || (string.Equals(edge.Source, to, StringComparison.Ordinal) && string.Equals(edge.Target, from, StringComparison.Ordinal)));
     }
-
-    private readonly record struct GraphStateViewModel(
-        string CurrentNodeId,
-        IReadOnlyList<string> ActiveNodeIds,
-        IReadOnlyList<string> FrontierNodeIds,
-        IReadOnlyList<string> ExploredNodeIds,
-        IReadOnlyList<string> ActiveEdgeKeys,
-        IReadOnlyList<string> SuccessorEdgeKeys,
-        IReadOnlyList<string> DirectedActiveEdgeIds,
-        IReadOnlyList<string> DirectedSuccessorEdgeIds);
 
     private readonly record struct MapPoint(double X, double Y);
 }
