@@ -5,14 +5,16 @@ CONFIGURATION ?= Debug
 PACK_CONFIGURATION ?= Release
 DOCFX_CONFIG := docfx/docfx.json
 DEMO_PROJECT := samples/Italbytz.AI.Demos.Web/Italbytz.AI.Demos.Web.csproj
-DEMO_HTTP_URL := http://localhost:5128
+DEMO_HTTP_URL := http://127.0.0.1:5128
 DEMO_PUBLISH_DIR := artifacts/demo-build
 PAGES_DIR := artifacts/pages
 PAGES_PORT ?= 8080
 PAGES_HTTP_URL := http://localhost:$(PAGES_PORT)
+DEMO_PORT := 5128
 
 .PHONY: help restore build test pack docs demo-run demo-watch demo-open demo-publish pages-prepare pages-serve pages-open feedback clean
 .PHONY: pages-serve-open
+.PHONY: clean-demo demo-stop
 
 help:
 	@echo "Available targets:"
@@ -24,6 +26,8 @@ help:
 	@echo "  make demo-run       - Run the demo host once on $(DEMO_HTTP_URL)"
 	@echo "  make demo-watch     - Run the demo host with dotnet watch on $(DEMO_HTTP_URL)"
 	@echo "  make demo-open      - Open the running demo host in the browser"
+	@echo "  make demo-stop      - Stop a running local demo process on port $(DEMO_PORT)"
+	@echo "  make clean-demo     - Remove demo build caches (bin/obj) for a true fresh start"
 	@echo "  make demo-publish   - Publish the demo host into $(DEMO_PUBLISH_DIR)"
 	@echo "  make pages-prepare  - Build the combined local Pages artifact"
 	@echo "  make pages-serve    - Serve the combined local Pages artifact on http://localhost:$(PAGES_PORT)"
@@ -50,10 +54,16 @@ docs:
 	dotnet tool run docfx $(DOCFX_CONFIG)
 
 demo-run:
-	dotnet run --project $(DEMO_PROJECT) --launch-profile http
+	ASPNETCORE_URLS=$(DEMO_HTTP_URL) dotnet run --project $(DEMO_PROJECT) --no-launch-profile
 
-demo-watch:
-	dotnet watch --project $(DEMO_PROJECT) run --launch-profile http
+demo-watch: demo-stop clean-demo
+	ASPNETCORE_URLS=$(DEMO_HTTP_URL) dotnet watch --project $(DEMO_PROJECT) run --no-launch-profile
+
+demo-stop:
+	-lsof -ti tcp:$(DEMO_PORT) | xargs kill
+
+clean-demo:
+	rm -rf ./samples/Italbytz.AI.Demos.Web/bin ./samples/Italbytz.AI.Demos.Web/obj
 
 demo-open:
 	open $(DEMO_HTTP_URL)
@@ -89,5 +99,6 @@ feedback: restore demo-publish docs pages-prepare
 	@echo "Pages preview: $(PAGES_HTTP_URL) via 'make pages-serve', 'make pages-open', or 'make pages-serve-open'"
 
 clean:
+	$(MAKE) clean-demo
 	rm -rf ./artifacts/demo-build ./artifacts/pages
 	dotnet clean $(SOLUTION)
