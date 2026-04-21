@@ -1,0 +1,506 @@
+.demo-hero,
+.control-panel,
+.surface-card {
+    background: rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(23, 50, 74, 0.1);
+    border-radius: 1.4rem;
+    box-shadow: 0 22px 56px rgba(23, 50, 74, 0.08);
+}
+
+.demo-hero {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: 1rem;
+    padding: 1.4rem;
+}
+
+.demo-hero h1,
+.section-heading h2,
+.inspector-box h3,
+.comparison-grid h3,
+.walkthrough-step strong {
+    color: #17324a;
+}
+
+.hero-copy,
+.section-heading p,
+.step-summary,
+.selection-summary,
+.inspector-box p,
+.branch-step p,
+.walkthrough-step span,
+.legend-item,
+.constraint-chip {
+    color: #4d5a66;
+}
+
+.stat-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.85rem;
+}
+
+.stat-grid article,
+.inspector-box,
+.model-card,
+.walkthrough-card {
+    padding: 1rem;
+    border-radius: 1rem;
+    background: #f7f2e8;
+    border: 1px solid rgba(23, 50, 74, 0.08);
+}
+
+.stat-label {
+    display: block;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: #6c766f;
+    margin-bottom: 0.2rem;
+}
+
+.control-panel {
+    margin-top: 1rem;
+    padding: 1rem 1.2rem;
+}
+
+.button-row,
+.secondary-controls,
+.compact-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.secondary-controls {
+    justify-content: space-between;
+    margin-top: 0.9rem;
+    align-items: center;
+}
+
+.selection-copy {
+    display: grid;
+    gap: 0.35rem;
+    max-width: 42rem;
+}
+
+.selection-summary {
+    margin: 0;
+}
+
+.choice-button,
+.primary-button,
+.ghost-button {
+    border-radius: 999px;
+    padding: 0.8rem 1rem;
+    font-weight: 600;
+}
+
+.choice-button,
+.ghost-button {
+    background: #fff;
+    color: #17324a;
+    border: 1px solid rgba(23, 50, 74, 0.16);
+}
+
+.choice-button.selected,
+.primary-button {
+    background: #17324a;
+    color: #fff;
+    border: 1px solid #17324a;
+}
+
+.choice-button:disabled,
+.primary-button:disabled,
+.ghost-button:disabled {
+    opacity: 0.5;
+}
+
+.step-summary {
+    margin: 0.9rem 0 0;
+}
+
+.demo-grid {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.surface-card {
+    padding: 1.25rem;
+}
+
+.lp-plot-card {
+    background: rgba(246, 243, 236, 0.94);
+}
+
+.constraint-chip-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.55rem;
+    margin-bottom: 0.6rem;
+}
+
+.constraint-chip {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    padding: 0.35rem 0.7rem;
+    font-size: 0.84rem;
+    background: rgba(255, 255, 255, 0.86);
+    border: 1px solid rgba(23, 50, 74, 0.14);
+}
+
+.plot-shell {
+    margin-top: 1rem;
+    overflow-x: auto;
+}
+
+.lp-plot {
+    width: 100%;
+    min-height: 30rem;
+}
+
+.plot-background {
+    fill: #fdfbf7;
+}
+
+.plot-grid-line {
+    stroke: rgba(23, 50, 74, 0.08);
+    stroke-width: 1;
+}
+
+.plot-axis {
+    stroke: #17324a;
+    stroke-width: 3;
+}
+
+.plot-tick-text,
+.plot-axis-text {
+    fill: #4d5a66;
+    font-family: Georgia, "Times New Roman", serif;
+}
+
+.plot-tick-text {
+    font-size: 12px;
+}
+
+.plot-axis-text {
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.feasible-region {
+    fill: rgba(11, 92, 122, 0.14);
+    stroke: rgba(11, 92, 122, 0.35);
+    stroke-width: 2;
+}
+
+.active-subproblem {
+    fill: rgba(23, 50, 74, 0.05);
+    stroke: rgba(23, 50, 74, 0.2);
+    stroke-width: 2;
+    stroke-dasharray: 6 5;
+}
+
+.constraint-line {
+    stroke: rgba(201, 94, 57, 0.9);
+    stroke-width: 3;
+    stroke-linecap: round;
+}
+
+.lattice-point {
+    fill: rgba(23, 50, 74, 0.34);
+}
+
+.lattice-point-optimal {
+    fill: #17324a;
+}
+
+.continuous-optimum {
+    fill: #0b5c7a;
+    opacity: 0.9;
+}
+
+.integer-optimum {
+    fill: #c95e39;
+    opacity: 0.9;
+}
+
+.visible-optimum {
+    fill: none;
+    stroke: #17324a;
+    stroke-width: 3;
+}
+
+.active-relaxed-optimum {
+    fill: none;
+    stroke: rgba(11, 92, 122, 0.42);
+    stroke-width: 3;
+    stroke-dasharray: 4 3;
+}
+
+.split-line {
+    stroke-width: 3;
+    stroke-dasharray: 8 5;
+}
+
+.split-line-left {
+    stroke: rgba(201, 94, 57, 0.85);
+}
+
+.split-line-right {
+    stroke: rgba(23, 50, 74, 0.7);
+}
+
+.legend-grid,
+.comparison-grid {
+    display: grid;
+    gap: 0.85rem;
+}
+
+.legend-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin-top: 1rem;
+}
+
+.plot-legend-card {
+    margin-top: 1rem;
+    padding: 1rem;
+    border-radius: 1rem;
+    background: rgba(255, 255, 255, 0.72);
+    border: 1px solid rgba(23, 50, 74, 0.08);
+}
+
+.legend-heading {
+    margin-bottom: 0.75rem;
+}
+
+.plot-legend-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem 1rem;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    color: #4d5a66;
+}
+
+.legend-swatch,
+.legend-line {
+    flex: 0 0 auto;
+}
+
+.legend-swatch {
+    width: 1.1rem;
+    height: 1.1rem;
+    border-radius: 999px;
+    border: 2px solid transparent;
+}
+
+.legend-swatch-feasible {
+    background: rgba(11, 92, 122, 0.14);
+    border-color: rgba(11, 92, 122, 0.35);
+}
+
+.legend-swatch-continuous {
+    background: #0b5c7a;
+}
+
+.legend-swatch-integer {
+    background: #c95e39;
+}
+
+.legend-swatch-visible {
+    background: transparent;
+    border-color: #17324a;
+}
+
+.legend-swatch-lattice {
+    background: rgba(23, 50, 74, 0.34);
+}
+
+.legend-swatch-subproblem {
+    background: rgba(23, 50, 74, 0.05);
+    border-color: rgba(23, 50, 74, 0.2);
+}
+
+.legend-swatch-relaxed {
+    background: transparent;
+    border-color: rgba(11, 92, 122, 0.42);
+}
+
+.legend-line {
+    width: 1.5rem;
+    height: 0;
+    border-top-width: 3px;
+    border-top-style: dashed;
+}
+
+.legend-line-left {
+    border-top-color: rgba(201, 94, 57, 0.85);
+}
+
+.legend-line-right {
+    border-top-color: rgba(23, 50, 74, 0.7);
+}
+
+.comparison-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin: 1rem 0;
+}
+
+.constraint-list {
+    margin: 0.8rem 0 0;
+    padding-left: 1.1rem;
+    color: #4d5a66;
+}
+
+.walkthrough-card {
+    margin: 1rem 0;
+}
+
+.walkthrough-list {
+    margin: 0.8rem 0 0;
+    padding: 0;
+    list-style: none;
+    counter-reset: walkthrough-step;
+    display: grid;
+    gap: 0.65rem;
+}
+
+.walkthrough-step {
+    margin: 0;
+    padding: 0.7rem 0.85rem 0.7rem 2.7rem;
+    border-radius: 0.85rem;
+    border: 1px solid rgba(23, 50, 74, 0.1);
+    background: rgba(255, 255, 255, 0.72);
+    position: relative;
+}
+
+.walkthrough-step::before {
+    counter-increment: walkthrough-step;
+    content: counter(walkthrough-step);
+    position: absolute;
+    left: 0.75rem;
+    top: 0.76rem;
+    width: 1.35rem;
+    height: 1.35rem;
+    border-radius: 999px;
+    background: rgba(23, 50, 74, 0.14);
+    color: #17324a;
+    font-size: 0.78rem;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.walkthrough-step strong,
+.walkthrough-step span {
+    display: block;
+}
+
+.walkthrough-step span {
+    margin-top: 0.2rem;
+}
+
+.walkthrough-step-active {
+    background: rgba(23, 50, 74, 0.09);
+    border-color: rgba(23, 50, 74, 0.24);
+}
+
+.walkthrough-step-active::before {
+    background: #17324a;
+    color: #fff;
+}
+
+.result-row-active {
+    background: rgba(23, 50, 74, 0.08);
+}
+
+.branch-panel {
+    margin-top: 1.2rem;
+}
+
+.branch-heading {
+    margin-bottom: 0.85rem;
+}
+
+.branch-trace-list {
+    margin: 0;
+    padding-left: 1.2rem;
+}
+
+.branch-step {
+    margin-bottom: 0.9rem;
+    padding: 0.8rem 0.9rem;
+    border-radius: 1rem;
+    background: #f7f2e8;
+    border: 1px solid rgba(23, 50, 74, 0.08);
+    cursor: pointer;
+}
+
+.branch-step-active {
+    outline: 2px solid rgba(11, 92, 122, 0.34);
+    outline-offset: 2px;
+}
+
+.branch-step-incumbent {
+    background: #dcebd8;
+}
+
+.branch-step-pruned {
+    background: #efe1d2;
+}
+
+.branch-step-header {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    color: #4d5a66;
+}
+
+.branch-step p {
+    margin: 0.45rem 0 0;
+}
+
+.branch-metric {
+    font-weight: 600;
+}
+
+.branch-outcome {
+    color: #17324a;
+}
+
+.compact-row {
+    align-items: center;
+}
+
+@media (max-width: 900px) {
+    .demo-grid,
+    .demo-hero,
+    .stat-grid,
+    .comparison-grid,
+    .legend-grid,
+    .plot-legend-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 780px) {
+    .control-panel,
+    .surface-card,
+    .demo-hero {
+        padding: 1rem;
+    }
+
+    .secondary-controls {
+        align-items: stretch;
+    }
+}
