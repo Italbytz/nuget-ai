@@ -32,6 +32,7 @@
     <ProjectReference Include="..\..\src\Italbytz.AI.Logic\Italbytz.AI.Logic.csproj" />
     <ProjectReference Include="..\..\src\Italbytz.AI.NLP\Italbytz.AI.NLP.csproj" />
     <ProjectReference Include="..\..\src\Italbytz.AI.Robotics\Italbytz.AI.Robotics.csproj" />
+    <ProjectReference Include="..\..\src\Italbytz.AI.ML.LogicGp\Italbytz.AI.ML.LogicGp.csproj" />
   </ItemGroup>
 
 </Project>
