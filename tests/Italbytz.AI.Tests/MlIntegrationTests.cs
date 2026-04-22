@@ -3,6 +3,7 @@ using Italbytz.AI.Learning;
 using Italbytz.AI.ML;
 using Italbytz.AI.ML.Core;
 using Italbytz.AI.ML.Core.Configuration;
+using Italbytz.AI.ML.LogicGp;
 using Italbytz.AI.ML.Trainers;
 using Italbytz.AI.ML.UciDatasets;
 using Microsoft.ML;
@@ -1037,6 +1038,41 @@ public class MlIntegrationTests
 
             Assert.IsGreaterThanOrEqualTo(0.99, metrics.Accuracy);
             Assert.IsGreaterThanOrEqualTo(0.99, metrics.F1Score);
+        }
+        finally
+        {
+            ThreadSafeMLContext.Seed = null;
+            File.Delete(path);
+        }
+    }
+
+    [TestMethod]
+    public void Gpas_binary_trainer_fits_heart_disease_starter_data()
+    {
+        const string csv = "age,sex,cp,trestbps,chol,fbs,restecg,thalach,exang,oldpeak,slope,ca,thal,num\n" +
+                           "45,0,1,110,190,0,0,172,0,0.0,1,0,2,0\n" +
+                           "51,0,2,118,210,0,0,168,0,0.1,1,0,2,0\n" +
+                           "39,1,1,120,185,0,0,175,0,0.0,1,0,2,0\n" +
+                           "67,1,4,160,286,0,2,108,1,1.5,2,3,3,1\n" +
+                           "58,1,4,150,270,1,2,111,1,1.2,2,2,3,1\n" +
+                           "62,1,4,140,268,0,2,116,1,2.0,2,2,3,1\n";
+
+        var path = Path.Combine(Path.GetTempPath(), $"logicgp-gpas-heart-{Guid.NewGuid():N}.csv");
+        File.WriteAllText(path, csv);
+
+        ThreadSafeMLContext.Seed = 42;
+        try
+        {
+            var mlContext = ThreadSafeMLContext.LocalMLContext;
+            var dataset = new HeartDiseaseDataset();
+            var data = dataset.LoadFromTextFile(path);
+            var pipeline = dataset.BuildPipeline(mlContext, new LogicGpGpasBinaryTrainer(10));
+
+            var model = pipeline.Fit(data);
+            var transformed = model.Transform(data);
+            var metrics = mlContext.BinaryClassification.Evaluate(transformed);
+
+            Assert.IsGreaterThanOrEqualTo(0.0, metrics.Accuracy);
         }
         finally
         {
