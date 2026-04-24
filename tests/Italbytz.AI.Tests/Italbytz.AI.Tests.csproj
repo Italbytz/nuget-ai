@@ -18,6 +18,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Include="Data\SNP\scrime.csv" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\src\Italbytz.AI\Italbytz.AI.csproj" />
     <ProjectReference Include="..\..\src\Italbytz.AI.Agent\Italbytz.AI.Agent.csproj" />
     <ProjectReference Include="..\..\src\Italbytz.AI.Search\Italbytz.AI.Search.csproj" />
