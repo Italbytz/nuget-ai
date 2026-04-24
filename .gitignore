@@ -20,3 +20,6 @@ docfx/api/
 
 # OS files
 .DS_Store
+
+# Sensitive patient data – must never be committed
+**/genica63.csv
