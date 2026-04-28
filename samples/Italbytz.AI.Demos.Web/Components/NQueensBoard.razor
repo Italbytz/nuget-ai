@@ -11,7 +11,14 @@
                 <div class="@GetCellClass(c, r)" title="@GetCellTitle(c, r)">
                     @if (IsAssigned(c) && QueenRows[c] == r)
                     {
-                        <span class="queen">Q</span>
+                        <svg class="queen-icon" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+                            <circle cx="14" cy="15" r="4"></circle>
+                            <circle cx="26" cy="11" r="4"></circle>
+                            <circle cx="38" cy="11" r="4"></circle>
+                            <circle cx="50" cy="15" r="4"></circle>
+                            <path d="M 14 20 L 22 38 L 32 24 L 42 38 L 50 20 L 47 46 L 17 46 Z"></path>
+                            <rect x="15" y="46" width="34" height="6" rx="2"></rect>
+                        </svg>
                     }
                 </div>
             }
