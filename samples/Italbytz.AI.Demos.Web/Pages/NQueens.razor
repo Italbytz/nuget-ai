@@ -1,13 +1,14 @@
-@page "/n-queens"
+@page "/n-queens-search"
 @using Italbytz.AI.Demos.Web.Demos
+@using Italbytz.AI.Demos.Web.Components
 
-<PageTitle>N-Queens demo</PageTitle>
+<PageTitle>N-Queens: Local Search demo</PageTitle>
 
 <section class="demo-hero">
     <div>
-        <p class="eyebrow">CSP demo</p>
-        <h1>N-Queens</h1>
-        <p class="hero-copy">Compare hill climbing, simulated annealing, and a genetic algorithm on the same 8-queens problem. Track board changes, conflicts, and optimization metrics over time.</p>
+        <p class="eyebrow">Optimization &amp; planning demo</p>
+        <h1>N-Queens: Local Search</h1>
+        <p class="hero-copy">Compare hill climbing, simulated annealing, and a genetic algorithm on the same 8-queens placement problem. Track board changes, conflicts, and fitness metrics over time.</p>
     </div>
 
     <div class="stat-grid">
@@ -67,22 +68,10 @@
             <p>Conflicted queens are highlighted, and the currently modified queen is outlined separately.</p>
         </div>
 
-        <div class="board-shell">
-            <div class="board" style="--board-size:@CurrentAlgorithm.BoardSize">
-                @for (var row = 0; row < CurrentAlgorithm.BoardSize; row++)
-                {
-                    @for (var column = 0; column < CurrentAlgorithm.BoardSize; column++)
-                    {
-                        <div class="@GetBoardCellClass(column, row)" title="@GetBoardCellTitle(column, row)">
-                            @if (CurrentBoardRows[column] == row)
-                            {
-                                <span class="queen">Q</span>
-                            }
-                        </div>
-                    }
-                }
-            </div>
-        </div>
+        <NQueensBoard BoardSize="@CurrentAlgorithm.BoardSize"
+                      QueenRows="@CurrentBoardRows"
+                      ConflictedColumns="@(CurrentStepModel?.ConflictedColumns ?? [])"
+                      CurrentColumn="@CurrentStepModel?.CurrentColumn" />
 
         <div class="inspector-grid">
             <article class="inspector-box @(CurrentStepModel?.Solved == true ? "inspector-box-active" : string.Empty)">
@@ -184,40 +173,6 @@
     private void Reset()
     {
         _currentStep = 0;
-    }
-
-    private string GetBoardCellClass(int column, int row)
-    {
-        var isDarkCell = (row + column) % 2 == 1;
-        var cssClass = isDarkCell ? "board-cell board-cell-dark" : "board-cell board-cell-light";
-
-        if (CurrentBoardRows[column] == row)
-        {
-            cssClass += " board-cell-has-queen";
-            if (CurrentStepModel?.ConflictedColumns.Contains(column) == true)
-            {
-                cssClass += " board-cell-conflicted";
-            }
-
-            if (CurrentStepModel?.CurrentColumn == column)
-            {
-                cssClass += " board-cell-current";
-            }
-        }
-
-        return cssClass;
-    }
-
-    private string GetBoardCellTitle(int column, int row)
-    {
-        if (CurrentBoardRows[column] != row)
-        {
-            return $"Column {column + 1}, row {row + 1}";
-        }
-
-        return CurrentStepModel?.CurrentColumn == column
-            ? $"Q{column + 1} is currently being modified"
-            : $"Q{column + 1} in row {row + 1}";
     }
 
 }
