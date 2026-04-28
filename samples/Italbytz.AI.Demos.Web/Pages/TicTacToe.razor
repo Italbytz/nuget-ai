@@ -69,11 +69,12 @@
             <div class="tic-board" role="grid" aria-label="Tic-Tac-Toe board">
                 @for (var index = 0; index < 9; index++)
                 {
-                    <button class="@GetCellClass(index)"
-                            disabled="@(_state.GetCell(index) != '.' || _comparison.IsTerminal)"
-                            title="@GetCellTitle(index)"
-                            @onclick="() => PlayMove(index)">
-                        @TicTacToeDemoFactory.DescribeCell(_state.GetCell(index))
+                    var cellIndex = index;
+                    <button class="@GetCellClass(cellIndex)"
+                            disabled="@(_state.GetCell(cellIndex) != '.' || _comparison.IsTerminal)"
+                            title="@GetCellTitle(cellIndex)"
+                            @onclick="() => PlayMove(cellIndex)">
+                        @TicTacToeDemoFactory.DescribeCell(_state.GetCell(cellIndex))
                     </button>
                 }
             </div>
