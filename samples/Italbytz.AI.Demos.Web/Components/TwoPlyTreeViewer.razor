@@ -1,0 +1,141 @@
+@using Italbytz.AI.Demos.Web.Demos
+@using Italbytz.Graph.Visualization
+
+@if (_graphView is not null)
+{
+    <div class="game-tree-container">
+        <GraphViewport Graph="@_graphView"
+                       ActiveEdgeKeys="@_graphState.ActiveEdgeKeys"
+                       ActiveNodeKeys="@_graphState.ActiveNodeIds"
+                       FrontierNodeKeys="@_graphState.FrontierNodeIds"
+                       ExploredNodeKeys="@_graphState.ExploredNodeIds"
+                       CurrentNodeKey="@_graphState.CurrentNodeId"
+                       SuccessorEdgeKeys="@_graphState.SuccessorEdgeKeys"
+                       DirectedActiveEdgeIds="@_graphState.DirectedActiveEdgeIds"
+                       DirectedSuccessorEdgeIds="@_graphState.DirectedSuccessorEdgeIds"
+                       Title="Two-ply game tree"
+                       ZoomInLabel="Zoom in"
+                       ZoomOutLabel="Zoom out"
+                       FitLabel="Fit tree"
+                       ResetLabel="Reset"
+                       InteractionHint="Nutze Zoom/Fit und klicke Knoten/Kanten für Details."
+                       ActiveLegendLabel="Principal variation"
+                       SuccessorLegendLabel="Alternativen"
+                       CurrentNodeLegendLabel="Root (MAX)"
+                       FrontierLegendLabel="MIN-Knoten"
+                       ExploredLegendLabel="Blatt (gewertet)"
+                       SolutionLegendLabel="PV-Knoten"
+                       DefaultLegendLabel="Normale Kante"
+                       InspectorTitle="Tree inspector"
+                       NoSelectionTitle="Nichts ausgewählt"
+                       NoSelectionText="Wähle einen Knoten oder eine Kante, um Utility und Verbindungen zu prüfen."
+                       NodeLabel="Node"
+                       EdgeLabel="Edge"
+                       WeightLabel="Utility"
+                       ConnectionsLabel="Connections"
+                       StateLabel="State" />
+    </div>
+}
+
+@code {
+    [Parameter]
+    public TwoPlyComparison? Comparison { get; set; }
+
+    private GraphViewModel? _graphView;
+    private GraphStateViewModel _graphState = new(string.Empty, [], [], [], [], [], [], []);
+
+    protected override void OnParametersSet()
+    {
+        if (Comparison is null)
+        {
+            _graphView = null;
+            _graphState = new(string.Empty, [], [], [], [], [], [], []);
+            return;
+        }
+
+        var scenario = Comparison.Scenario;
+        var pvSet = new HashSet<string>(Comparison.PrincipalVariation, StringComparer.Ordinal);
+
+        // Build leaf utility lookup from LeafInsights
+        var leafUtility = Comparison.LeafInsights
+            .GroupBy(l => l.Leaf, StringComparer.Ordinal)
+            .ToDictionary(g => g.Key, g => g.First().Utility, StringComparer.Ordinal);
+
+        // Build branch minimax value lookup from Branches
+        var branchValue = Comparison.Branches
+            .ToDictionary(b => b.ActionLabel, b => b.MinimaxValue, StringComparer.Ordinal);
+
+        var treeLayoutNodes = new List<TreeLayoutNode>();
+        var activeNodeIds = new List<string>();
+        var frontierNodeIds = new List<string>();
+        var exploredNodeIds = new List<string>();
+        var activeEdgeKeys = new List<string>();
+        var directedActiveEdgeIds = new List<string>();
+
+        // Root node (MAX)
+        treeLayoutNodes.Add(new TreeLayoutNode("A", "A", null, string.Empty, pvSet.Contains("A"), 0));
+        if (pvSet.Contains("A")) activeNodeIds.Add("A");
+
+        var branchOrder = 0;
+        foreach (var branch in scenario.RootOrder)
+        {
+            var branchChildren = scenario.ChildOrder.TryGetValue(branch, out var children) ? children : [];
+            branchValue.TryGetValue(branch, out var bv);
+            var branchLabel = $"{branch}={bv:0.##}";
+
+            treeLayoutNodes.Add(new TreeLayoutNode(branch, branchLabel, "A", branch, pvSet.Contains(branch), branchOrder));
+            frontierNodeIds.Add(branch);
+            if (pvSet.Contains(branch)) activeNodeIds.Add(branch);
+
+            var edgeKey = $"A->{branch}";
+            var directedId = GraphViewKeys.CreateDirectedEdgeId("A", branch);
+            if (pvSet.Contains(branch))
+            {
+                activeEdgeKeys.Add(edgeKey);
+                directedActiveEdgeIds.Add(directedId);
+            }
+
+            var leafOrder = 0;
+            foreach (var leaf in branchChildren)
+            {
+                leafUtility.TryGetValue(leaf, out var u);
+                var leafLabel = $"{leaf}={u:0.##}";
+
+                treeLayoutNodes.Add(new TreeLayoutNode(leaf, leafLabel, branch, leaf, pvSet.Contains(leaf), leafOrder));
+                exploredNodeIds.Add(leaf);
+                if (pvSet.Contains(leaf)) activeNodeIds.Add(leaf);
+
+                var leafEdgeKey = $"{branch}->{leaf}";
+                var leafDirectedId = GraphViewKeys.CreateDirectedEdgeId(branch, leaf);
+                if (pvSet.Contains(branch) && pvSet.Contains(leaf))
+                {
+                    activeEdgeKeys.Add(leafEdgeKey);
+                    directedActiveEdgeIds.Add(leafDirectedId);
+                }
+
+                leafOrder++;
+            }
+
+            branchOrder++;
+        }
+
+        _graphView = GraphViewFactory.BuildTreeGraphView(
+            treeLayoutNodes,
+            horizontalSpacing: 108.0,
+            verticalSpacing: 180.0,
+            nodeRadius: 24.0,
+            padding: 56.0,
+            rootSpacing: 1.4,
+            orientation: TreeLayoutOrientation.LeftToRight);
+
+        _graphState = new GraphStateViewModel(
+            "A",
+            activeNodeIds,
+            frontierNodeIds,
+            exploredNodeIds,
+            activeEdgeKeys,
+            [],
+            directedActiveEdgeIds,
+            []);
+    }
+}
