@@ -85,6 +85,22 @@
                 <p>@CurrentMetric</p>
             </article>
         </div>
+
+        <div class="domain-panel">
+            <div class="section-heading section-heading-tight">
+                <h2>Domains</h2>
+                <p>Each chip shows the currently allowed rows for one queen column. Smaller sets indicate stronger pruning.</p>
+            </div>
+            <div class="domain-grid">
+                @foreach (var domain in CurrentDomainsByColumn.Select((values, column) => new { values, column }))
+                {
+                    <article class="@GetDomainChipClass(domain.column, domain.values)">
+                        <strong>Q@(domain.column + 1)</strong>
+                        <span>@FormatDomain(domain.values)</span>
+                    </article>
+                }
+            </div>
+        </div>
     </article>
 
     <article class="surface-card inspector-card">
@@ -130,6 +146,7 @@
     private IReadOnlyList<int> CurrentBoardRows => CurrentStepModel?.QueenRows ?? CurrentAlgorithm.InitialQueenRows;
     private IReadOnlyList<int> CurrentAssignedColumns => CurrentStepModel?.AssignedColumns ?? CurrentAlgorithm.InitialAssignedColumns;
     private IReadOnlyList<int> CurrentConflictedColumns => CurrentStepModel?.ConflictedColumns ?? [];
+    private IReadOnlyList<int[]> CurrentDomainsByColumn => CurrentStepModel?.DomainsByColumn ?? CreateDefaultDomains(CurrentAlgorithm.BoardSize);
     private int CurrentAssignedCount => CurrentAssignedColumns.Count;
     private int CurrentConflictCount => CurrentStepModel?.ConflictCount ?? NQueensCspDemoFactory.CountConflictsForBoard(CurrentBoardRows, CurrentAssignedColumns);
     private string CurrentActionTitle => CurrentStepModel?.Summary ?? "Initial board";
@@ -177,5 +194,48 @@
     private void Reset()
     {
         _currentStep = 0;
+    }
+
+    private string FormatDomain(IReadOnlyList<int> values)
+    {
+        if (values.Count == 0)
+        {
+            return "{}";
+        }
+
+        return $"{{{string.Join(", ", values.Select(value => value + 1))}}}";
+    }
+
+    private string GetDomainChipClass(int column, IReadOnlyList<int> values)
+    {
+        var cssClass = "domain-chip";
+
+        if (CurrentAssignedColumns.Contains(column))
+        {
+            cssClass += " domain-chip-assigned";
+        }
+        else if (values.Count < CurrentAlgorithm.BoardSize)
+        {
+            cssClass += " domain-chip-reduced";
+        }
+
+        if (CurrentConflictedColumns.Contains(column))
+        {
+            cssClass += " domain-chip-conflicted";
+        }
+
+        if (CurrentStepModel?.CurrentColumn == column)
+        {
+            cssClass += " domain-chip-current";
+        }
+
+        return cssClass;
+    }
+
+    private static IReadOnlyList<int[]> CreateDefaultDomains(int boardSize)
+    {
+        return Enumerable.Range(0, boardSize)
+            .Select(_ => Enumerable.Range(0, boardSize).ToArray())
+            .ToArray();
     }
 }
