@@ -165,11 +165,15 @@
 
                 <div class="tree-toggle-row">
                     <button class="ghost-button" @onclick="ToggleTreeVisualization">@(_showTreeVisualization ? "Hide tree" : "Show tree")</button>
+                    @if (_showTreeVisualization)
+                    {
+                        <button class="ghost-button" @onclick="ToggleTreeDensity">@(_condenseTreeBeforeDecision ? "Show full tree" : "Show compact tree")</button>
+                    }
                 </div>
 
                 @if (_showTreeVisualization && _gameTree is not null)
                 {
-                    <GameTreeViewer Tree="_gameTree" />
+                    <GameTreeViewer Tree="_gameTree" CondenseBeforeDecision="_condenseTreeBeforeDecision" />
                 }
 
                 <div class="section-heading section-heading-tight">
@@ -213,6 +217,7 @@
     private TicTacToeGameTree? _gameTree;
     private bool _showTreeInsights;
     private bool _showTreeVisualization;
+    private bool _condenseTreeBeforeDecision = true;
 
     protected override void OnInitialized()
     {
@@ -296,6 +301,11 @@
     private void ToggleTreeVisualization()
     {
         _showTreeVisualization = !_showTreeVisualization;
+    }
+
+    private void ToggleTreeDensity()
+    {
+        _condenseTreeBeforeDecision = !_condenseTreeBeforeDecision;
     }
 
     private string GetCellClass(int index)
