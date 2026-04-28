@@ -21,7 +21,8 @@
 		<a class="ghost-link" href="umbrella-world">Open Umbrella World</a>
 		<a class="ghost-link" href="cyk-parser">Open CYK Parser</a>
 		<a class="ghost-link" href="vacuum-world">Open Vacuum World</a>
-		<a class="ghost-link" href="n-queens">Open N-Queens</a>
+		<a class="ghost-link" href="n-queens-search">Open N-Queens Local Search</a>
+		<a class="ghost-link" href="n-queens-csp">Open N-Queens CSP</a>
 		<a class="ghost-link" href="https://italbytz.github.io/nuget-ai/docs/interactive-demos.html" target="_blank" rel="noreferrer">Read demo guide</a>
 	</div>
 </section>
@@ -60,6 +61,13 @@
 		<h2>Linear Programming</h2>
 		<p>Contrast the LP relaxation with the ILP optimum on a two-variable problem and inspect the feasible polygon, integer lattice points, and shifted optimum. Built around <code>Italbytz.AI.Search.Continuous</code>.</p>
 		<a class="primary-link" href="linear-programming">Launch demo</a>
+	</article>
+
+	<article class="demo-card muted-card">
+		<p class="eyebrow">Optimization</p>
+		<h2>N-Queens: Local Search</h2>
+		<p>Compare hill climbing, simulated annealing, and a genetic algorithm on the same 8-queens board with visible conflicts and step-by-step metrics. Constraint evaluation is tied to <code>Italbytz.AI.CSP</code>.</p>
+		<a class="primary-link" href="n-queens-search">Launch demo</a>
 	</article>
 
 	<article class="demo-card featured-card">
@@ -106,8 +114,8 @@
 
 	<article class="demo-card muted-card">
 		<p class="eyebrow">CSP</p>
-		<h2>N-Queens</h2>
-		<p>Compare hill climbing, simulated annealing, and a genetic algorithm on the same 8-queens board with visible conflicts and step-by-step metrics. Constraint evaluation is tied to <code>Italbytz.AI.CSP</code>.</p>
-		<a class="primary-link" href="n-queens">Launch demo</a>
+		<h2>N-Queens: CSP</h2>
+		<p>Compare plain backtracking, backtracking with arc consistency, and min-conflicts repair while inspecting partial assignments, propagation, and conflict counts.</p>
+		<a class="primary-link" href="n-queens-csp">Launch demo</a>
 	</article>
 </section>
