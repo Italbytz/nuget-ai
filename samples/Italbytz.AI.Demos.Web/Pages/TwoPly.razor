@@ -86,6 +86,10 @@
             <p>The selected action should stay identical. Only the expansion count should differ when ordering enables pruning.</p>
         </div>
 
+        <div class="tree-toggle-row">
+            <button class="choice-button" @onclick="ToggleTreeInsights">@(_showTreeInsights ? "Hide tree insights" : "Show tree insights")</button>
+        </div>
+
         <table>
             <thead>
                 <tr>
@@ -112,6 +116,51 @@
         </table>
 
         <p class="step-summary">Interpretation: alpha-beta has the same decision quality as minimax but may inspect fewer states when low-value MIN outcomes are discovered early.</p>
+
+        @if (_showTreeInsights)
+        {
+            <div class="tree-insights-panel">
+                <div class="tree-metrics-grid">
+                    <article class="inspector-box">
+                        <p class="eyebrow">Principal variation</p>
+                        <h3>@PrincipalVariationLabel</h3>
+                        <p>Best-play path through the tree for MAX at root and MIN on the next ply.</p>
+                    </article>
+                    <article class="inspector-box">
+                        <p class="eyebrow">Pruned leaves (alpha-beta)</p>
+                        <h3>@_comparison.AlphaBetaPrunedLeafCount</h3>
+                        <p>Leaf utilities not evaluated because alpha-beta cut off the remainder of the MIN branch.</p>
+                    </article>
+                </div>
+
+                <div class="section-heading section-heading-tight">
+                    <h2>Leaf explorer</h2>
+                    <p>Full two-ply leaf set with alpha-beta evaluation status under the selected ordering.</p>
+                </div>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Root action</th>
+                            <th>Leaf</th>
+                            <th>Utility</th>
+                            <th>Alpha-beta status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var leaf in _comparison.LeafInsights)
+                        {
+                            <tr class="@(leaf.EvaluatedByAlphaBeta ? string.Empty : "tree-row-pruned")">
+                                <td>@leaf.RootAction</td>
+                                <td>@leaf.Leaf</td>
+                                <td>@leaf.Utility.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)</td>
+                                <td>@(leaf.EvaluatedByAlphaBeta ? "evaluated" : "pruned")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
     </article>
 </section>
 
@@ -119,6 +168,7 @@
     private readonly IReadOnlyList<TwoPlyScenario> _scenarios = TwoPlyDemoFactory.BuildScenarios();
     private TwoPlyScenario _scenario = TwoPlyDemoFactory.BuildScenarios()[0];
     private TwoPlyComparison _comparison = TwoPlyDemoFactory.Analyze(TwoPlyDemoFactory.BuildScenarios()[0]);
+    private bool _showTreeInsights;
 
     private string NodeSavingsLabel
     {
@@ -129,9 +179,18 @@
         }
     }
 
+    private string PrincipalVariationLabel => _comparison.PrincipalVariation.Count == 0
+        ? "none"
+        : string.Join(" -> ", _comparison.PrincipalVariation);
+
     private void SelectScenario(string key)
     {
         _scenario = _scenarios.First(scenario => scenario.Key == key);
         _comparison = TwoPlyDemoFactory.Analyze(_scenario);
+    }
+
+    private void ToggleTreeInsights()
+    {
+        _showTreeInsights = !_showTreeInsights;
     }
 }
