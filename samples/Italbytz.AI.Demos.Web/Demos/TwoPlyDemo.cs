@@ -25,7 +25,16 @@ internal sealed record TwoPlyComparison(
     TwoPlyAlgorithmAnalysis Minimax,
     TwoPlyAlgorithmAnalysis AlphaBeta,
     IReadOnlyList<TwoPlyBranchSummary> Branches,
-    string Explanation);
+    string Explanation,
+    IReadOnlyList<TwoPlyLeafInsight> LeafInsights,
+    IReadOnlyList<string> PrincipalVariation,
+    int AlphaBetaPrunedLeafCount);
+
+internal sealed record TwoPlyLeafInsight(
+    string RootAction,
+    string Leaf,
+    double Utility,
+    bool EvaluatedByAlphaBeta);
 
 internal sealed record TwoPlyScenario(
     string Key,
@@ -90,6 +99,10 @@ internal static class TwoPlyDemoFactory
             ? "Both algorithms select the same optimal root action; alpha-beta only changes how many nodes must be expanded."
             : "The selected moves differ, which indicates either equivalent utilities with tie-breaking or a modeling mismatch.";
 
+        var leafInsights = BuildLeafInsights(scenario);
+        var prunedLeafCount = leafInsights.Count(leaf => !leaf.EvaluatedByAlphaBeta);
+        var principalVariation = BuildPrincipalVariation(leafInsights, minimaxMove?.Label);
+
         return new TwoPlyComparison(
             scenario,
             new TwoPlyAlgorithmAnalysis(
@@ -103,7 +116,65 @@ internal static class TwoPlyDemoFactory
                 alphaBeta.Metrics.GetInt(AlphaBetaSearch<TwoPlyState, TwoPlyMove, TwoPlyPlayer>.MetricNodesExpanded),
                 rootValue),
             branches,
-            explanation);
+            explanation,
+            leafInsights,
+            principalVariation,
+            prunedLeafCount);
+    }
+
+    private static IReadOnlyList<TwoPlyLeafInsight> BuildLeafInsights(TwoPlyScenario scenario)
+    {
+        var alpha = double.NegativeInfinity;
+        var insights = new List<TwoPlyLeafInsight>();
+
+        foreach (var root in scenario.RootOrder)
+        {
+            var leaves = scenario.ChildOrder[root];
+            var branchValue = double.PositiveInfinity;
+            var branchCutoff = false;
+
+            foreach (var leaf in leaves)
+            {
+                var utility = TwoPlyGame.GetUtilityValue(leaf);
+                var evaluated = !branchCutoff;
+                if (evaluated)
+                {
+                    branchValue = Math.Min(branchValue, utility);
+                    if (branchValue <= alpha)
+                    {
+                        branchCutoff = true;
+                    }
+                }
+
+                insights.Add(new TwoPlyLeafInsight(
+                    root,
+                    leaf,
+                    utility,
+                    evaluated));
+            }
+
+            alpha = Math.Max(alpha, branchValue);
+        }
+
+        return insights;
+    }
+
+    private static IReadOnlyList<string> BuildPrincipalVariation(IReadOnlyList<TwoPlyLeafInsight> leafInsights, string? bestRootAction)
+    {
+        if (bestRootAction is null)
+        {
+            return [];
+        }
+
+        var bestLeaf = leafInsights
+            .Where(leaf => string.Equals(leaf.RootAction, bestRootAction, StringComparison.Ordinal))
+            .OrderBy(leaf => leaf.Utility)
+            .ThenBy(leaf => leaf.Leaf, StringComparer.Ordinal)
+            .FirstOrDefault();
+
+        return bestLeaf is null
+            ? ["A", bestRootAction]
+            : ["A", bestRootAction, bestLeaf.Leaf];
     }
 
     private static double EvaluateValue(TwoPlyGame game, TwoPlyState state, TwoPlyPlayer rootPlayer)
@@ -140,6 +211,11 @@ internal static class TwoPlyDemoFactory
         public TwoPlyGame(TwoPlyScenario scenario)
         {
             _scenario = scenario;
+        }
+
+        public static double GetUtilityValue(string stateId)
+        {
+            return Utilities.TryGetValue(stateId, out var value) ? value : 0;
         }
 
         public TwoPlyState InitialState { get; } = new("A", 0);
