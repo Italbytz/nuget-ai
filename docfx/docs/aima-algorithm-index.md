@@ -32,5 +32,7 @@ It is intended as a quick bridge between **Artificial Intelligence: A Modern App
 - GridWorld MDP: `https://italbytz.github.io/nuget-ai/demos/gridworld-mdp`
 - Map coloring: `https://italbytz.github.io/nuget-ai/demos/map-coloring`
 - Romania search: `https://italbytz.github.io/nuget-ai/demos/romania-search`
+- Tic-Tac-Toe: `https://italbytz.github.io/nuget-ai/demos/tic-tac-toe`
+- Two-Ply: `https://italbytz.github.io/nuget-ai/demos/two-ply`
 - Umbrella world: `https://italbytz.github.io/nuget-ai/demos/umbrella-world`
 - Weighted graph: `https://italbytz.github.io/nuget-ai/demos/weighted-graph`
