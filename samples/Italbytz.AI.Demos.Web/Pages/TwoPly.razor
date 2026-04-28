@@ -1,0 +1,137 @@
+@page "/two-ply"
+@using Italbytz.AI.Demos.Web.Demos
+
+<PageTitle>Two-Ply adversarial search demo</PageTitle>
+
+<section class="demo-hero">
+    <div>
+        <p class="eyebrow">Adversarial search demo</p>
+        <h1>Two-Ply game tree</h1>
+        <p class="hero-copy">Compare minimax and alpha-beta pruning on a compact depth-2 game tree. The scenario switch changes move ordering to show how pruning depends on action order while preserving the optimal root move.</p>
+    </div>
+
+    <div class="stat-grid">
+        <article>
+            <span class="stat-label">Scenario</span>
+            <strong>@_scenario.Name</strong>
+        </article>
+        <article>
+            <span class="stat-label">Best root move</span>
+            <strong>@(_comparison.Minimax.BestMove?.Label ?? "none")</strong>
+        </article>
+        <article>
+            <span class="stat-label">Root value</span>
+            <strong>@_comparison.Minimax.RootValue.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)</strong>
+        </article>
+        <article>
+            <span class="stat-label">Node savings</span>
+            <strong>@NodeSavingsLabel</strong>
+        </article>
+    </div>
+</section>
+
+<section class="control-panel">
+    <div class="button-row">
+        @foreach (var scenario in _scenarios)
+        {
+            <button class="@(scenario.Key == _scenario.Key ? "choice-button selected" : "choice-button")"
+                    @onclick="() => SelectScenario(scenario.Key)">
+                @scenario.Name
+            </button>
+        }
+    </div>
+
+    <div class="selection-copy" style="margin-top:0.75rem;">
+        <p class="selection-summary">@_scenario.Summary</p>
+        <p class="selection-summary">Package linkage: recommendations and node metrics come from <code>MinimaxSearch&lt;TState, TAction, TPlayer&gt;</code> and <code>AlphaBetaSearch&lt;TState, TAction, TPlayer&gt;</code> in <code>Italbytz.AI.Search.Adversarial</code>.</p>
+        <p class="selection-summary">@_comparison.Explanation</p>
+    </div>
+</section>
+
+<section class="demo-grid two-ply-grid">
+    <article class="surface-card tree-card">
+        <div class="section-heading">
+            <h2>Root actions</h2>
+            <p>Each branch value is the MIN outcome for that root action under perfect play.</p>
+        </div>
+
+        <div class="branch-grid">
+            @foreach (var branch in _comparison.Branches)
+            {
+                <article class="branch-card @(branch.Recommended ? "branch-card-recommended" : string.Empty)">
+                    <p class="eyebrow">Action</p>
+                    <h3>@branch.ActionLabel</h3>
+                    <p>minimax value = @branch.MinimaxValue.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)</p>
+                </article>
+            }
+        </div>
+
+        <div class="inspector-grid">
+            <article class="inspector-box">
+                <p class="eyebrow">Minimax move</p>
+                <h3>@(_comparison.Minimax.BestMove?.Label ?? "none")</h3>
+                <p>nodes expanded: @_comparison.Minimax.NodesExpanded</p>
+            </article>
+            <article class="inspector-box">
+                <p class="eyebrow">Alpha-beta move</p>
+                <h3>@(_comparison.AlphaBeta.BestMove?.Label ?? "none")</h3>
+                <p>nodes expanded: @_comparison.AlphaBeta.NodesExpanded</p>
+            </article>
+        </div>
+    </article>
+
+    <article class="surface-card inspector-card">
+        <div class="section-heading">
+            <h2>Algorithm comparison</h2>
+            <p>The selected action should stay identical. Only the expansion count should differ when ordering enables pruning.</p>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Algorithm</th>
+                    <th>Recommended move</th>
+                    <th>Nodes expanded</th>
+                    <th>Root value</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>@_comparison.Minimax.Name</td>
+                    <td>@(_comparison.Minimax.BestMove?.Label ?? "none")</td>
+                    <td>@_comparison.Minimax.NodesExpanded</td>
+                    <td>@_comparison.Minimax.RootValue.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)</td>
+                </tr>
+                <tr>
+                    <td>@_comparison.AlphaBeta.Name</td>
+                    <td>@(_comparison.AlphaBeta.BestMove?.Label ?? "none")</td>
+                    <td>@_comparison.AlphaBeta.NodesExpanded</td>
+                    <td>@_comparison.AlphaBeta.RootValue.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <p class="step-summary">Interpretation: alpha-beta has the same decision quality as minimax but may inspect fewer states when low-value MIN outcomes are discovered early.</p>
+    </article>
+</section>
+
+@code {
+    private readonly IReadOnlyList<TwoPlyScenario> _scenarios = TwoPlyDemoFactory.BuildScenarios();
+    private TwoPlyScenario _scenario = TwoPlyDemoFactory.BuildScenarios()[0];
+    private TwoPlyComparison _comparison = TwoPlyDemoFactory.Analyze(TwoPlyDemoFactory.BuildScenarios()[0]);
+
+    private string NodeSavingsLabel
+    {
+        get
+        {
+            var savings = _comparison.Minimax.NodesExpanded - _comparison.AlphaBeta.NodesExpanded;
+            return savings > 0 ? $"{savings} fewer nodes" : "none";
+        }
+    }
+
+    private void SelectScenario(string key)
+    {
+        _scenario = _scenarios.First(scenario => scenario.Key == key);
+        _comparison = TwoPlyDemoFactory.Analyze(_scenario);
+    }
+}
