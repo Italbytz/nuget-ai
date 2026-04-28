@@ -1,0 +1,181 @@
+@page "/n-queens-csp"
+@using Italbytz.AI.Demos.Web.Demos
+@using Italbytz.AI.Demos.Web.Components
+
+<PageTitle>N-Queens: CSP demo</PageTitle>
+
+<section class="demo-hero">
+    <div>
+        <p class="eyebrow">CSP demo</p>
+        <h1>N-Queens: CSP</h1>
+        <p class="hero-copy">Compare plain backtracking, backtracking with arc consistency, and min-conflicts repair on the same 8-queens constraint model. Inspect assignment depth, conflicts, and propagation effects over time.</p>
+    </div>
+
+    <div class="stat-grid">
+        <article>
+            <span class="stat-label">Algorithm</span>
+            <strong>@CurrentAlgorithm.Name</strong>
+        </article>
+        <article>
+            <span class="stat-label">Assigned queens</span>
+            <strong>@CurrentAssignedCount / @CurrentAlgorithm.BoardSize</strong>
+        </article>
+        <article>
+            <span class="stat-label">Conflicts</span>
+            <strong>@CurrentConflictCount</strong>
+        </article>
+        <article>
+            <span class="stat-label">Visible step</span>
+            <strong>@VisibleProgressLabel</strong>
+        </article>
+    </div>
+</section>
+
+<section class="control-panel">
+    <div class="button-row">
+        @foreach (var algorithm in _algorithms)
+        {
+            <button class="@(algorithm.Key == _selectedAlgorithmKey ? "choice-button selected" : "choice-button")"
+                    @onclick="() => SelectAlgorithm(algorithm.Key)">
+                @algorithm.Name
+            </button>
+        }
+    </div>
+
+    <div class="secondary-controls">
+        <div class="selection-copy">
+            <p class="selection-summary">@CurrentAlgorithm.Summary</p>
+            <p class="selection-summary">@CurrentAlgorithm.SeedSummary. Initial board: @InitialBoardLabel</p>
+        </div>
+
+        <div class="step-buttons">
+            <button class="ghost-button" @onclick="RandomizeRun">Randomize run</button>
+            <button class="ghost-button" @onclick="PreviousStep" disabled="@(_currentStep == 0)">Previous</button>
+            <button class="primary-button" @onclick="NextStep" disabled="@(_currentStep >= CurrentAlgorithm.Steps.Count)">Next</button>
+            <button class="ghost-button" @onclick="ShowCompleteRun" disabled="@(_currentStep >= CurrentAlgorithm.Steps.Count)">Complete run</button>
+            <button class="ghost-button" @onclick="Reset">Reset</button>
+        </div>
+    </div>
+
+    <p class="step-summary">@CurrentSummary</p>
+</section>
+
+<section class="demo-grid">
+    <article class="surface-card board-card">
+        <div class="section-heading">
+            <h2>Board</h2>
+            <p>Assigned queens are rendered on the board. Conflicted assigned columns are highlighted.</p>
+        </div>
+
+        <NQueensBoard BoardSize="@CurrentAlgorithm.BoardSize"
+                      QueenRows="@CurrentBoardRows"
+                      AssignedColumns="@CurrentAssignedColumns"
+                      ConflictedColumns="@CurrentConflictedColumns"
+                      CurrentColumn="@CurrentStepModel?.CurrentColumn" />
+
+        <div class="inspector-grid">
+            <article class="inspector-box @(CurrentStepModel?.Solved == true ? "inspector-box-active" : string.Empty)">
+                <p class="eyebrow">Assignment state</p>
+                <h3>@CurrentAssignedCount / @CurrentAlgorithm.BoardSize assigned</h3>
+                <p>Conflicts: @CurrentConflictCount</p>
+            </article>
+            <article class="inspector-box @(CurrentStepModel?.Backtracking == true ? "inspector-box-warning" : string.Empty)">
+                <p class="eyebrow">Current move</p>
+                <h3>@CurrentActionTitle</h3>
+                <p>@CurrentMetric</p>
+            </article>
+        </div>
+    </article>
+
+    <article class="surface-card inspector-card">
+        <div class="section-heading">
+            <h2>Trace</h2>
+            <p>Reveal each solver trace step incrementally to inspect where choices are accepted, rejected, propagated, or reverted.</p>
+        </div>
+
+        @if (VisibleTraceSteps.Count == 0)
+        {
+            <p class="empty-copy">No step revealed yet. Advance the solver to add the first trace entry.</p>
+        }
+        else
+        {
+            <ol class="trace-list step-trace-list">
+                @foreach (var step in VisibleTraceSteps)
+                {
+                    <li class="@(step.Number == _currentStep ? "trace-step-active" : string.Empty)">
+                        <strong>@step.Number. @step.Summary</strong>
+                        <span>@step.Description</span>
+                        <span class="trace-metric">@step.Metric</span>
+                    </li>
+                }
+            </ol>
+        }
+    </article>
+</section>
+
+@code {
+    private readonly Random _random = new();
+    private IReadOnlyList<NQueensCspAlgorithmDemo> _algorithms = NQueensCspDemoFactory.BuildAll(41);
+    private string _selectedAlgorithmKey = "Backtracking";
+    private int _scenarioSeed = 41;
+    private int _currentStep;
+
+    private NQueensCspAlgorithmDemo CurrentAlgorithm => _algorithms.First(algorithm => algorithm.Key == _selectedAlgorithmKey);
+    private IReadOnlyList<NQueensCspStep> VisibleTraceSteps => CurrentAlgorithm.Steps.Take(_currentStep).ToArray();
+
+    private NQueensCspStep? CurrentStepModel => _currentStep > 0 && CurrentAlgorithm.Steps.Count > 0
+        ? CurrentAlgorithm.Steps[Math.Min(_currentStep - 1, CurrentAlgorithm.Steps.Count - 1)]
+        : null;
+
+    private IReadOnlyList<int> CurrentBoardRows => CurrentStepModel?.QueenRows ?? CurrentAlgorithm.InitialQueenRows;
+    private IReadOnlyList<int> CurrentAssignedColumns => CurrentStepModel?.AssignedColumns ?? CurrentAlgorithm.InitialAssignedColumns;
+    private IReadOnlyList<int> CurrentConflictedColumns => CurrentStepModel?.ConflictedColumns ?? [];
+    private int CurrentAssignedCount => CurrentAssignedColumns.Count;
+    private int CurrentConflictCount => CurrentStepModel?.ConflictCount ?? NQueensCspDemoFactory.CountConflictsForBoard(CurrentBoardRows, CurrentAssignedColumns);
+    private string CurrentActionTitle => CurrentStepModel?.Summary ?? "Initial board";
+    private string CurrentMetric => CurrentStepModel?.Metric ?? $"assigned={CurrentAssignedCount}/{CurrentAlgorithm.BoardSize}, conflicts={CurrentConflictCount}";
+    private string InitialBoardLabel => string.Join(", ", CurrentAlgorithm.InitialQueenRows.Select((row, column) => $"Q{column + 1}->{row + 1}"));
+    private string VisibleProgressLabel => CurrentAlgorithm.Steps.Count == 0 ? "0 / 0" : $"{_currentStep} / {CurrentAlgorithm.Steps.Count}";
+    private string CurrentSummary => _currentStep == 0
+        ? "Choose a CSP strategy and advance one step at a time to inspect assignment, propagation, and repair behaviour."
+        : CurrentStepModel?.Description ?? string.Empty;
+
+    private void SelectAlgorithm(string key)
+    {
+        _selectedAlgorithmKey = key;
+        _currentStep = 0;
+    }
+
+    private void RandomizeRun()
+    {
+        _scenarioSeed = _random.Next(1000, 99999);
+        _algorithms = NQueensCspDemoFactory.BuildAll(_scenarioSeed);
+        _currentStep = 0;
+    }
+
+    private void PreviousStep()
+    {
+        if (_currentStep > 0)
+        {
+            _currentStep--;
+        }
+    }
+
+    private void NextStep()
+    {
+        if (_currentStep < CurrentAlgorithm.Steps.Count)
+        {
+            _currentStep++;
+        }
+    }
+
+    private void ShowCompleteRun()
+    {
+        _currentStep = CurrentAlgorithm.Steps.Count;
+    }
+
+    private void Reset()
+    {
+        _currentStep = 0;
+    }
+}
