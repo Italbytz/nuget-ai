@@ -8,7 +8,7 @@ internal enum TicTacToePlayer
     O
 }
 
-internal sealed record TicTacToeMove(int Index)
+public sealed record TicTacToeMove(int Index)
 {
     public int Row => Index / 3;
     public int Column => Index % 3;
@@ -49,6 +49,24 @@ internal sealed record TicTacToeBranchInsight(
     int MinimaxNodes,
     int AlphaBetaNodes,
     bool OnPrincipalVariation);
+
+public sealed record TicTacToeTreeNode(
+    string Id,
+    TicTacToeMove? Move,
+    double Utility,
+    int Depth,
+    double XPos,
+    double YPos,
+    bool OnPrincipalVariation,
+    bool IsTerminal,
+    IReadOnlyList<TicTacToeTreeNode> Children,
+    string? Label);
+
+public sealed record TicTacToeGameTree(
+    TicTacToeTreeNode Root,
+    int MaxDepth,
+    double Width,
+    double Height);
 
 internal static class TicTacToeDemoFactory
 {
@@ -100,6 +118,99 @@ internal static class TicTacToeDemoFactory
             branchInsights,
             principalVariation,
             estimatedSubtreeSavings);
+    }
+
+    public static TicTacToeGameTree BuildGameTree(TicTacToeState state, IReadOnlyList<TicTacToeMove> principalVariation)
+    {
+        const int maxDepth = 2;
+        const double svgWidth = 800;
+        const double svgHeight = 600;
+        
+        var rootPlayer = state.NextPlayer;
+        var pvPath = new HashSet<(int, int)>();
+        var pvState = state;
+        int pvIndex = 0;
+        
+        // Build PV path as a set of (depth, moveIndex) pairs
+        while (pvIndex < principalVariation.Count && !Game.Terminal(pvState))
+        {
+            var actions = Game.Actions(pvState).ToList();
+            var pvMove = principalVariation[pvIndex];
+            var moveIndex = actions.FindIndex(a => a.Index == pvMove.Index);
+            if (moveIndex >= 0)
+            {
+                pvPath.Add((pvIndex, moveIndex));
+                pvState = Game.Result(pvState, pvMove);
+                pvIndex++;
+            }
+            else
+            {
+                break;
+            }
+        }
+        
+        var root = BuildTreeNodeRecursive(state, null, rootPlayer, 0, maxDepth, 0, 0, svgWidth, 1, pvPath);
+        return new TicTacToeGameTree(root, maxDepth, svgWidth, svgHeight);
+    }
+
+    private static TicTacToeTreeNode BuildTreeNodeRecursive(
+        TicTacToeState state,
+        TicTacToeMove? move,
+        TicTacToePlayer rootPlayer,
+        int depth,
+        int maxDepth,
+        double xPos,
+        double yPos,
+        double parentWidth,
+        int siblingIndex,
+        HashSet<(int, int)> pvPath)
+    {
+        var nodeId = $"node-{Guid.NewGuid().ToString()[..8]}";
+        var isTerminal = Game.Terminal(state);
+        var utility = EvaluateState(state, rootPlayer);
+        var yPos2 = yPos + (90.0 * (depth + 1));
+        var onPV = move is null || pvPath.Contains((depth - 1, siblingIndex));
+        
+        var children = new List<TicTacToeTreeNode>();
+        
+        if (depth < maxDepth && !isTerminal)
+        {
+            var actions = Game.Actions(state).ToList();
+            var childWidth = parentWidth / Math.Max(1, actions.Count);
+            
+            for (int i = 0; i < actions.Count; i++)
+            {
+                var action = actions[i];
+                var childX = xPos - (parentWidth / 2.0) + (childWidth / 2.0) + (i * childWidth);
+                var child = BuildTreeNodeRecursive(
+                    Game.Result(state, action),
+                    action,
+                    rootPlayer,
+                    depth + 1,
+                    maxDepth,
+                    childX,
+                    yPos2,
+                    childWidth,
+                    i,
+                    pvPath);
+                
+                children.Add(child);
+            }
+        }
+        
+        var label = move is null ? "Root" : $"{move.Row + 1},{move.Column + 1}";
+        
+        return new TicTacToeTreeNode(
+            nodeId,
+            move,
+            utility,
+            depth,
+            xPos,
+            yPos2,
+            onPV && !isTerminal,
+            isTerminal,
+            children,
+            label);
     }
 
     public static TicTacToeState ApplyMove(TicTacToeState state, TicTacToeMove move)
