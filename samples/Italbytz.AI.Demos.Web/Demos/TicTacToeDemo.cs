@@ -122,9 +122,9 @@ internal static class TicTacToeDemoFactory
 
     public static TicTacToeGameTree BuildGameTree(TicTacToeState state, IReadOnlyList<TicTacToeMove> principalVariation)
     {
-        const int maxDepth = 2;
-        const double svgWidth = 800;
-        const double svgHeight = 600;
+        const int maxDepth = 3;
+        const double svgWidth = 1200;
+        const double svgHeight = 900;
         
         var rootPlayer = state.NextPlayer;
         var pvPath = new HashSet<(int, int)>();
@@ -149,7 +149,7 @@ internal static class TicTacToeDemoFactory
             }
         }
         
-        var root = BuildTreeNodeRecursive(state, null, rootPlayer, 0, maxDepth, 0, 0, svgWidth, 1, pvPath);
+        var root = BuildTreeNodeRecursive(state, null, rootPlayer, 0, maxDepth, svgWidth / 2.0, 0, svgWidth / 2.0, 1, pvPath);
         return new TicTacToeGameTree(root, maxDepth, svgWidth, svgHeight);
     }
 
@@ -168,7 +168,7 @@ internal static class TicTacToeDemoFactory
         var nodeId = $"node-{Guid.NewGuid().ToString()[..8]}";
         var isTerminal = Game.Terminal(state);
         var utility = EvaluateState(state, rootPlayer);
-        var yPos2 = yPos + (90.0 * (depth + 1));
+        var yPos2 = yPos + (150.0 * (depth + 1));
         var onPV = move is null || pvPath.Contains((depth - 1, siblingIndex));
         
         var children = new List<TicTacToeTreeNode>();
