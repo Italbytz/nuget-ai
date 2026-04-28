@@ -1,0 +1,30 @@
+.game-tree-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    margin: 2rem 0 1rem 0;
+    padding: 1rem;
+    background: #fafaf8;
+    border-radius: 4px;
+    border: 1px solid #e8dcc8;
+    overflow-x: auto;
+}
+
+.game-tree-svg {
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    min-height: 400px;
+}
+
+@media (max-width: 768px) {
+    .game-tree-container {
+        padding: 0.5rem;
+        margin: 1rem 0 0.5rem 0;
+    }
+
+    .game-tree-svg {
+        min-height: 300px;
+    }
+}
