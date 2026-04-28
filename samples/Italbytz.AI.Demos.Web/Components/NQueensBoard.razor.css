@@ -51,6 +51,22 @@
     z-index: 1;
 }
 
+.queen-icon {
+    width: 1.58rem;
+    height: 1.58rem;
+    position: relative;
+    z-index: 1;
+    fill: currentColor;
+}
+
+.board-cell-conflicted .queen-icon {
+    filter: drop-shadow(0 0 0.28rem rgba(123, 46, 24, 0.28));
+}
+
+.board-cell-current .queen-icon {
+    transform: scale(1.06);
+}
+
 @media (max-width: 780px) {
     .board {
         width: 100%;
