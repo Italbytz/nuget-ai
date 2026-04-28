@@ -134,6 +134,66 @@
     background: rgba(246, 243, 236, 0.94);
 }
 
+.domain-panel {
+    margin-top: 1rem;
+    padding: 1rem;
+    border-radius: 1rem;
+    border: 1px solid rgba(23, 50, 74, 0.12);
+    background: rgba(255, 255, 255, 0.72);
+}
+
+.section-heading-tight h2 {
+    margin-bottom: 0.2rem;
+}
+
+.section-heading-tight p {
+    margin-top: 0;
+}
+
+.domain-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.6rem;
+    margin-top: 0.8rem;
+}
+
+.domain-chip {
+    border: 1px solid rgba(23, 50, 74, 0.12);
+    background: #f7f2e8;
+    border-radius: 0.85rem;
+    padding: 0.55rem 0.65rem;
+}
+
+.domain-chip strong,
+.domain-chip span {
+    display: block;
+}
+
+.domain-chip span {
+    margin-top: 0.1rem;
+    color: #4d5a66;
+    font-size: 0.9rem;
+}
+
+.domain-chip-reduced {
+    border-color: rgba(23, 50, 74, 0.28);
+    background: #efe6d6;
+}
+
+.domain-chip-assigned {
+    background: #dcebd8;
+    border-color: rgba(36, 85, 45, 0.3);
+}
+
+.domain-chip-conflicted {
+    box-shadow: inset 0 0 0 2px rgba(154, 63, 33, 0.38);
+}
+
+.domain-chip-current {
+    outline: 2px solid #17324a;
+    outline-offset: 1px;
+}
+
 .inspector-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     margin-top: 1rem;
@@ -201,5 +261,9 @@
 
     .secondary-controls {
         align-items: stretch;
+    }
+
+    .domain-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 }
