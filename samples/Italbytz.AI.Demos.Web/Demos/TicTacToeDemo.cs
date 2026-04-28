@@ -61,8 +61,8 @@ internal static class TicTacToeDemoFactory
             new(
                 "WinningFinish",
                 "Winning finish",
-                "X can force an immediate win from this late-game position. The node expansion difference stays visible but small.",
-                new TicTacToeState("XO.OX.X..", TicTacToePlayer.X))
+                "O to move, but X already threatens two winning lines simultaneously. O can block one at most, so X wins on the very next move regardless. Both algorithms identify the forced win instantly.",
+                new TicTacToeState("XO.OX.X..", TicTacToePlayer.O))
         ];
     }
 
