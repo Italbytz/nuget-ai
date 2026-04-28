@@ -51,6 +51,8 @@ The GitHub Pages site also exposes a public demo host under `/demos/`.
 - Decision making: `GridWorld MDP` uses `Italbytz.AI.Probability.MDP` to compare value iteration and policy iteration on the classic stochastic grid world.
 - Probability: `Umbrella World` uses `Italbytz.AI.Probability.HMM` to compare filtering and smoothing on the classic temporal umbrella sequence.
 - Search: `Weighted Graph` uses `Italbytz.AI.Search.Demos.WeightedGraph` to reveal Dijkstra relaxations, frontier updates, and the shortest-path tree step by step.
+- Adversarial search: `Tic-Tac-Toe` uses `Italbytz.AI.Search.Adversarial` to compare minimax and alpha-beta move recommendations and expanded-node counts on the same board states.
+- Adversarial search: `Two-Ply` uses `Italbytz.AI.Search.Adversarial` to contrast minimax and alpha-beta over a compact depth-2 game tree with scenario-dependent move ordering.
 - Search: `Romania search` uses `Italbytz.AI.Search` together with the `nuget-graph` viewport for visible frontier and path state, including randomized start cities.
 - CSP: `Map Coloring` uses `Italbytz.AI.CSP` to compare backtracking, heuristic ordering, and min-conflicts on the classic Australia map.
 - Agents: `Vacuum World` uses `Italbytz.AI.Agent` base types such as `SimpleAgent` and `AbstractEnvironment` for a randomized, stepwise action loop.
@@ -63,6 +65,8 @@ Public demo routes:
 - `https://italbytz.github.io/nuget-ai/demos/gridworld-mdp`
 - `https://italbytz.github.io/nuget-ai/demos/map-coloring`
 - `https://italbytz.github.io/nuget-ai/demos/romania-search`
+- `https://italbytz.github.io/nuget-ai/demos/tic-tac-toe`
+- `https://italbytz.github.io/nuget-ai/demos/two-ply`
 - `https://italbytz.github.io/nuget-ai/demos/umbrella-world`
 - `https://italbytz.github.io/nuget-ai/demos/vacuum-world`
 - `https://italbytz.github.io/nuget-ai/demos/n-queens`
