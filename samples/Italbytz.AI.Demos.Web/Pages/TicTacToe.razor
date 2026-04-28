@@ -70,11 +70,28 @@
                 @for (var index = 0; index < 9; index++)
                 {
                     var cellIndex = index;
+                    var occupant = _state.GetCell(cellIndex);
                     <button class="@GetCellClass(cellIndex)"
                             disabled="@(_state.GetCell(cellIndex) != '.' || _comparison.IsTerminal)"
                             title="@GetCellTitle(cellIndex)"
                             @onclick="() => PlayMove(cellIndex)">
-                        @TicTacToeDemoFactory.DescribeCell(_state.GetCell(cellIndex))
+                        @if (occupant == 'X')
+                        {
+                            <svg class="tic-mark tic-mark-x" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+                                <line x1="14" y1="14" x2="50" y2="50"></line>
+                                <line x1="50" y1="14" x2="14" y2="50"></line>
+                            </svg>
+                        }
+                        else if (occupant == 'O')
+                        {
+                            <svg class="tic-mark tic-mark-o" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+                                <circle cx="32" cy="32" r="18"></circle>
+                            </svg>
+                        }
+                        else
+                        {
+                            <span class="tic-cell-empty-dot" aria-hidden="true"></span>
+                        }
                     </button>
                 }
             </div>
