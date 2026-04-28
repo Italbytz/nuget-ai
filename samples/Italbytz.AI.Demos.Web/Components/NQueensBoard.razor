@@ -1,0 +1,62 @@
+@namespace Italbytz.AI.Demos.Web.Components
+
+<div class="board-shell">
+    <div class="board" style="--board-size:@BoardSize">
+        @for (var row = 0; row < BoardSize; row++)
+        {
+            @for (var column = 0; column < BoardSize; column++)
+            {
+                var r = row;
+                var c = column;
+                <div class="@GetCellClass(c, r)" title="@GetCellTitle(c, r)">
+                    @if (QueenRows[c] == r)
+                    {
+                        <span class="queen">Q</span>
+                    }
+                </div>
+            }
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public int BoardSize { get; set; }
+    [Parameter, EditorRequired] public IReadOnlyList<int> QueenRows { get; set; } = [];
+    [Parameter] public IReadOnlyList<int> ConflictedColumns { get; set; } = [];
+    [Parameter] public int? CurrentColumn { get; set; }
+
+    private string GetCellClass(int column, int row)
+    {
+        var isDarkCell = (row + column) % 2 == 1;
+        var cssClass = isDarkCell ? "board-cell board-cell-dark" : "board-cell board-cell-light";
+
+        if (QueenRows[column] == row)
+        {
+            cssClass += " board-cell-has-queen";
+
+            if (ConflictedColumns.Contains(column))
+            {
+                cssClass += " board-cell-conflicted";
+            }
+
+            if (CurrentColumn == column)
+            {
+                cssClass += " board-cell-current";
+            }
+        }
+
+        return cssClass;
+    }
+
+    private string GetCellTitle(int column, int row)
+    {
+        if (QueenRows[column] != row)
+        {
+            return $"Column {column + 1}, row {row + 1}";
+        }
+
+        return CurrentColumn == column
+            ? $"Q{column + 1} is currently being modified"
+            : $"Q{column + 1} in row {row + 1}";
+    }
+}
