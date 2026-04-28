@@ -63,6 +63,36 @@ public class ProbabilityTests
     }
 
     [TestMethod]
+    public void PriorSample_BurglaryNetwork_ProducesCompleteWorldAssignment()
+    {
+        var net = BurglaryNetwork.Build();
+        var sample = new PriorSample(seed: 7).Sample(net);
+
+        Assert.IsTrue(sample.ContainsKey(BurglaryNetwork.Burglary));
+        Assert.IsTrue(sample.ContainsKey(BurglaryNetwork.Earthquake));
+        Assert.IsTrue(sample.ContainsKey(BurglaryNetwork.Alarm));
+        Assert.IsTrue(sample.ContainsKey(BurglaryNetwork.JohnCalls));
+        Assert.IsTrue(sample.ContainsKey(BurglaryNetwork.MaryCalls));
+    }
+
+    [TestMethod]
+    public void RejectionSampling_BurglaryNetwork_Approximate()
+    {
+        var net = BurglaryNetwork.Build();
+        var query = BurglaryNetwork.Burglary;
+        var evidence = Ev(
+            new AssignmentProposition(BurglaryNetwork.JohnCalls, true),
+            new AssignmentProposition(BurglaryNetwork.MaryCalls, true));
+
+        var rejectionSampling = new RejectionSampling(sampleCount: 50000, seed: 42);
+        var result = rejectionSampling.Ask(Q(query), evidence, net);
+
+        var p = result.ValueOf(new AssignmentProposition(query, true));
+        Assert.IsTrue(p > 0.20 && p < 0.38, $"Expected ~0.284 but got {p}");
+        Assert.AreNotEqual(0, rejectionSampling.Metrics.GetInt("acceptedSamples"));
+    }
+
+    [TestMethod]
     public void GibbsAsk_BurglaryNetwork_Approximate()
     {
         var net = BurglaryNetwork.Build();
@@ -88,9 +118,67 @@ public class ProbabilityTests
         var prior = new double[hmm.NumStates];
         for (int i = 0; i < prior.Length; i++) prior[i] = 1.0 / prior.Length;
         var result = fb.ForwardBackward(hmm, observations, prior);
-        Assert.AreEqual(observations.Count, result.Count);
+        Assert.HasCount(2, result);
         // P(Rain_1 | umbrella_1,2) ≈ 0.883
-        Assert.IsTrue(result[0][0] > 0.8, $"Expected P(Rain_1)>0.8 but got {result[0][0]}");
+        Assert.IsGreaterThan(0.8, result[0][0], $"Expected P(Rain_1)>0.8 but got {result[0][0]}");
+    }
+
+    [TestMethod]
+    public void Forward_UmbrellaWorld_MatchesAimaReferenceValues()
+    {
+        var hmm = UmbrellaWorld.Build();
+        var fb = new ForwardBackwardAlgorithm();
+
+        var first = fb.Forward(hmm, new[] { 0.5, 0.5 }, true);
+        var second = fb.Forward(hmm, first, true);
+
+        Assert.AreEqual(0.818, first[0], 0.01);
+        Assert.AreEqual(0.182, first[1], 0.01);
+        Assert.AreEqual(0.883, second[0], 0.01);
+        Assert.AreEqual(0.117, second[1], 0.01);
+    }
+
+    [TestMethod]
+    public void Backward_UmbrellaWorld_MatchesAimaReferenceValues()
+    {
+        var hmm = UmbrellaWorld.Build();
+        var fb = new ForwardBackwardAlgorithm();
+
+        var backward = fb.Backward(hmm, new[] { 1.0, 1.0 }, true);
+
+        Assert.AreEqual(0.69, backward[0], 0.01);
+        Assert.AreEqual(0.41, backward[1], 0.01);
+    }
+
+    [TestMethod]
+    public void ForwardBackward_UmbrellaWorld_ThreeObservationsMatchesAimaApproximation()
+    {
+        var hmm = UmbrellaWorld.Build();
+        var fb = new ForwardBackwardAlgorithm();
+
+        var result = fb.ForwardBackward(hmm, new List<object> { true, true, false }, new[] { 0.5, 0.5 });
+
+        Assert.HasCount(3, result);
+        Assert.AreEqual(0.861, result[0][0], 0.02);
+        Assert.AreEqual(0.138, result[0][1], 0.02);
+        Assert.AreEqual(0.799, result[1][0], 0.02);
+        Assert.AreEqual(0.201, result[1][1], 0.02);
+        Assert.AreEqual(0.190, result[2][0], 0.02);
+        Assert.AreEqual(0.810, result[2][1], 0.02);
+    }
+
+    [TestMethod]
+    public void ParticleFilter_UmbrellaWorld_FavorsRainAfterUmbrellaObservation()
+    {
+        var hmm = UmbrellaWorld.Build();
+        var particleFilter = new ParticleFilter(seed: 42);
+        var particles = particleFilter.CreateInitialParticles(hmm, 1000);
+
+        var filtered = particleFilter.Filter(hmm, particles, true);
+        var rainCount = filtered.Count(state => Equals(state, true));
+
+        Assert.HasCount(particles.Count, filtered);
+        Assert.IsGreaterThan(650, rainCount, $"Expected a rain-majority after umbrella observation but got {rainCount} rain particles.");
     }
 
     // ------------------------------------------------------------------ MDP
@@ -101,7 +189,10 @@ public class ProbabilityTests
         var solver = new ValueIteration<string, string>();
         var (policy, utilities) = solver.Solve(mdp);
         Assert.IsNotNull(policy);
-        Assert.IsTrue(utilities.Count > 0);
+        Assert.AreNotEqual(0, utilities.Count);
+        Assert.AreEqual(1.0, utilities["1,4"], 0.0001);
+        Assert.AreEqual(-1.0, utilities["2,4"], 0.0001);
+        Assert.AreEqual("Right", policy.Action("1,3"));
     }
 
     [TestMethod]
@@ -111,6 +202,9 @@ public class ProbabilityTests
         var solver = new PolicyIteration<string, string>();
         var (policy, utilities) = solver.Solve(mdp);
         Assert.IsNotNull(policy);
-        Assert.IsTrue(utilities.Count > 0);
+        Assert.AreNotEqual(0, utilities.Count);
+        Assert.AreEqual(1.0, utilities["1,4"], 0.0001);
+        Assert.AreEqual(-1.0, utilities["2,4"], 0.0001);
+        Assert.AreEqual("Right", policy.Action("1,3"));
     }
 }

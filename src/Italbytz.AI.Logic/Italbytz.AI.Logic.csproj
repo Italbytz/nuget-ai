@@ -12,5 +12,6 @@
   <ItemGroup>
     <ProjectReference Include="..\Italbytz.AI\Italbytz.AI.csproj" />
     <ProjectReference Include="..\Italbytz.AI.Logic.Abstractions\Italbytz.AI.Logic.Abstractions.csproj" />
+    <ProjectReference Include="..\Italbytz.AI.Planning\Italbytz.AI.Planning.csproj" />
   </ItemGroup>
 </Project>

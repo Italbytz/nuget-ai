@@ -8,6 +8,7 @@ public interface IFolKnowledgeBase
 {
     void Tell(ILiteral conclusion, IReadOnlyList<ILiteral> premises);
     IEnumerable<ISubstitution> Ask(ISentence query);
+    IFolInferenceResult AskResult(ISentence query);
     IEnumerable<ILiteral> Conclusions { get; }
     IReadOnlyList<(ILiteral conclusion, IReadOnlyList<ILiteral> premises)> Clauses { get; }
 }

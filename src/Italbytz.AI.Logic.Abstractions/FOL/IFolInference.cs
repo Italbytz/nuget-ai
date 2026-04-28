@@ -10,4 +10,6 @@ namespace Italbytz.AI.Logic.Fol;
 public interface IFolInference
 {
     IEnumerable<ISubstitution> Ask(IFolKnowledgeBase kb, ISentence query);
+
+    IFolInferenceResult AskResult(IFolKnowledgeBase kb, ISentence query);
 }

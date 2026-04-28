@@ -30,6 +30,13 @@ public class Unifier : IUnifier
                              ay.Args.Cast<object>().ToList(), theta);
         }
 
+        if (x is IFunctionTerm fx && y is IFunctionTerm fy)
+        {
+            if (fx.SymbolicName != fy.SymbolicName) return null;
+            return UnifyArgs(fx.Args.Cast<object>().ToList(),
+                             fy.Args.Cast<object>().ToList(), theta);
+        }
+
         return null;
     }
 
@@ -38,7 +45,7 @@ public class Unifier : IUnifier
         if (theta.Binds(var)) return Unify(theta.GetBinding(var), x, theta);
         if (x is IVariable xv && theta.Binds(xv)) return Unify(var, theta.GetBinding(xv), theta);
         if (OccursIn(var, x, theta)) return null;  // occurs-check
-        return theta.Extend(var, (ITerm)x);
+        return x is ITerm term ? theta.Extend(var, term) : null;
     }
 
     private bool OccursIn(IVariable var, object x, ISubstitution theta)
@@ -51,11 +58,14 @@ public class Unifier : IUnifier
         }
         if (x is IAtomicSentence atom)
             return atom.Args.Any(arg => OccursIn(var, arg, theta));
+        if (x is IFunctionTerm function)
+            return function.Args.Any(arg => OccursIn(var, arg, theta));
         return false;
     }
 
-    private ISubstitution? UnifyArgs(List<object> args1, List<object> args2, ISubstitution theta)
+    private ISubstitution? UnifyArgs(List<object> args1, List<object> args2, ISubstitution? theta)
     {
+        if (theta is null) return null;
         if (args1.Count != args2.Count) return null;
         if (!args1.Any()) return theta;
         var unified = Unify(args1[0], args2[0], theta);

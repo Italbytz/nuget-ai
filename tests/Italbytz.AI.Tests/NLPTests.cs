@@ -32,7 +32,7 @@ public class NLPTests
         var table = parser.Parse(words, grammar);
         int sIdx = grammar.NonterminalIndex("S");
         double logP = table[sIdx, 0, words.Length - 1];
-        Assert.IsTrue(logP > double.NegativeInfinity, "Should find a parse");
+        Assert.IsGreaterThan(double.NegativeInfinity, logP, "Should find a parse");
     }
 
     [TestMethod]

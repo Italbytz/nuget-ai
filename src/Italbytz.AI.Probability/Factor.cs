@@ -6,7 +6,7 @@ namespace Italbytz.AI.Probability;
 
 /// <summary>
 /// An unnormalised factor over a subset of random variables.
-/// Used internally by <see cref="EliminationAsk"/> for variable elimination (AIMA3e p. 524).
+/// Used internally by <see cref="Italbytz.AI.Probability.Bayes.EliminationAsk"/> for variable elimination (AIMA3e p. 524).
 /// Stored as a dictionary keyed by canonical assignment strings for clarity.
 /// </summary>
 public class Factor : IFactor

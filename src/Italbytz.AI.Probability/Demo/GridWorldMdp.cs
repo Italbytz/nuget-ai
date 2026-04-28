@@ -16,7 +16,6 @@ public class GridWorldMdp : IMarkovDecisionProcess<string, string>
 {
     private const int Rows = 3;
     private const int Cols = 4;
-    private static readonly string Wall = "wall";
     private static readonly string GoalPos = "1,4";
     private static readonly string PitPos = "2,4";
 

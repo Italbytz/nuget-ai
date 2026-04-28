@@ -73,7 +73,7 @@ public class RoboticsTests
         var updated = mcl.Localize(initialCloud, move, readings);
 
         Assert.IsNotNull(updated);
-        Assert.AreEqual(initialCloud.Count, updated.Count);
+        Assert.HasCount(initialCloud.Count, updated);
         // All particles should be valid poses
         foreach (var p in updated)
             Assert.IsTrue(map.IsPoseValid(p), $"Invalid pose: {p.X}");

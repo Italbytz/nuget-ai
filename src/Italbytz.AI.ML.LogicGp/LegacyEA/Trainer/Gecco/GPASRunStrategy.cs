@@ -7,7 +7,9 @@ namespace Italbytz.AI.ML.LogicGp.Internal.Trainer.Gecco;
 internal class GPASRunStrategy(int generations, double minMaxWeight = 0.0)
     : RunStrategy(generations, minMaxWeight)
 {
-    protected override Task<global::Italbytz.AI.Evolutionary.Individuals.IIndividualList> RunSpecificLogicGp(
+    protected override Task<(
+        global::Italbytz.AI.Evolutionary.Individuals.IIndividual,
+        global::Italbytz.AI.Evolutionary.Individuals.IIndividualList)> RunSpecificLogicGp(
         int[][] features, int[] labels)
     {
         return RunLogicGp(features, labels,

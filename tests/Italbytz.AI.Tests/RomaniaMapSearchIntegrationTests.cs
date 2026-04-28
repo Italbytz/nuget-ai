@@ -34,6 +34,21 @@ public class RomaniaMapSearchIntegrationTests
 
         CollectionAssert.AreEqual(new[] { RimnicuVilcea, Pitesti, Bucharest }, actions);
         Assert.AreEqual(278d, search.Metrics.GetDouble("pathCost"), 0.0001);
+        Assert.AreEqual(9, search.Metrics.GetInt("nodesExpanded"));
+    }
+
+    [TestMethod]
+    public void UniformCostSearchFromAradMatchesLegacyRomaniaSample()
+    {
+        var problem = CreateRomaniaProblem(Arad, useDistanceCosts: true);
+        var search = new UniformCostSearch<string, MoveToAction>();
+
+        var actions = search.FindActions(problem)?.Select(action => action.ToLocation).ToArray()
+            ?? Array.Empty<string>();
+
+        CollectionAssert.AreEqual(new[] { Sibiu, RimnicuVilcea, Pitesti, Bucharest }, actions);
+        Assert.AreEqual(418d, search.Metrics.GetDouble("pathCost"), 0.0001);
+        Assert.AreEqual(12, search.Metrics.GetInt("nodesExpanded"));
     }
 
     [TestMethod]

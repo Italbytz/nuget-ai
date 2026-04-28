@@ -34,5 +34,5 @@ public interface IGeneticProgram
 
     IFitnessFunction FitnessFunction { get; set; }
 
-    Task<IIndividualList> Run();
+    Task<(IIndividual, IIndividualList)> Run();
 }

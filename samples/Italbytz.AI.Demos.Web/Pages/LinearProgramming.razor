@@ -1,0 +1,377 @@
+@page "/linear-programming"
+@using Italbytz.AI.Demos.Web.Demos
+
+<PageTitle>Linear programming demo</PageTitle>
+
+<section class="demo-hero">
+    <div>
+        <p class="eyebrow">Optimization demo</p>
+        <h1>Linear Programming vs. Integer Programming</h1>
+        <p class="hero-copy">Compare the LP relaxation against the ILP solution on a two-variable optimization problem. The page visualizes the feasible region, the lattice points, and how the optimum changes once integrality is enforced.</p>
+    </div>
+
+    <div class="stat-grid">
+        <article>
+            <span class="stat-label">Scenario</span>
+            <strong>@CurrentScenario.Name</strong>
+        </article>
+        <article>
+            <span class="stat-label">Mode</span>
+            <strong>@ModeLabel</strong>
+        </article>
+        <article>
+            <span class="stat-label">Visible optimum</span>
+            <strong>@VisiblePointLabel</strong>
+        </article>
+        <article>
+            <span class="stat-label">Objective value</span>
+            <strong>@VisibleObjectiveLabel</strong>
+        </article>
+    </div>
+</section>
+
+<section class="control-panel">
+    <div class="button-row">
+        @foreach (var scenario in _scenarios)
+        {
+            <button class="@(scenario.Key == _selectedScenarioKey ? "choice-button selected" : "choice-button")"
+                    @onclick="() => SelectScenario(scenario.Key)">
+                @scenario.Name
+            </button>
+        }
+    </div>
+
+    <div class="secondary-controls">
+        <div class="selection-copy">
+            <p class="selection-summary">@CurrentScenario.Summary</p>
+            <p class="selection-summary">@CurrentScenario.Interpretation</p>
+        </div>
+
+        <div class="button-row compact-row">
+            <button class="@(_showIntegerMode ? "choice-button" : "choice-button selected")" @onclick="() => _showIntegerMode = false">Show LP</button>
+            <button class="@(_showIntegerMode ? "choice-button selected" : "choice-button")" @onclick="() => _showIntegerMode = true">Show ILP</button>
+        </div>
+    </div>
+
+    <p class="step-summary">Walkthrough order: 1) inspect LP feasible region, 2) switch to ILP, 3) follow branch-and-bound steps and compare shifted optima.</p>
+</section>
+
+<section class="demo-grid">
+    <article class="surface-card lp-plot-card">
+        <div class="section-heading">
+            <h2>Feasible region</h2>
+            <p>The chart focuses on geometry first: constraints, feasible polygon, integer lattice, and the active optimum marker for the selected mode.</p>
+        </div>
+
+        <div class="constraint-chip-row">
+            @foreach (var constraint in CurrentScenario.Constraints)
+            {
+                <span class="constraint-chip">@constraint.Label</span>
+            }
+        </div>
+
+        <div class="plot-shell">
+            <svg viewBox="0 0 520 520" class="lp-plot" aria-label="Linear programming feasible region">
+                <defs>
+                    <clipPath id="lpPlotClip">
+                        <rect x="@PlotLeft" y="@PlotTop" width="@(PlotRight - PlotLeft)" height="@(PlotBottom - PlotTop)" />
+                    </clipPath>
+                </defs>
+
+                <rect x="0" y="0" width="520" height="520" class="plot-background" />
+
+                @for (var tick = 0; tick <= (int)CurrentScenario.AxisMax; tick++)
+                {
+                    var x = MapX(tick);
+                    var y = MapY(tick);
+                    <line x1="@x" y1="@PlotTop" x2="@x" y2="@PlotBottom" class="plot-grid-line" />
+                    <line x1="@PlotLeft" y1="@y" x2="@PlotRight" y2="@y" class="plot-grid-line" />
+                    <svg:text x="@x" y="@(PlotBottom + 20)" text-anchor="middle" class="plot-tick-text">@tick</svg:text>
+                    <svg:text x="@(PlotLeft - 12)" y="@(y + 4)" text-anchor="end" class="plot-tick-text">@tick</svg:text>
+                }
+
+                <line x1="@PlotLeft" y1="@PlotBottom" x2="@PlotRight" y2="@PlotBottom" class="plot-axis" />
+                <line x1="@PlotLeft" y1="@PlotBottom" x2="@PlotLeft" y2="@PlotTop" class="plot-axis" />
+
+                <svg:text x="@(PlotRight + 8)" y="@(PlotBottom + 22)" class="plot-axis-text">x</svg:text>
+                <svg:text x="@(PlotLeft - 22)" y="@(PlotTop - 10)" class="plot-axis-text">y</svg:text>
+
+                <g clip-path="url(#lpPlotClip)">
+                    <polygon points="@PolygonPoints" class="feasible-region" />
+
+                    @if (ActiveTraceStep is not null)
+                    {
+                        <rect x="@MapX(ActiveTraceStep.Bounds.XLower)"
+                              y="@MapY(ActiveTraceStep.Bounds.YUpper)"
+                              width="@(MapX(ActiveTraceStep.Bounds.XUpper) - MapX(ActiveTraceStep.Bounds.XLower))"
+                              height="@(MapY(ActiveTraceStep.Bounds.YLower) - MapY(ActiveTraceStep.Bounds.YUpper))"
+                              class="active-subproblem" />
+                    }
+
+                    @foreach (var segment in _currentAnalysis.ConstraintSegments)
+                    {
+                        <line x1="@MapX(segment.Start.X)" y1="@MapY(segment.Start.Y)" x2="@MapX(segment.End.X)" y2="@MapY(segment.End.Y)" class="constraint-line" />
+                    }
+
+                    @foreach (var latticePoint in _currentAnalysis.FeasibleIntegerPoints)
+                    {
+                        <circle cx="@MapX(latticePoint.X)" cy="@MapY(latticePoint.Y)" r="@(latticePoint.IsOptimal ? 6 : 3.5)" class="@(latticePoint.IsOptimal ? "lattice-point lattice-point-optimal" : "lattice-point")" />
+                    }
+
+                    <circle cx="@MapX(_currentAnalysis.ContinuousOptimum.X)" cy="@MapY(_currentAnalysis.ContinuousOptimum.Y)" r="7" class="continuous-optimum" />
+                    <circle cx="@MapX(_currentAnalysis.IntegerOptimum.X)" cy="@MapY(_currentAnalysis.IntegerOptimum.Y)" r="7" class="integer-optimum" />
+
+                    @if (ActiveTraceStep?.BranchVariable is not null && ActiveTraceStep.FloorSplit is not null && ActiveTraceStep.CeilSplit is not null)
+                    {
+                        @if (ActiveTraceStep.BranchVariable == "x")
+                        {
+                            <line x1="@MapX(ActiveTraceStep.FloorSplit.Value)" y1="@MapY(ActiveTraceStep.Bounds.YUpper)" x2="@MapX(ActiveTraceStep.FloorSplit.Value)" y2="@MapY(ActiveTraceStep.Bounds.YLower)" class="split-line split-line-left" />
+                            <line x1="@MapX(ActiveTraceStep.CeilSplit.Value)" y1="@MapY(ActiveTraceStep.Bounds.YUpper)" x2="@MapX(ActiveTraceStep.CeilSplit.Value)" y2="@MapY(ActiveTraceStep.Bounds.YLower)" class="split-line split-line-right" />
+                        }
+                        else
+                        {
+                            <line x1="@MapX(ActiveTraceStep.Bounds.XLower)" y1="@MapY(ActiveTraceStep.FloorSplit.Value)" x2="@MapX(ActiveTraceStep.Bounds.XUpper)" y2="@MapY(ActiveTraceStep.FloorSplit.Value)" class="split-line split-line-left" />
+                            <line x1="@MapX(ActiveTraceStep.Bounds.XLower)" y1="@MapY(ActiveTraceStep.CeilSplit.Value)" x2="@MapX(ActiveTraceStep.Bounds.XUpper)" y2="@MapY(ActiveTraceStep.CeilSplit.Value)" class="split-line split-line-right" />
+                        }
+                    }
+
+                    @if (ActiveTraceStep?.RelaxedOptimum is not null)
+                    {
+                        <circle cx="@MapX(ActiveTraceStep.RelaxedOptimum.X)" cy="@MapY(ActiveTraceStep.RelaxedOptimum.Y)" r="12" class="active-relaxed-optimum" />
+                    }
+
+                    <circle cx="@MapX(VisiblePoint.X)" cy="@MapY(VisiblePoint.Y)" r="9" class="visible-optimum" />
+                </g>
+            </svg>
+        </div>
+
+        <div class="legend-grid">
+            <article class="inspector-box">
+                <p class="eyebrow">LP optimum</p>
+                <h3>@LinearProgrammingDemoFactory.FormatPoint(_currentAnalysis.ContinuousOptimum)</h3>
+                <p>objective = @LinearProgrammingDemoFactory.FormatObjective(_currentAnalysis.ContinuousObjective)</p>
+            </article>
+            <article class="inspector-box @(_currentAnalysis.IntegerObjective < _currentAnalysis.ContinuousObjective - 0.000001 ? "inspector-box-warning" : string.Empty)">
+                <p class="eyebrow">ILP optimum</p>
+                <h3>@LinearProgrammingDemoFactory.FormatPoint(_currentAnalysis.IntegerOptimum)</h3>
+                <p>objective = @LinearProgrammingDemoFactory.FormatObjective(_currentAnalysis.IntegerObjective)</p>
+            </article>
+        </div>
+
+        <div class="plot-legend-card">
+            <div class="section-heading legend-heading">
+                <h2>Legend</h2>
+                <p>The same visual language is used across LP mode, ILP mode, and the branch-and-bound walkthrough.</p>
+            </div>
+
+            <div class="plot-legend-grid">
+                <div class="legend-item">
+                    <span class="legend-swatch legend-swatch-feasible"></span>
+                    <span>Feasible region of the LP relaxation</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-swatch legend-swatch-continuous"></span>
+                    <span>LP optimum</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-swatch legend-swatch-integer"></span>
+                    <span>ILP optimum</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-swatch legend-swatch-visible"></span>
+                    <span>Currently emphasized optimum</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-swatch legend-swatch-lattice"></span>
+                    <span>Feasible integer lattice point</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-swatch legend-swatch-subproblem"></span>
+                    <span>Active subproblem bounds from the selected trace step</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-line legend-line-left"></span>
+                    <span>Left split boundary of the current branch</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-line legend-line-right"></span>
+                    <span>Right split boundary of the current branch</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-swatch legend-swatch-relaxed"></span>
+                    <span>Relaxed optimum of the selected branch-and-bound node</span>
+                </div>
+            </div>
+        </div>
+    </article>
+
+    <article class="surface-card inspector-card">
+        <div class="section-heading">
+            <h2>Model and interpretation</h2>
+            <p>The same objective and constraints are solved twice: once as a continuous LP, once with integer variables enforced.</p>
+        </div>
+
+        <div class="model-card">
+            <p class="eyebrow">Objective</p>
+            <h3>maximize z = @CurrentScenario.Objective[0]x + @CurrentScenario.Objective[1]y</h3>
+            <ul class="constraint-list">
+                @foreach (var constraint in CurrentScenario.Constraints)
+                {
+                    <li>@constraint.Label</li>
+                }
+                <li>x, y &gt;= 0</li>
+                @if (_showIntegerMode)
+                {
+                    <li>x, y integer</li>
+                }
+            </ul>
+        </div>
+
+        <div class="comparison-grid">
+            <article>
+                <h3>Why LP?</h3>
+                <p>The LP relaxation treats x and y as continuous values. That makes the feasible region a polygon and the optimum a corner of that polygon.</p>
+            </article>
+            <article>
+                <h3>Why ILP?</h3>
+                <p>The ILP view restricts the solution to lattice points. If the LP optimum is fractional, the best admissible integer point can shift to a different corner.</p>
+            </article>
+        </div>
+
+        <div class="walkthrough-card">
+            <p class="eyebrow">Step-by-step explanation</p>
+            <ol class="walkthrough-list">
+                <li class="walkthrough-step @(!_showIntegerMode ? "walkthrough-step-active" : string.Empty)">
+                    <strong>1. Build and read the LP model</strong>
+                    <span>Interpret constraints as lines and identify the feasible polygon in the chart.</span>
+                </li>
+                <li class="walkthrough-step @(!_showIntegerMode ? "walkthrough-step-active" : string.Empty)">
+                    <strong>2. Solve LP relaxation</strong>
+                    <span>Read the continuous optimum and objective value from the left KPI box.</span>
+                </li>
+                <li class="walkthrough-step @(_showIntegerMode ? "walkthrough-step-active" : string.Empty)">
+                    <strong>3. Enforce integrality (ILP)</strong>
+                    <span>Switch to ILP mode and compare how the optimum moves to a feasible lattice point.</span>
+                </li>
+                <li class="walkthrough-step @(ActiveTraceStep is not null ? "walkthrough-step-active" : string.Empty)">
+                    <strong>4. Follow branch-and-bound</strong>
+                    <span>Select trace nodes to inspect active subproblem bounds and split lines in the plot.</span>
+                </li>
+            </ol>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Mode</th>
+                    <th>Optimum</th>
+                    <th>Objective</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="@(_showIntegerMode ? string.Empty : "result-row-active")">
+                    <td>LP relaxation</td>
+                    <td>@LinearProgrammingDemoFactory.FormatPoint(_currentAnalysis.ContinuousOptimum)</td>
+                    <td>@LinearProgrammingDemoFactory.FormatObjective(_currentAnalysis.ContinuousObjective)</td>
+                </tr>
+                <tr class="@(_showIntegerMode ? "result-row-active" : string.Empty)">
+                    <td>ILP</td>
+                    <td>@LinearProgrammingDemoFactory.FormatPoint(_currentAnalysis.IntegerOptimum)</td>
+                    <td>@LinearProgrammingDemoFactory.FormatObjective(_currentAnalysis.IntegerObjective)</td>
+                </tr>
+            </tbody>
+        </table>
+
+        @if (_showIntegerMode)
+        {
+            <div class="branch-panel">
+                <div class="section-heading branch-heading">
+                    <h2>Branch-and-bound walkthrough</h2>
+                    <p>This trace mirrors the demo solver's ILP search idea: solve an LP relaxation, branch on the first fractional variable, then keep or prune subproblems based on the incumbent objective. Select a trace step to mirror its subproblem and split lines in the plot.</p>
+                </div>
+
+                <ol class="branch-trace-list">
+                    @foreach (var step in _currentAnalysis.BranchTrace)
+                    {
+                        <li class="branch-step @(IsActiveTraceStep(step) ? "branch-step-active" : string.Empty) @(step.IsIncumbent ? "branch-step-incumbent" : step.IsPruned ? "branch-step-pruned" : string.Empty)"
+                            @onclick="() => SelectBranchStep(step.Number)">
+                            <div class="branch-step-header">
+                                <strong>@step.Number. @step.NodeLabel</strong>
+                                <span>@step.BoundsLabel</span>
+                            </div>
+                            <p>@step.Summary</p>
+                            @if (step.RelaxedOptimum is not null && step.RelaxedObjective is not null)
+                            {
+                                <p class="branch-metric">LP optimum: @LinearProgrammingDemoFactory.FormatPoint(step.RelaxedOptimum) with objective @LinearProgrammingDemoFactory.FormatObjective(step.RelaxedObjective.Value)</p>
+                            }
+                            <p class="branch-outcome">@step.Outcome</p>
+                        </li>
+                    }
+                </ol>
+            </div>
+        }
+    </article>
+</section>
+
+@code {
+    private const double PlotLeft = 52;
+    private const double PlotRight = 470;
+    private const double PlotTop = 34;
+    private const double PlotBottom = 468;
+
+    private readonly IReadOnlyList<LinearProgrammingScenario> _scenarios = LinearProgrammingDemoFactory.BuildScenarios();
+    private string _selectedScenarioKey = "FractionalGap";
+    private bool _showIntegerMode;
+    private LinearProgrammingAnalysis _currentAnalysis = null!;
+    private int? _selectedBranchStepNumber;
+
+    private LinearProgrammingScenario CurrentScenario => _scenarios.First(scenario => scenario.Key == _selectedScenarioKey);
+    private PlotPoint VisiblePoint => _showIntegerMode ? _currentAnalysis.IntegerOptimum : _currentAnalysis.ContinuousOptimum;
+    private string ModeLabel => _showIntegerMode ? "ILP" : "LP relaxation";
+    private string VisiblePointLabel => LinearProgrammingDemoFactory.FormatPoint(VisiblePoint);
+    private string VisibleObjectiveLabel => LinearProgrammingDemoFactory.FormatObjective(_showIntegerMode ? _currentAnalysis.IntegerObjective : _currentAnalysis.ContinuousObjective);
+    private string PolygonPoints => string.Join(" ", _currentAnalysis.FeasiblePolygon.Select(point => $"{MapX(point.X).ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)},{MapY(point.Y).ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)}"));
+    private BranchAndBoundStep? ActiveTraceStep => !_showIntegerMode
+        ? null
+        : _currentAnalysis.BranchTrace.FirstOrDefault(step => step.Number == (_selectedBranchStepNumber ?? DefaultTraceStepNumber));
+    private int DefaultTraceStepNumber => _currentAnalysis.BranchTrace.FirstOrDefault(step => step.BranchVariable is not null)?.Number
+        ?? _currentAnalysis.BranchTrace.FirstOrDefault()?.Number
+        ?? 0;
+
+    protected override void OnInitialized()
+    {
+        _currentAnalysis = LinearProgrammingDemoFactory.Analyze(CurrentScenario);
+    }
+
+    private void SelectScenario(string key)
+    {
+        _selectedScenarioKey = key;
+        _currentAnalysis = LinearProgrammingDemoFactory.Analyze(CurrentScenario);
+        _selectedBranchStepNumber = null;
+    }
+
+    private void SelectBranchStep(int stepNumber)
+    {
+        _selectedBranchStepNumber = stepNumber;
+    }
+
+    private bool IsActiveTraceStep(BranchAndBoundStep step)
+    {
+        return ActiveTraceStep?.Number == step.Number;
+    }
+
+    private double MapX(double x)
+    {
+        return PlotLeft + (x / CurrentScenario.AxisMax) * (PlotRight - PlotLeft);
+    }
+
+    private double MapY(double y)
+    {
+        return PlotBottom - (y / CurrentScenario.AxisMax) * (PlotBottom - PlotTop);
+    }
+
+    private static PlotPoint Midpoint(PlotPoint start, PlotPoint end)
+    {
+        return new PlotPoint((start.X + end.X) / 2.0, (start.Y + end.Y) / 2.0);
+    }
+}

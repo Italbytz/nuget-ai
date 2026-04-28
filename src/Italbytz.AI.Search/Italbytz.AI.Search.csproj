@@ -7,6 +7,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="alglib.net" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Italbytz.AI\Italbytz.AI.csproj" />
     <ProjectReference Include="..\Italbytz.AI.Agent\Italbytz.AI.Agent.csproj" />
     <ProjectReference Include="..\Italbytz.AI.Search.Abstractions\Italbytz.AI.Search.Abstractions.csproj" />

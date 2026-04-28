@@ -127,7 +127,9 @@ internal class GeneticProgram : global::Italbytz.AI.Evolutionary.IGeneticProgram
     }
 
     /// <inheritdoc />
-    public Task<global::Italbytz.AI.Evolutionary.Individuals.IIndividualList> Run()
+    public async Task<(
+        global::Italbytz.AI.Evolutionary.Individuals.IIndividual,
+        global::Italbytz.AI.Evolutionary.Individuals.IIndividualList)> Run()
     {
         _ea = new EvolutionaryAlgorithm
         {
@@ -141,16 +143,22 @@ internal class GeneticProgram : global::Italbytz.AI.Evolutionary.IGeneticProgram
             SelectionForOperator,
             Mutations,
             Crossovers, SelectionForSurvival);
-        return _ea.Run();
+        var population = await _ea.Run();
+        var bestIndividual = population.OrderByDescending(p => p.Fitness).FirstOrDefault();
+        return (bestIndividual ?? population.FirstOrDefault(), population);
     }
 
-    Task<global::Italbytz.AI.Evolutionary.Individuals.IIndividualList>
+    Task<(
+        global::Italbytz.AI.Evolutionary.Individuals.IIndividual,
+        global::Italbytz.AI.Evolutionary.Individuals.IIndividualList)>
         global::Italbytz.AI.Evolutionary.IGeneticProgram.Run()
     {
         return RunAsEvolutionaryAsync();
     }
 
-    private Task<global::Italbytz.AI.Evolutionary.Individuals.IIndividualList>
+    private Task<(
+        global::Italbytz.AI.Evolutionary.Individuals.IIndividual,
+        global::Italbytz.AI.Evolutionary.Individuals.IIndividualList)>
         RunAsEvolutionaryAsync() => Run();
 
 }

@@ -10,7 +10,9 @@ internal class FlcwRunStrategy(
     double minMaxWeight = 0.0)
     : RunStrategy(generations, minMaxWeight, folds, maxTime)
 {
-    protected override Task<global::Italbytz.AI.Evolutionary.Individuals.IIndividualList> RunSpecificLogicGp(
+    protected override Task<(
+        global::Italbytz.AI.Evolutionary.Individuals.IIndividual,
+        global::Italbytz.AI.Evolutionary.Individuals.IIndividualList)> RunSpecificLogicGp(
         int[][] features, int[] labels)
     {
         return RunLogicGp(features, labels,

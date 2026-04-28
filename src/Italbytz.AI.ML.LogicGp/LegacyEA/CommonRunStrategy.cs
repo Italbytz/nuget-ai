@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Italbytz.EA;
 using Italbytz.AI.ML.LogicGp.Internal.Fitness;
@@ -33,11 +34,15 @@ internal abstract class CommonRunStrategy : global::Italbytz.AI.ML.Core.Control.
             Dictionary<uint, int> labelMapping);
 
 
-    protected abstract Task<global::Italbytz.AI.Evolutionary.Individuals.IIndividualList> RunSpecificLogicGp(
+    protected abstract Task<(
+        global::Italbytz.AI.Evolutionary.Individuals.IIndividual,
+        global::Italbytz.AI.Evolutionary.Individuals.IIndividualList)> RunSpecificLogicGp(
         int[][] features,
         int[] labels);
 
-    protected virtual Task<global::Italbytz.AI.Evolutionary.Individuals.IIndividualList> RunLogicGp(int[][] features,
+    protected virtual async Task<(
+        global::Italbytz.AI.Evolutionary.Individuals.IIndividual,
+        global::Italbytz.AI.Evolutionary.Individuals.IIndividualList)> RunLogicGp(int[][] features,
         int[] labels, OperatorGraph algorithmGraph,
         global::Italbytz.AI.Evolutionary.Initialization.IInitialization initialization,
         int maxModelSize = int.MaxValue,
@@ -71,7 +76,9 @@ internal abstract class CommonRunStrategy : global::Italbytz.AI.ML.Core.Control.
             },
             new TimeStoppingCriterion(maxTime)
         ];
-        return logicGp.Run();
+        var population = await logicGp.Run();
+        var bestIndividual = population.OrderByDescending(p => p.Fitness).FirstOrDefault();
+        return (bestIndividual ?? population.FirstOrDefault(), population);
     }
 
     public global::Italbytz.AI.Evolutionary.Individuals.IIndividualList TrainAndValidate(IDataView trainSet,
@@ -89,7 +96,7 @@ internal abstract class CommonRunStrategy : global::Italbytz.AI.ML.Core.Control.
         var convertedTrainLabels = MappingHelper.MapLabels(
             trainLabels,
             labelMapping);
-        var individuals = RunSpecificLogicGp(convertedTrainFeatures,
+        var (_, individuals) = RunSpecificLogicGp(convertedTrainFeatures,
             convertedTrainLabels).Result;
         foreach (var individual in individuals)
         {

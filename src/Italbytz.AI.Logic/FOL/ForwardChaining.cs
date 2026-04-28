@@ -16,8 +16,22 @@ public class ForwardChaining : IFolInference
 
     public IEnumerable<ISubstitution> Ask(IFolKnowledgeBase kb, ISentence query)
     {
-        if (query is not IAtomicSentence goal) yield break;
+        return AskResult(kb, query).Proofs.Select(proof => proof.AnswerBindings);
+    }
 
+    public IFolInferenceResult AskResult(IFolKnowledgeBase kb, ISentence query)
+    {
+        return query switch
+        {
+            IAtomicSentence goal => FolInferenceResult.FromProofs(AskAtomic(kb, goal), goal, "FORWARD_CHAINING"),
+            ITermEquality equality => AskEquality(kb, equality),
+            INotSentence notSentence => AskNegated(kb, notSentence),
+            _ => FolInferenceResult.PossiblyFalse()
+        };
+    }
+
+    private IEnumerable<ISubstitution> AskAtomic(IFolKnowledgeBase kb, IAtomicSentence goal)
+    {
         // Seed known facts (unit clauses)
         var known = kb.Clauses
             .Where(c => !c.premises.Any())
@@ -30,7 +44,7 @@ public class ForwardChaining : IFolInference
             changed = false;
             foreach (var (conclusion, premises) in kb.Clauses.Where(c => c.premises.Any()))
             {
-                foreach (var theta in MatchPremises(premises, known))
+                foreach (var theta in MatchPremises(premises, known).ToList())
                 {
                     var derived = ApplySubstitution(conclusion.Atom, theta);
                     if (!known.Any(f => f.SymbolicName == derived.SymbolicName &&
@@ -51,6 +65,47 @@ public class ForwardChaining : IFolInference
         }
     }
 
+    private IFolInferenceResult AskEquality(IFolKnowledgeBase kb, ITermEquality equality)
+    {
+        var directUnification = _unifier.Unify(equality.Left, equality.Right);
+        if (directUnification is not null)
+        {
+            return FolInferenceResult.FromProofs(
+                new[] { directUnification },
+                equality,
+                "TERM_UNIFICATION");
+        }
+
+        var equalityPredicate = new Predicate("=", new[] { equality.Left, equality.Right });
+        var derivedSubstitutions = AskAtomic(kb, equalityPredicate);
+        return FolInferenceResult.FromProofs(
+            derivedSubstitutions,
+            equality,
+            "FORWARD_CHAINING_EQUALITY",
+            new[] { equalityPredicate.ToString() });
+    }
+
+    private IFolInferenceResult AskNegated(IFolKnowledgeBase kb, INotSentence notSentence)
+    {
+        var inner = AskResult(kb, notSentence.Negated);
+        if (inner.IsUnknownDueToTimeout)
+        {
+            return FolInferenceResult.UnknownDueToTimeout();
+        }
+
+        if (inner.IsPartialResultDueToTimeout)
+        {
+            return FolInferenceResult.Partial(new[] { Substitution.Empty });
+        }
+
+        return inner.IsTrue
+            ? FolInferenceResult.PossiblyFalse()
+            : FolInferenceResult.TrueWithoutBindings(
+                notSentence,
+                "NEGATION_AS_FAILURE",
+                new[] { notSentence.Negated.ToString()! });
+    }
+
     private IEnumerable<ISubstitution> MatchPremises(
         IReadOnlyList<ILiteral> premises,
         List<IAtomicSentence> known)
@@ -60,19 +115,20 @@ public class ForwardChaining : IFolInference
         {
             var p = premise;
             current = current.SelectMany(theta =>
-                known
-                    .Select(fact => _unifier.Unify(p.Atom, fact, theta))
-                    .Where(t => t is not null)
-                    .Select(t => t!)
+                {
+                    var instantiatedPremise = SubstitutionApplier.Apply(p.Atom, theta);
+                    return known
+                        .Select(fact => _unifier.Unify(instantiatedPremise, fact, theta))
+                        .Where(t => t is not null)
+                        .Select(t => t!);
+                }
             );
         }
         return current;
     }
 
     private static IAtomicSentence ApplySubstitution(IAtomicSentence atom, ISubstitution theta) =>
-        // For our simple Horn-clause KB, atoms are returned as-is; a full
-        // implementation would walk the arg list and substitute variables.
-        atom;
+        SubstitutionApplier.Apply(atom, theta);
 
     private static bool ArgsMatch(IAtomicSentence a, IAtomicSentence b) =>
         a.Args.Count == b.Args.Count &&
