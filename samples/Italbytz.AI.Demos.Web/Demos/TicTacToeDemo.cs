@@ -123,8 +123,12 @@ internal static class TicTacToeDemoFactory
     public static TicTacToeGameTree BuildGameTree(TicTacToeState state, IReadOnlyList<TicTacToeMove> principalVariation)
     {
         const int maxDepth = 3;
-        const double svgWidth = 1200;
-        const double svgHeight = 900;
+        const double minSvgWidth = 1400;
+        const double horizontalLeafSpacing = 96;
+        const double horizontalMargin = 120;
+        const double verticalLevelSpacing = 190;
+        const double topMargin = 120;
+        const double bottomMargin = 140;
         
         var rootPlayer = state.NextPlayer;
         var pvPath = new HashSet<(int, int)>();
@@ -148,9 +152,41 @@ internal static class TicTacToeDemoFactory
                 break;
             }
         }
-        
-        var root = BuildTreeNodeRecursive(state, null, rootPlayer, 0, maxDepth, svgWidth / 2.0, 0, svgWidth / 2.0, 1, pvPath);
+
+        var visibleLeafCount = CountVisibleLeaves(state, 0, maxDepth);
+        var svgWidth = Math.Max(minSvgWidth, (horizontalMargin * 2.0) + (visibleLeafCount * horizontalLeafSpacing));
+        var svgHeight = topMargin + bottomMargin + (maxDepth * verticalLevelSpacing);
+
+        var root = BuildTreeNodeRecursive(
+            state,
+            null,
+            rootPlayer,
+            0,
+            maxDepth,
+            horizontalMargin,
+            svgWidth - horizontalMargin,
+            topMargin,
+            -1,
+            pvPath,
+            verticalLevelSpacing);
+
         return new TicTacToeGameTree(root, maxDepth, svgWidth, svgHeight);
+    }
+
+    private static int CountVisibleLeaves(TicTacToeState state, int depth, int maxDepth)
+    {
+        if (depth >= maxDepth || Game.Terminal(state))
+        {
+            return 1;
+        }
+
+        var actions = Game.Actions(state).ToList();
+        if (actions.Count == 0)
+        {
+            return 1;
+        }
+
+        return actions.Sum(action => CountVisibleLeaves(Game.Result(state, action), depth + 1, maxDepth));
     }
 
     private static TicTacToeTreeNode BuildTreeNodeRecursive(
@@ -159,16 +195,17 @@ internal static class TicTacToeDemoFactory
         TicTacToePlayer rootPlayer,
         int depth,
         int maxDepth,
-        double xPos,
+        double leftBound,
+        double rightBound,
         double yPos,
-        double parentWidth,
         int siblingIndex,
-        HashSet<(int, int)> pvPath)
+        HashSet<(int, int)> pvPath,
+        double verticalLevelSpacing)
     {
         var nodeId = $"node-{Guid.NewGuid().ToString()[..8]}";
         var isTerminal = Game.Terminal(state);
         var utility = EvaluateState(state, rootPlayer);
-        var yPos2 = yPos + (150.0 * (depth + 1));
+        var xPos = (leftBound + rightBound) / 2.0;
         var onPV = move is null || pvPath.Contains((depth - 1, siblingIndex));
         
         var children = new List<TicTacToeTreeNode>();
@@ -176,25 +213,39 @@ internal static class TicTacToeDemoFactory
         if (depth < maxDepth && !isTerminal)
         {
             var actions = Game.Actions(state).ToList();
-            var childWidth = parentWidth / Math.Max(1, actions.Count);
-            
-            for (int i = 0; i < actions.Count; i++)
+            if (actions.Count > 0)
             {
-                var action = actions[i];
-                var childX = xPos - (parentWidth / 2.0) + (childWidth / 2.0) + (i * childWidth);
-                var child = BuildTreeNodeRecursive(
-                    Game.Result(state, action),
-                    action,
-                    rootPlayer,
-                    depth + 1,
-                    maxDepth,
-                    childX,
-                    yPos2,
-                    childWidth,
-                    i,
-                    pvPath);
-                
-                children.Add(child);
+                var childLeafCounts = actions
+                    .Select(action => CountVisibleLeaves(Game.Result(state, action), depth + 1, maxDepth))
+                    .ToList();
+                var totalLeafCount = childLeafCounts.Sum();
+                var currentLeft = leftBound;
+                var nextY = yPos + verticalLevelSpacing;
+            
+                for (int i = 0; i < actions.Count; i++)
+                {
+                    var action = actions[i];
+                    var widthRatio = childLeafCounts[i] / (double)totalLeafCount;
+                    var childRight = i == actions.Count - 1
+                        ? rightBound
+                        : currentLeft + ((rightBound - leftBound) * widthRatio);
+
+                    var child = BuildTreeNodeRecursive(
+                        Game.Result(state, action),
+                        action,
+                        rootPlayer,
+                        depth + 1,
+                        maxDepth,
+                        currentLeft,
+                        childRight,
+                        nextY,
+                        i,
+                        pvPath,
+                        verticalLevelSpacing);
+
+                    children.Add(child);
+                    currentLeft = childRight;
+                }
             }
         }
         
@@ -206,7 +257,7 @@ internal static class TicTacToeDemoFactory
             utility,
             depth,
             xPos,
-            yPos2,
+            yPos,
             onPV && !isTerminal,
             isTerminal,
             children,
