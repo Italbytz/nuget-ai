@@ -55,6 +55,8 @@
             <p>Each branch value is the MIN outcome for that root action under perfect play.</p>
         </div>
 
+        <TwoPlyTreeViewer Comparison="@_comparison" />
+
         <div class="branch-grid">
             @foreach (var branch in _comparison.Branches)
             {
