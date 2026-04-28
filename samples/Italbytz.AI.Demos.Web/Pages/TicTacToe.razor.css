@@ -186,6 +186,37 @@ table th {
     margin-top: 1rem;
 }
 
+.tree-toggle-row {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 0.85rem;
+}
+
+.tree-insights-panel {
+    margin-top: 1rem;
+    padding-top: 0.9rem;
+    border-top: 1px dashed rgba(23, 50, 74, 0.18);
+}
+
+.tree-metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.85rem;
+    margin-bottom: 0.85rem;
+}
+
+.section-heading-tight h2 {
+    margin-bottom: 0.2rem;
+}
+
+.section-heading-tight p {
+    margin-top: 0;
+}
+
+.tree-row-pv {
+    background: rgba(23, 50, 74, 0.08);
+}
+
 .inspector-box-active {
     background: #17324a;
     color: #fff;
@@ -234,7 +265,8 @@ td {
 @media (max-width: 640px) {
     .stat-grid,
     .inspector-grid,
-    .tic-summary-grid {
+    .tic-summary-grid,
+    .tree-metrics-grid {
         grid-template-columns: 1fr;
     }
 }
