@@ -1,6 +1,9 @@
 @page "/weighted-graph"
 @using Italbytz.AI.Demos.Web.Demos
 @using Italbytz.AI.Search.Demos.WeightedGraph
+@using Italbytz.Graph
+@using Italbytz.Graph.Abstractions
+@using Italbytz.Graph.Visualization
 
 <PageTitle>Weighted graph demo</PageTitle>
 
@@ -35,7 +38,7 @@
     <div class="secondary-controls">
         <div class="selection-copy">
             <p class="selection-summary">@_scenario.Summary</p>
-            <p class="selection-summary">This page is driven by the package-level <code>WeightedGraphSearchSimulator</code> and mirrors the queue discipline of uniform-cost search / Dijkstra.</p>
+            <p class="selection-summary">This page is driven by the package-level <code>WeightedGraphSearchSimulator</code> and mirrors the queue discipline of uniform-cost search / Dijkstra. Graph rendering uses <code>Italbytz.Graph.Blazor</code>.</p>
         </div>
 
         <div class="step-buttons">
@@ -51,47 +54,42 @@
 </section>
 
 <section class="demo-grid">
-    <article class="surface-card graph-card">
+    <article class="surface-card map-card">
         <div class="section-heading">
             <h2>Graph</h2>
             <p>Nodes display their current best-known distance. Accepted relaxations and the current shortest-path tree are highlighted as you advance.</p>
         </div>
 
-        <div class="graph-shell">
-            <svg viewBox="0 0 640 360" class="graph-svg" aria-label="Weighted graph">
-                @foreach (var edge in _scenario.Edges)
-                {
-                    <line x1="@NodePositions[edge.FromNode].X" y1="@NodePositions[edge.FromNode].Y" x2="@NodePositions[edge.ToNode].X" y2="@NodePositions[edge.ToNode].Y" class="@GetEdgeClass(edge)" />
-                    <foreignObject x="@(((NodePositions[edge.FromNode].X + NodePositions[edge.ToNode].X) / 2) - 20)" y="@(((NodePositions[edge.FromNode].Y + NodePositions[edge.ToNode].Y) / 2) - 20)" width="40" height="24">
-                        <div class="edge-weight-label">@edge.Cost</div>
-                    </foreignObject>
-                }
-
-                @foreach (var vertex in _scenario.Vertices)
-                {
-                    <circle cx="@NodePositions[vertex].X" cy="@NodePositions[vertex].Y" r="28" class="@GetNodeClass(vertex)" />
-                    <foreignObject x="@(NodePositions[vertex].X - 26)" y="@(NodePositions[vertex].Y - 22)" width="52" height="20">
-                        <div class="node-label-text">@vertex</div>
-                    </foreignObject>
-                    <foreignObject x="@(NodePositions[vertex].X - 28)" y="@(NodePositions[vertex].Y + 2)" width="56" height="18">
-                        <div class="node-distance-text">@GetDistanceLabel(vertex)</div>
-                    </foreignObject>
-                }
-            </svg>
-        </div>
-
-        <div class="inspector-grid">
-            <article class="inspector-box @(CurrentStep is null ? string.Empty : "inspector-box-active")">
-                <p class="eyebrow">Expanded node</p>
-                <h3>@(CurrentStep?.ExpandedNode.State ?? _scenario.StartNode)</h3>
-                <p>distance = @(CurrentStep is null ? "0" : CurrentStep.ExpandedNode.PathCost.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture))</p>
-            </article>
-            <article class="inspector-box @(CurrentRelaxations.Any(relaxation => relaxation.Accepted) ? string.Empty : "inspector-box-warning")">
-                <p class="eyebrow">Accepted relaxations</p>
-                <h3>@CurrentRelaxations.Count(relaxation => relaxation.Accepted)</h3>
-                <p>@(CurrentRelaxations.Count == 0 ? "No relaxation yet." : "Check the table on the right for candidate distances.")</p>
-            </article>
-        </div>
+        <GraphViewport Graph="@_graphView"
+                       ActiveEdgeKeys="@CurrentGraphState.ActiveEdgeKeys"
+                       ActiveNodeKeys="@CurrentGraphState.ActiveNodeIds"
+                       FrontierNodeKeys="@CurrentGraphState.FrontierNodeIds"
+                       ExploredNodeKeys="@CurrentGraphState.ExploredNodeIds"
+                       CurrentNodeKey="@CurrentGraphState.CurrentNodeId"
+                       SuccessorEdgeKeys="@CurrentGraphState.SuccessorEdgeKeys"
+                       DirectedActiveEdgeIds="@CurrentGraphState.DirectedActiveEdgeIds"
+                       DirectedSuccessorEdgeIds="@CurrentGraphState.DirectedSuccessorEdgeIds"
+                       Title="Dijkstra shortest-path search"
+                       ZoomInLabel="Zoom in"
+                       ZoomOutLabel="Zoom out"
+                       FitLabel="Fit graph"
+                       ResetLabel="Reset"
+                       InteractionHint="Use the graph itself to inspect nodes, edges and the current search state."
+                       ActiveLegendLabel="Shortest-path tree"
+                       SuccessorLegendLabel="Candidate edges"
+                       CurrentNodeLegendLabel="Expanded node"
+                       FrontierLegendLabel="Frontier"
+                       ExploredLegendLabel="Reached"
+                       SolutionLegendLabel="Shortest path"
+                       DefaultLegendLabel="Alternative edge"
+                       InspectorTitle="Inspector"
+                       NoSelectionTitle="Nothing selected"
+                       NoSelectionText="Select a node or edge in the graph to inspect its current role."
+                       NodeLabel="Node"
+                       EdgeLabel="Edge"
+                       WeightLabel="Weight"
+                       ConnectionsLabel="Connections"
+                       StateLabel="State" />
     </article>
 
     <article class="surface-card inspector-card">
@@ -175,16 +173,6 @@
 </section>
 
 @code {
-    private static readonly Dictionary<string, (double X, double Y)> NodePositions = new(StringComparer.Ordinal)
-    {
-        ["A"] = (90, 70),
-        ["B"] = (255, 70),
-        ["C"] = (170, 180),
-        ["D"] = (385, 165),
-        ["E"] = (520, 80),
-        ["F"] = (540, 250)
-    };
-
     private readonly Random _random = new();
     private WeightedGraphScenario _scenario = WeightedGraphDemoFactory.BuildScenarios()[0];
     private WeightedGraphSearchResult _result = new WeightedGraphSearchSimulator().SimulateDijkstra(
@@ -192,21 +180,38 @@
         WeightedGraphDemoFactory.BuildScenarios()[0].Vertices,
         WeightedGraphDemoFactory.BuildScenarios()[0].Edges);
     private int _currentStep;
+    private GraphViewModel _graphView = null!;
+
+    protected override void OnInitialized()
+    {
+        RecreateGraph();
+    }
+
+    private void RecreateGraph()
+    {
+        var graph = CreateGraph();
+        _graphView = GraphViewFactory.BuildSvgGraphView(graph, Array.Empty<string>());
+    }
 
     private IReadOnlyList<WeightedGraphSearchStep> VisibleSteps => _result.Steps.Take(_currentStep).ToArray();
     private WeightedGraphSearchStep? CurrentStep => _currentStep > 0 && _result.Steps.Count > 0 ? _result.Steps[_currentStep - 1] : null;
     private IReadOnlyList<WeightedGraphDistanceState> CurrentDistances => CurrentStep?.Distances ?? _result.Distances;
     private IReadOnlyList<WeightedGraphRelaxation> CurrentRelaxations => CurrentStep?.Relaxations ?? [];
     private string VisibleProgressLabel => _result.Steps.Count == 0 ? "0 / 0" : $"{_currentStep} / {_result.Steps.Count}";
-    private string CurrentSummary => _currentStep == 0
-        ? "Advance the search to inspect how Dijkstra relaxes outgoing edges and reorders the frontier."
-        : $"Step {_currentStep}: expand {CurrentStep?.ExpandedNode.State} and inspect accepted versus rejected relaxations.";
+    private string CurrentSummary => _currentStep switch
+    {
+        0 => "Start with the initial node, then step through the queue discipline to see how Dijkstra relaxes edges and reorders the frontier.",
+        _ => $"Step {_currentStep}: expand {CurrentStep?.ExpandedNode.State}, inspect relaxations, and compare the frontier ordering."
+    };
+
+    private GraphStateViewModel CurrentGraphState => BuildGraphState();
 
     private void RandomizeScenario()
     {
         _scenario = WeightedGraphDemoFactory.CreateRandomScenario(_random);
         _result = new WeightedGraphSearchSimulator().SimulateDijkstra(_scenario.StartNode, _scenario.Vertices, _scenario.Edges);
         _currentStep = 0;
+        RecreateGraph();
     }
 
     private void PreviousStep()
@@ -235,56 +240,79 @@
         _currentStep = 0;
     }
 
-    private string GetDistanceLabel(string vertex)
+    private IUndirectedGraph<string, ITaggedEdge<string, double>> CreateGraph()
     {
-        return WeightedGraphDemoFactory.FormatDistance(CurrentDistances.FirstOrDefault(distance => string.Equals(distance.Node, vertex, StringComparison.Ordinal))?.Distance);
+        var edges = new List<ITaggedEdge<string, double>>();
+        
+        foreach (var edge in _scenario.Edges)
+        {
+            edges.Add(new TaggedEdge<string, double>(edge.FromNode, edge.ToNode, edge.Cost));
+        }
+
+        return new UndirectedGraph<string, ITaggedEdge<string, double>>
+        {
+            Edges = edges.ToArray()
+        };
     }
 
-    private string GetNodeClass(string vertex)
+    private GraphStateViewModel BuildGraphState()
     {
-        var cssClass = "graph-node";
-
-        if (string.Equals(vertex, _scenario.StartNode, StringComparison.Ordinal))
+        if (CurrentStep is null)
         {
-            cssClass += " graph-node-start";
+            var startNode = _scenario.StartNode;
+            return new GraphStateViewModel(
+                startNode,                      // CurrentNodeId
+                [startNode],                    // ActiveNodeIds
+                [],                             // FrontierNodeIds
+                [],                             // ExploredNodeIds
+                [],                             // ActiveEdgeKeys
+                [],                             // SuccessorEdgeKeys
+                [],                             // DirectedActiveEdgeIds
+                []);                            // DirectedSuccessorEdgeIds
         }
 
-        if (string.Equals(vertex, CurrentStep?.ExpandedNode.State, StringComparison.Ordinal))
+        // Build the graph state for the current step
+        var expandedNode = CurrentStep.ExpandedNode.State;
+        var reachedNodes = CurrentDistances
+            .Where(d => d.Distance.HasValue)
+            .Select(d => d.Node)
+            .ToList();
+        var frontierNodes = CurrentStep.Frontier.Select(f => f.State).ToArray();
+        
+        // Tree edges from shortest-path tree (parent to child nodes)
+        var treeEdgeIds = new List<string>();
+        var directedTreeEdgeIds = new List<string>();
+        
+        foreach (var distance in CurrentDistances)
         {
-            cssClass += " graph-node-current";
+            if (!string.IsNullOrEmpty(distance.PreviousNode) && distance.Distance.HasValue)
+            {
+                var parentNode = distance.PreviousNode;
+                var childNode = distance.Node;
+                treeEdgeIds.Add($"{parentNode}-{childNode}");
+                directedTreeEdgeIds.Add(GraphViewKeys.CreateDirectedEdgeId(parentNode, childNode));
+            }
         }
 
-        if (CurrentStep?.Frontier.Any(node => string.Equals(node.State, vertex, StringComparison.Ordinal)) == true)
+        // Successor edges are the candidate edges from the current expanded node
+        var successorEdgeIds = new List<string>();
+        var directedSuccessorEdgeIds = new List<string>();
+        
+        var relaxationsInStep = CurrentStep?.Relaxations ?? [];
+        foreach (var relaxation in relaxationsInStep)
         {
-            cssClass += " graph-node-frontier";
+            successorEdgeIds.Add($"{relaxation.FromNode}-{relaxation.ToNode}");
+            directedSuccessorEdgeIds.Add(GraphViewKeys.CreateDirectedEdgeId(relaxation.FromNode, relaxation.ToNode));
         }
 
-        if (CurrentDistances.Any(distance => string.Equals(distance.Node, vertex, StringComparison.Ordinal) && distance.Distance.HasValue))
-        {
-            cssClass += " graph-node-reached";
-        }
-
-        return cssClass;
-    }
-
-    private string GetEdgeClass(WeightedGraphEdge edge)
-    {
-        var cssClass = "graph-edge";
-        var previous = CurrentDistances.FirstOrDefault(distance => string.Equals(distance.Node, edge.ToNode, StringComparison.Ordinal))?.PreviousNode;
-        var reversePrevious = CurrentDistances.FirstOrDefault(distance => string.Equals(distance.Node, edge.FromNode, StringComparison.Ordinal))?.PreviousNode;
-
-        if (string.Equals(previous, edge.FromNode, StringComparison.Ordinal) || string.Equals(reversePrevious, edge.ToNode, StringComparison.Ordinal))
-        {
-            cssClass += " graph-edge-tree";
-        }
-
-        if (CurrentRelaxations.Any(relaxation => relaxation.Accepted &&
-            ((string.Equals(relaxation.FromNode, edge.FromNode, StringComparison.Ordinal) && string.Equals(relaxation.ToNode, edge.ToNode, StringComparison.Ordinal))
-            || (string.Equals(relaxation.FromNode, edge.ToNode, StringComparison.Ordinal) && string.Equals(relaxation.ToNode, edge.FromNode, StringComparison.Ordinal)))))
-        {
-            cssClass += " graph-edge-active";
-        }
-
-        return cssClass;
+        return new GraphStateViewModel(
+            expandedNode,                       // CurrentNodeId
+            reachedNodes.ToArray(),             // ActiveNodeIds (all reached nodes)
+            frontierNodes,                      // FrontierNodeIds
+            [],                                 // ExploredNodeIds (not used in Dijkstra)
+            treeEdgeIds.ToArray(),              // ActiveEdgeKeys (shortest-path tree)
+            successorEdgeIds.ToArray(),         // SuccessorEdgeKeys (candidates)
+            directedTreeEdgeIds.ToArray(),      // DirectedActiveEdgeIds
+            directedSuccessorEdgeIds.ToArray()); // DirectedSuccessorEdgeIds
     }
 }
