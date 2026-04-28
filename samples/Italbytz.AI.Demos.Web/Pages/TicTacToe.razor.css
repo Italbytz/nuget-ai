@@ -147,6 +147,9 @@ table th {
     border: 1px solid rgba(23, 50, 74, 0.14);
     font-size: 1.9rem;
     font-family: Georgia, "Times New Roman", serif;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .tic-cell-empty {
@@ -161,6 +164,37 @@ table th {
 .tic-cell-o {
     background: #dbe7f4;
     color: #21486d;
+}
+
+.tic-mark {
+    width: 2.6rem;
+    height: 2.6rem;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    fill: none;
+}
+
+.tic-mark-x {
+    stroke: #8d3f2e;
+    stroke-width: 7;
+}
+
+.tic-mark-o {
+    stroke: #21486d;
+    stroke-width: 6;
+}
+
+.tic-cell-empty-dot {
+    width: 0.42rem;
+    height: 0.42rem;
+    border-radius: 999px;
+    background: rgba(23, 50, 74, 0.22);
+    opacity: 0;
+    transition: opacity 0.15s ease-in-out;
+}
+
+.tic-cell:not(:disabled):hover .tic-cell-empty-dot {
+    opacity: 1;
 }
 
 .tic-cell-recommended-minimax {
