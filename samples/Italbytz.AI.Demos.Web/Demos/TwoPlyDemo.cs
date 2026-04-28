@@ -8,19 +8,19 @@ internal enum TwoPlyPlayer
     Min
 }
 
-internal sealed record TwoPlyMove(string Label, string ToStateId);
+public sealed record TwoPlyMove(string Label, string ToStateId);
 
 internal sealed record TwoPlyState(string Id, int Depth);
 
-internal sealed record TwoPlyBranchSummary(string ActionLabel, double MinimaxValue, bool Recommended);
+public sealed record TwoPlyBranchSummary(string ActionLabel, double MinimaxValue, bool Recommended);
 
-internal sealed record TwoPlyAlgorithmAnalysis(
+public sealed record TwoPlyAlgorithmAnalysis(
     string Name,
     TwoPlyMove? BestMove,
     int NodesExpanded,
     double RootValue);
 
-internal sealed record TwoPlyComparison(
+public sealed record TwoPlyComparison(
     TwoPlyScenario Scenario,
     TwoPlyAlgorithmAnalysis Minimax,
     TwoPlyAlgorithmAnalysis AlphaBeta,
@@ -30,13 +30,13 @@ internal sealed record TwoPlyComparison(
     IReadOnlyList<string> PrincipalVariation,
     int AlphaBetaPrunedLeafCount);
 
-internal sealed record TwoPlyLeafInsight(
+public sealed record TwoPlyLeafInsight(
     string RootAction,
     string Leaf,
     double Utility,
     bool EvaluatedByAlphaBeta);
 
-internal sealed record TwoPlyScenario(
+public sealed record TwoPlyScenario(
     string Key,
     string Name,
     string Summary,
