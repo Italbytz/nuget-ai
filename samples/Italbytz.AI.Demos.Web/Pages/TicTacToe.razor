@@ -1,0 +1,257 @@
+@page "/tic-tac-toe"
+@using Italbytz.AI.Demos.Web.Demos
+
+<PageTitle>Tic-Tac-Toe minimax demo</PageTitle>
+
+<section class="demo-hero">
+    <div>
+        <p class="eyebrow">Adversarial search demo</p>
+        <h1>Tic-Tac-Toe</h1>
+        <p class="hero-copy">Compare pure minimax against alpha-beta pruning on the same Tic-Tac-Toe positions. Click empty squares to continue the game manually or let one of the algorithms play the next move.</p>
+    </div>
+
+    <div class="stat-grid">
+        <article>
+            <span class="stat-label">Scenario</span>
+            <strong>@_selectedScenario.Name</strong>
+        </article>
+        <article>
+            <span class="stat-label">Current player</span>
+            <strong>@TicTacToeDemoFactory.FormatPlayer(_state.NextPlayer)</strong>
+        </article>
+        <article>
+            <span class="stat-label">Legal moves</span>
+            <strong>@_comparison.LegalMoves.Count</strong>
+        </article>
+        <article>
+            <span class="stat-label">Agreement</span>
+            <strong>@AgreementLabel</strong>
+        </article>
+    </div>
+</section>
+
+<section class="control-panel">
+    <div class="button-row">
+        @foreach (var scenario in _scenarios)
+        {
+            <button class="@(scenario.Key == _selectedScenario.Key ? "choice-button selected" : "choice-button")"
+                    @onclick="() => SelectScenario(scenario.Key)">
+                @scenario.Name
+            </button>
+        }
+    </div>
+
+    <div class="secondary-controls">
+        <div class="selection-copy">
+            <p class="selection-summary">@_selectedScenario.Summary</p>
+            <p class="selection-summary">Package linkage: both recommendations come directly from <code>Italbytz.AI.Search.Adversarial.MinimaxSearch</code> and <code>Italbytz.AI.Search.Adversarial.AlphaBetaSearch</code> over the same sample-local <code>IGame</code> implementation.</p>
+            <p class="selection-summary">@_comparison.PositionSummary</p>
+        </div>
+
+        <div class="step-buttons">
+            <button class="ghost-button" @onclick="ResetScenario">Reset scenario</button>
+            <button class="primary-button" @onclick="ApplyMinimaxMove" disabled="@(!_comparison.LegalMoves.Any() || _comparison.Minimax.BestMove is null)">Play minimax move</button>
+            <button class="ghost-button" @onclick="ApplyAlphaBetaMove" disabled="@(!_comparison.LegalMoves.Any() || _comparison.AlphaBeta.BestMove is null)">Play alpha-beta move</button>
+        </div>
+    </div>
+
+    <p class="step-summary">@CurrentSummary</p>
+</section>
+
+<section class="demo-grid tic-grid-layout">
+    <article class="surface-card tic-board-card">
+        <div class="section-heading">
+            <h2>Board</h2>
+            <p>Recommended cells are highlighted so you can see immediately whether minimax and alpha-beta pruning agree on the same action.</p>
+        </div>
+
+        <div class="tic-board-shell">
+            <div class="tic-board" role="grid" aria-label="Tic-Tac-Toe board">
+                @for (var index = 0; index < 9; index++)
+                {
+                    <button class="@GetCellClass(index)"
+                            disabled="@(_state.GetCell(index) != '.' || _comparison.IsTerminal)"
+                            title="@GetCellTitle(index)"
+                            @onclick="() => PlayMove(index)">
+                        @TicTacToeDemoFactory.DescribeCell(_state.GetCell(index))
+                    </button>
+                }
+            </div>
+        </div>
+
+        <div class="inspector-grid">
+            <article class="inspector-box @(_comparison.IsTerminal ? "inspector-box-active" : string.Empty)">
+                <p class="eyebrow">Position state</p>
+                <h3>@PositionStateLabel</h3>
+                <p>@WinnerLabel</p>
+            </article>
+            <article class="inspector-box @(AgreementLabel == "Same move" ? string.Empty : "inspector-box-warning")">
+                <p class="eyebrow">Recommendation</p>
+                <h3>@PreferredMoveLabel</h3>
+                <p>@_comparison.PositionSummary</p>
+            </article>
+        </div>
+    </article>
+
+    <article class="surface-card inspector-card">
+        <div class="section-heading">
+            <h2>Algorithm comparison</h2>
+            <p>The move should stay the same, but alpha-beta pruning typically expands fewer states because the preferred move ordering enables earlier cutoffs.</p>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Algorithm</th>
+                    <th>Best move</th>
+                    <th>Nodes</th>
+                    <th>Outcome</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>@_comparison.Minimax.Name</td>
+                    <td>@TicTacToeDemoFactory.FormatMove(_comparison.Minimax.BestMove)</td>
+                    <td>@_comparison.Minimax.NodesExpanded</td>
+                    <td>@_comparison.Minimax.OutcomeLabel</td>
+                </tr>
+                <tr>
+                    <td>@_comparison.AlphaBeta.Name</td>
+                    <td>@TicTacToeDemoFactory.FormatMove(_comparison.AlphaBeta.BestMove)</td>
+                    <td>@_comparison.AlphaBeta.NodesExpanded</td>
+                    <td>@_comparison.AlphaBeta.OutcomeLabel</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="tic-summary-grid">
+            <article class="inspector-box">
+                <p class="eyebrow">Node reduction</p>
+                <h3>@NodeReductionLabel</h3>
+                <p>Measured as minimax nodes minus alpha-beta nodes on the same current position.</p>
+            </article>
+            <article class="inspector-box">
+                <p class="eyebrow">Playable cells</p>
+                <h3>@string.Join(", ", _comparison.LegalMoves.Select(TicTacToeDemoFactory.FormatMove))</h3>
+                <p>Click any empty square to continue manually from the current player's perspective.</p>
+            </article>
+        </div>
+    </article>
+</section>
+
+@code {
+    private readonly IReadOnlyList<TicTacToeScenario> _scenarios = TicTacToeDemoFactory.BuildScenarios();
+    private TicTacToeScenario _selectedScenario = TicTacToeDemoFactory.BuildScenarios()[0];
+    private TicTacToeState _state = TicTacToeDemoFactory.BuildScenarios()[0].InitialState;
+    private TicTacToeComparison _comparison = TicTacToeDemoFactory.Analyze(TicTacToeDemoFactory.BuildScenarios()[0].InitialState);
+
+    private string AgreementLabel => _comparison.Minimax.BestMove?.Index == _comparison.AlphaBeta.BestMove?.Index ? "Same move" : "Different move";
+    private string PositionStateLabel => _comparison.IsTerminal ? "Finished" : "In play";
+    private string WinnerLabel => _comparison.Winner is null ? (_comparison.IsTerminal ? "Winner: draw" : $"Turn: {TicTacToeDemoFactory.FormatPlayer(_state.NextPlayer)}") : $"Winner: {TicTacToeDemoFactory.FormatPlayer(_comparison.Winner.Value)}";
+    private string PreferredMoveLabel => TicTacToeDemoFactory.FormatMove(_comparison.AlphaBeta.BestMove);
+    private string NodeReductionLabel => _comparison.Minimax.NodesExpanded == 0
+        ? "0"
+        : $"{_comparison.Minimax.NodesExpanded - _comparison.AlphaBeta.NodesExpanded} fewer";
+    private string CurrentSummary => _comparison.IsTerminal
+        ? "The position is terminal. Reset the scenario or switch to another preset to compare a new search tree."
+        : "Click an empty cell for a manual move or let one of the two adversarial search variants play the next turn.";
+
+    private void SelectScenario(string key)
+    {
+        _selectedScenario = _scenarios.First(scenario => scenario.Key == key);
+        _state = _selectedScenario.InitialState;
+        RecomputeComparison();
+    }
+
+    private void ResetScenario()
+    {
+        _state = _selectedScenario.InitialState;
+        RecomputeComparison();
+    }
+
+    private void PlayMove(int index)
+    {
+        if (_comparison.IsTerminal || _state.GetCell(index) != '.')
+        {
+            return;
+        }
+
+        _state = TicTacToeDemoFactory.ApplyMove(_state, new TicTacToeMove(index));
+        RecomputeComparison();
+    }
+
+    private void ApplyMinimaxMove()
+    {
+        if (_comparison.Minimax.BestMove is null)
+        {
+            return;
+        }
+
+        _state = TicTacToeDemoFactory.ApplyMove(_state, _comparison.Minimax.BestMove);
+        RecomputeComparison();
+    }
+
+    private void ApplyAlphaBetaMove()
+    {
+        if (_comparison.AlphaBeta.BestMove is null)
+        {
+            return;
+        }
+
+        _state = TicTacToeDemoFactory.ApplyMove(_state, _comparison.AlphaBeta.BestMove);
+        RecomputeComparison();
+    }
+
+    private void RecomputeComparison()
+    {
+        _comparison = TicTacToeDemoFactory.Analyze(_state);
+    }
+
+    private string GetCellClass(int index)
+    {
+        var cssClass = "tic-cell";
+        var cell = _state.GetCell(index);
+
+        if (cell == 'X')
+        {
+            cssClass += " tic-cell-x";
+        }
+        else if (cell == 'O')
+        {
+            cssClass += " tic-cell-o";
+        }
+        else
+        {
+            cssClass += " tic-cell-empty";
+        }
+
+        var isMinimax = _comparison.Minimax.BestMove?.Index == index;
+        var isAlphaBeta = _comparison.AlphaBeta.BestMove?.Index == index;
+
+        if (isMinimax && isAlphaBeta)
+        {
+            cssClass += " tic-cell-recommended-both";
+        }
+        else if (isAlphaBeta)
+        {
+            cssClass += " tic-cell-recommended-alpha";
+        }
+        else if (isMinimax)
+        {
+            cssClass += " tic-cell-recommended-minimax";
+        }
+
+        return cssClass;
+    }
+
+    private string GetCellTitle(int index)
+    {
+        var row = (index / 3) + 1;
+        var column = (index % 3) + 1;
+        var occupant = TicTacToeDemoFactory.DescribeCell(_state.GetCell(index));
+
+        return string.IsNullOrEmpty(occupant)
+            ? $"Play row {row}, column {column}"
+            : $"Row {row}, column {column}: {occupant}";
+    }
+}
