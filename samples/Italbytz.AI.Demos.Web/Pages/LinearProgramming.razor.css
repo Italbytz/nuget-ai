@@ -127,11 +127,19 @@
     margin-top: 1rem;
 }
 
+.model-layout {
+    margin-top: 1rem;
+}
+
 .surface-card {
     padding: 1.25rem;
 }
 
 .lp-plot-card {
+    background: rgba(246, 243, 236, 0.94);
+}
+
+.solver-card {
     background: rgba(246, 243, 236, 0.94);
 }
 
@@ -220,18 +228,39 @@
 
 .continuous-optimum {
     fill: #0b5c7a;
+    stroke: #ffffff;
+    stroke-width: 2;
     opacity: 0.9;
 }
 
 .integer-optimum {
     fill: #c95e39;
+    stroke: #ffffff;
+    stroke-width: 2;
     opacity: 0.9;
+}
+
+.marker-visible {
+    opacity: 1;
+}
+
+.marker-hidden {
+    opacity: 0;
 }
 
 .visible-optimum {
     fill: none;
-    stroke: #17324a;
+}
+
+.visible-optimum-local {
+    stroke: #0b5c7a;
     stroke-width: 3;
+    stroke-dasharray: 5 3;
+}
+
+.visible-optimum-final {
+    stroke: #c95e39;
+    stroke-width: 3.5;
 }
 
 .active-relaxed-optimum {
@@ -271,6 +300,98 @@
     border-radius: 1rem;
     background: rgba(255, 255, 255, 0.72);
     border: 1px solid rgba(23, 50, 74, 0.08);
+}
+
+.solution-trace-card {
+    margin-top: 0.8rem;
+    padding: 1rem;
+    border-radius: 1rem;
+    background: rgba(255, 255, 255, 0.72);
+    border: 1px solid rgba(23, 50, 74, 0.08);
+}
+
+.solution-trace-list {
+    margin: 0.8rem 0 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    gap: 0.75rem;
+}
+
+.solution-trace-step {
+    position: relative;
+    padding: 0;
+    border-radius: 0.9rem;
+    background: rgba(247, 242, 232, 0.82);
+    border: 1px solid rgba(23, 50, 74, 0.08);
+}
+
+.solution-trace-button {
+    width: 100%;
+    border: 0;
+    background: transparent;
+    text-align: left;
+    padding: 0.8rem 0.95rem 0.8rem 1rem;
+    cursor: pointer;
+    font: inherit;
+}
+
+.solution-trace-button:focus-visible {
+    outline: 2px solid rgba(11, 92, 122, 0.4);
+    outline-offset: -2px;
+    border-radius: 0.9rem;
+}
+
+.solution-trace-step strong,
+.solution-trace-step span {
+    display: block;
+}
+
+.solution-trace-step span {
+    margin-top: 0.25rem;
+    color: #4d5a66;
+}
+
+.solution-trace-detail {
+    font-size: 0.93rem;
+    line-height: 1.4;
+}
+
+.solution-trace-step-active {
+    background: rgba(23, 50, 74, 0.09);
+    border-color: rgba(23, 50, 74, 0.24);
+}
+
+.branch-quick-stepper {
+    margin-top: 0.9rem;
+    padding: 0.85rem 0.95rem;
+    border-radius: 0.95rem;
+    background: rgba(255, 255, 255, 0.72);
+    border: 1px solid rgba(23, 50, 74, 0.08);
+}
+
+.branch-quick-stepper-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.75rem;
+    color: #4d5a66;
+}
+
+.branch-quick-stepper-header .eyebrow {
+    margin: 0;
+}
+
+.branch-quick-stepper-controls {
+    margin-top: 0.65rem;
+    display: flex;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+}
+
+.branch-quick-stepper-copy {
+    margin: 0.7rem 0 0;
+    color: #4d5a66;
 }
 
 .legend-heading {
@@ -343,6 +464,11 @@
 
 .legend-line-left {
     border-top-color: rgba(201, 94, 57, 0.85);
+}
+
+.legend-line-constraint {
+    border-top-style: solid;
+    border-top-color: rgba(201, 94, 57, 0.9);
 }
 
 .legend-line-right {
@@ -427,13 +553,90 @@
     margin-top: 1.2rem;
 }
 
+.branch-status-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.55rem;
+    margin-bottom: 0.7rem;
+}
+
+.branch-status-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.25rem 0.6rem;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.72);
+    border: 1px solid rgba(23, 50, 74, 0.12);
+    color: #4d5a66;
+    font-size: 0.82rem;
+}
+
 .branch-heading {
     margin-bottom: 0.85rem;
+}
+
+.branch-group + .branch-group {
+    margin-top: 1rem;
+}
+
+.branch-path-toggle {
+    margin-top: 0.85rem;
+    padding: 0.25rem 0.45rem 0.55rem;
+    border: 1px solid rgba(23, 50, 74, 0.1);
+    border-radius: 1rem;
+    background: rgba(255, 255, 255, 0.58);
+}
+
+.branch-group-summary {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 0.7rem;
+    cursor: pointer;
+    padding: 0.55rem 0.55rem 0.45rem;
+    list-style: none;
+}
+
+.branch-group-summary::-webkit-details-marker {
+    display: none;
+}
+
+.branch-group-title {
+    color: #17324a;
+    font-weight: 700;
+}
+
+.branch-group-copy {
+    color: #4d5a66;
+    font-size: 0.9rem;
+}
+
+.branch-group-header {
+    margin-bottom: 0.75rem;
+}
+
+.branch-group-header h3 {
+    margin: 0;
+    color: #17324a;
+}
+
+.branch-group-header p {
+    margin: 0.2rem 0 0;
+    color: #4d5a66;
 }
 
 .branch-trace-list {
     margin: 0;
     padding-left: 1.2rem;
+}
+
+.branch-path-toggle .branch-trace-list {
+    margin-top: 0.15rem;
+}
+
+.branch-trace-list-secondary {
+    opacity: 0.88;
 }
 
 .branch-step {
@@ -458,12 +661,45 @@
     background: #efe1d2;
 }
 
+.branch-step-secondary {
+    background: rgba(247, 242, 232, 0.72);
+}
+
+.branch-step-toggle {
+    display: block;
+}
+
+.branch-step-summary {
+    list-style: none;
+    cursor: pointer;
+}
+
+.branch-step-summary::-webkit-details-marker {
+    display: none;
+}
+
+.branch-step-body {
+    margin-top: 0.25rem;
+}
+
 .branch-step-header {
     display: flex;
     justify-content: space-between;
     gap: 0.75rem;
     flex-wrap: wrap;
     color: #4d5a66;
+}
+
+.branch-step-status {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    padding: 0.15rem 0.55rem;
+    border-radius: 999px;
+    background: rgba(23, 50, 74, 0.1);
+    color: #4d5a66;
+    white-space: nowrap;
+    align-self: center;
 }
 
 .branch-step p {
@@ -482,10 +718,33 @@
     align-items: center;
 }
 
+.interpretation-panels {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.85rem;
+}
+
+.mini-panel {
+    padding: 1rem;
+    border-radius: 1rem;
+    background: #f7f2e8;
+    border: 1px solid rgba(23, 50, 74, 0.08);
+}
+
+.mini-panel h3 {
+    margin-top: 0;
+    color: #17324a;
+}
+
+.mini-panel p {
+    color: #4d5a66;
+}
+
 @media (max-width: 900px) {
     .demo-grid,
     .demo-hero,
     .stat-grid,
+    .interpretation-panels,
     .comparison-grid,
     .legend-grid,
     .plot-legend-grid {
