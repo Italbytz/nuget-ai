@@ -100,6 +100,10 @@
             <p>The move should stay the same, but alpha-beta pruning typically expands fewer states because the preferred move ordering enables earlier cutoffs.</p>
         </div>
 
+        <div class="tree-toggle-row">
+            <button class="ghost-button" @onclick="ToggleTreeInsights">@(_showTreeInsights ? "Hide tree insights" : "Show tree insights")</button>
+        </div>
+
         <table>
             <thead>
                 <tr>
@@ -137,6 +141,53 @@
                 <p>Click any empty square to continue manually from the current player's perspective.</p>
             </article>
         </div>
+
+        @if (_showTreeInsights)
+        {
+            <div class="tree-insights-panel">
+                <div class="tree-metrics-grid">
+                    <article class="inspector-box">
+                        <p class="eyebrow">Principal variation</p>
+                        <h3>@PrincipalVariationLabel</h3>
+                        <p>Best-play line from the current state under minimax tie-breaking and move ordering.</p>
+                    </article>
+                    <article class="inspector-box">
+                        <p class="eyebrow">Estimated subtree savings</p>
+                        <h3>@EstimatedSubtreeSavingsLabel</h3>
+                        <p>Sum of minimax vs alpha-beta node differences across each legal root action subtree.</p>
+                    </article>
+                </div>
+
+                <div class="section-heading section-heading-tight">
+                    <h2>Root branch explorer</h2>
+                    <p>Shows branch utility and approximate explored nodes per root move for both algorithms.</p>
+                </div>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Move</th>
+                            <th>Utility</th>
+                            <th>Minimax nodes</th>
+                            <th>Alpha-beta nodes</th>
+                            <th>Savings</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var branch in _comparison.BranchInsights)
+                        {
+                            <tr class="@(branch.OnPrincipalVariation ? "tree-row-pv" : string.Empty)">
+                                <td>@TicTacToeDemoFactory.FormatMove(branch.Move)</td>
+                                <td>@branch.Utility.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)</td>
+                                <td>@branch.MinimaxNodes</td>
+                                <td>@branch.AlphaBetaNodes</td>
+                                <td>@(branch.MinimaxNodes - branch.AlphaBetaNodes)</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
     </article>
 </section>
 
@@ -145,6 +196,7 @@
     private TicTacToeScenario _selectedScenario = TicTacToeDemoFactory.BuildScenarios()[0];
     private TicTacToeState _state = TicTacToeDemoFactory.BuildScenarios()[0].InitialState;
     private TicTacToeComparison _comparison = TicTacToeDemoFactory.Analyze(TicTacToeDemoFactory.BuildScenarios()[0].InitialState);
+    private bool _showTreeInsights;
 
     private string AgreementLabel => _comparison.Minimax.BestMove?.Index == _comparison.AlphaBeta.BestMove?.Index ? "Same move" : "Different move";
     private string PositionStateLabel => _comparison.IsTerminal ? "Finished" : "In play";
@@ -153,6 +205,12 @@
     private string NodeReductionLabel => _comparison.Minimax.NodesExpanded == 0
         ? "0"
         : $"{_comparison.Minimax.NodesExpanded - _comparison.AlphaBeta.NodesExpanded} fewer";
+    private string PrincipalVariationLabel => _comparison.PrincipalVariation.Count == 0
+        ? "terminal"
+        : string.Join(" -> ", _comparison.PrincipalVariation.Select(TicTacToeDemoFactory.FormatMove));
+    private string EstimatedSubtreeSavingsLabel => _comparison.EstimatedSubtreeSavings > 0
+        ? $"{_comparison.EstimatedSubtreeSavings} fewer"
+        : "none";
     private string CurrentSummary => _comparison.IsTerminal
         ? "The position is terminal. Reset the scenario or switch to another preset to compare a new search tree."
         : "Click an empty cell for a manual move or let one of the two adversarial search variants play the next turn.";
@@ -206,6 +264,11 @@
     private void RecomputeComparison()
     {
         _comparison = TicTacToeDemoFactory.Analyze(_state);
+    }
+
+    private void ToggleTreeInsights()
+    {
+        _showTreeInsights = !_showTreeInsights;
     }
 
     private string GetCellClass(int index)
