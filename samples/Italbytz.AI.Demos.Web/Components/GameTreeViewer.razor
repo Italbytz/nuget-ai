@@ -1,113 +1,131 @@
+@using System.Globalization
 @using Italbytz.AI.Demos.Web.Demos
+@using Italbytz.Graph.Visualization
 
-@code {
-    [Parameter]
-    public TicTacToeGameTree? Tree { get; set; }
-}
-
-@if (Tree is not null)
+@if (Tree is not null && _graphView is not null)
 {
     <div class="game-tree-container">
-        <svg class="game-tree-svg" viewBox="0 0 @Tree.Width @Tree.Height" preserveAspectRatio="xMidYMid meet">
-            <defs>
-                <style>
-                    .tree-edge {
-                        stroke: #a0aec0;
-                        stroke-width: 2;
-                        fill: none;
-                    }
-                    .tree-edge-pv {
-                        stroke: #0b5c7a;
-                        stroke-width: 3;
-                        fill: none;
-                    }
-                    .tree-node {
-                        fill: #f6f2e9;
-                        stroke: #17324a;
-                        stroke-width: 2;
-                    }
-                    .tree-node-pv {
-                        fill: #0b5c7a;
-                        stroke: #17324a;
-                        stroke-width: 2;
-                    }
-                    .tree-node-leaf {
-                        fill: #e8d5c4;
-                        stroke: #17324a;
-                        stroke-width: 2;
-                    }
-                    .tree-node-label {
-                        font-size: 11px;
-                        font-weight: 500;
-                        text-anchor: middle;
-                        dominant-baseline: central;
-                        fill: #17324a;
-                    }
-                    .tree-node-label-pv {
-                        font-size: 11px;
-                        font-weight: 600;
-                        text-anchor: middle;
-                        dominant-baseline: central;
-                        fill: #f6f2e9;
-                    }
-                    .tree-utility-label {
-                        font-size: 10px;
-                        text-anchor: middle;
-                        dominant-baseline: hanging;
-                        fill: #666;
-                    }
-                </style>
-            </defs>
-
-            <!-- Draw edges first -->
-            <g class="tree-edges">
-                @RenderEdges(Tree.Root)
-            </g>
-
-            <!-- Draw nodes -->
-            <g class="tree-nodes">
-                @RenderNodes(Tree.Root)
-            </g>
-        </svg>
+        <GraphViewport Graph="@_graphView"
+                       ActiveEdgeKeys="@_graphState.ActiveEdgeKeys"
+                       ActiveNodeKeys="@_graphState.ActiveNodeIds"
+                       FrontierNodeKeys="@_graphState.FrontierNodeIds"
+                       ExploredNodeKeys="@_graphState.ExploredNodeIds"
+                       CurrentNodeKey="@_graphState.CurrentNodeId"
+                       SuccessorEdgeKeys="@_graphState.SuccessorEdgeKeys"
+                       DirectedActiveEdgeIds="@_graphState.DirectedActiveEdgeIds"
+                       DirectedSuccessorEdgeIds="@_graphState.DirectedSuccessorEdgeIds"
+                       Title="Tic-Tac-Toe game tree"
+                       ZoomInLabel="Zoom in"
+                       ZoomOutLabel="Zoom out"
+                       FitLabel="Fit tree"
+                       ResetLabel="Reset"
+                       InteractionHint="Nutze Zoom/Fit und klicke Knoten/Kanten für Details."
+                       ActiveLegendLabel="Principal variation"
+                       SuccessorLegendLabel="Alternativen"
+                       CurrentNodeLegendLabel="Root"
+                       FrontierLegendLabel="Nicht-terminal"
+                       ExploredLegendLabel="Terminal"
+                       SolutionLegendLabel="PV-Knoten"
+                       DefaultLegendLabel="Normale Kante"
+                       InspectorTitle="Tree inspector"
+                       NoSelectionTitle="Nichts ausgewählt"
+                       NoSelectionText="Wähle einen Knoten oder eine Kante, um Utility und Verbindungen zu prüfen."
+                       NodeLabel="Node"
+                       EdgeLabel="Edge"
+                       WeightLabel="Utility"
+                       ConnectionsLabel="Connections"
+                       StateLabel="State" />
     </div>
 }
 
 @code {
-    private RenderFragment RenderEdges(TicTacToeTreeNode node)
+    [Parameter]
+    public TicTacToeGameTree? Tree { get; set; }
+
+    private GraphViewModel? _graphView;
+    private GraphStateViewModel _graphState = new(string.Empty, [], [], [], [], [], [], []);
+
+    protected override void OnParametersSet()
     {
-        return @<g>
-            @foreach (var child in node.Children)
-            {
-                <line class="@(child.OnPrincipalVariation ? "tree-edge-pv" : "tree-edge")"
-                      x1="@node.XPos" y1="@node.YPos"
-                      x2="@child.XPos" y2="@child.YPos" />
-                @RenderEdges(child)
-            }
-        </g>;
+        if (Tree is null)
+        {
+            _graphView = null;
+            _graphState = new(string.Empty, [], [], [], [], [], [], []);
+            return;
+        }
+
+        var nodes = new List<GraphNodeViewModel>();
+        var edges = new List<GraphEdgeViewModel>();
+        var activeNodeIds = new List<string>();
+        var frontierNodeIds = new List<string>();
+        var exploredNodeIds = new List<string>();
+        var activeEdgeKeys = new List<string>();
+        var directedActiveEdgeIds = new List<string>();
+
+        BuildGraphFromTree(Tree.Root, nodes, edges, activeNodeIds, frontierNodeIds, exploredNodeIds, activeEdgeKeys, directedActiveEdgeIds);
+
+        _graphView = new GraphViewModel(Tree.Width, Tree.Height, nodes, edges);
+        _graphState = new GraphStateViewModel(
+            Tree.Root.Id,
+            activeNodeIds,
+            frontierNodeIds,
+            exploredNodeIds,
+            activeEdgeKeys,
+            [],
+            directedActiveEdgeIds,
+            []);
     }
 
-    private RenderFragment RenderNodes(TicTacToeTreeNode node)
+    private static void BuildGraphFromTree(
+        TicTacToeTreeNode node,
+        ICollection<GraphNodeViewModel> nodes,
+        ICollection<GraphEdgeViewModel> edges,
+        ICollection<string> activeNodeIds,
+        ICollection<string> frontierNodeIds,
+        ICollection<string> exploredNodeIds,
+        ICollection<string> activeEdgeKeys,
+        ICollection<string> directedActiveEdgeIds)
     {
-        var nodeClass = node.IsTerminal ? "tree-node-leaf" : (node.OnPrincipalVariation ? "tree-node-pv" : "tree-node");
-        var labelClass = node.OnPrincipalVariation ? "tree-node-label-pv" : "tree-node-label";
-        var utilityLabel = node.Utility.ToString("0.##");
+        var label = node.Label ?? "?";
+        nodes.Add(new GraphNodeViewModel(node.Id, label, node.XPos, node.YPos, 24, 24, node.OnPrincipalVariation));
 
-        return @<g>
-            <circle class="@nodeClass"
-                    cx="@node.XPos" cy="@node.YPos"
-                    r="20" />
-            <text class="@labelClass"
-                  x="@node.XPos" y="@node.YPos">
-                @node.Label
-            </text>
-            <text class="tree-utility-label"
-                  x="@node.XPos" y="@(node.YPos + 25)">
-                @utilityLabel
-            </text>
-            @foreach (var child in node.Children)
+        if (node.OnPrincipalVariation)
+        {
+            activeNodeIds.Add(node.Id);
+        }
+
+        if (node.IsTerminal)
+        {
+            exploredNodeIds.Add(node.Id);
+        }
+        else
+        {
+            frontierNodeIds.Add(node.Id);
+        }
+
+        foreach (var child in node.Children)
+        {
+            var edgeKey = $"{node.Id}->{child.Id}";
+            var directedId = GraphViewKeys.CreateDirectedEdgeId(node.Id, child.Id);
+            var pathData = $"M {ToSvg(node.XPos)} {ToSvg(node.YPos)} L {ToSvg(child.XPos)} {ToSvg(child.YPos)}";
+            var labelX = (node.XPos + child.XPos) / 2.0;
+            var labelY = (node.YPos + child.YPos) / 2.0;
+            var weight = child.Utility.ToString("0.##", CultureInfo.InvariantCulture);
+
+            edges.Add(new GraphEdgeViewModel(edgeKey, node.Id, child.Id, weight, pathData, labelX, labelY, child.OnPrincipalVariation));
+
+            if (child.OnPrincipalVariation)
             {
-                @RenderNodes(child)
+                activeEdgeKeys.Add(edgeKey);
+                directedActiveEdgeIds.Add(directedId);
             }
-        </g>;
+
+            BuildGraphFromTree(child, nodes, edges, activeNodeIds, frontierNodeIds, exploredNodeIds, activeEdgeKeys, directedActiveEdgeIds);
+        }
+    }
+
+    private static string ToSvg(double value)
+    {
+        return value.ToString("0.##", CultureInfo.InvariantCulture);
     }
 }
