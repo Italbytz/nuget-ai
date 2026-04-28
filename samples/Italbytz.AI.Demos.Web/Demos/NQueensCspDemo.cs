@@ -9,6 +9,7 @@ internal sealed record NQueensCspStep(
     string Metric,
     int[] QueenRows,
     IReadOnlyList<int> AssignedColumns,
+    IReadOnlyList<int[]> DomainsByColumn,
     IReadOnlyList<int> ConflictedColumns,
     int ConflictCount,
     int? CurrentColumn,
@@ -81,6 +82,7 @@ internal static class NQueensCspDemoFactory
 
         var steps = new List<NQueensCspStep>();
         var stepNumber = 1;
+        var domains = CreateInitialDomains();
 
         steps.Add(CreateStep(
             stepNumber++,
@@ -93,9 +95,9 @@ internal static class NQueensCspDemoFactory
             currentColumn: null,
             solved: false,
             backtracking: false,
-            extraMetric: useArcConsistency ? "AC-3=ready" : "AC-3=off"));
+            extraMetric: useArcConsistency ? "AC-3=ready" : "AC-3=off",
+            domains: domains));
 
-        var domains = CreateInitialDomains();
         var solved = Search(domains);
         if (!solved)
         {
@@ -108,7 +110,8 @@ internal static class NQueensCspDemoFactory
                 currentColumn: null,
                 solved: false,
                 backtracking: false,
-                extraMetric: useArcConsistency ? "AC-3=active" : "AC-3=off"));
+                extraMetric: useArcConsistency ? "AC-3=active" : "AC-3=off",
+                domains: domains));
         }
 
         return new NQueensCspAlgorithmDemo(
@@ -136,7 +139,8 @@ internal static class NQueensCspDemoFactory
                     currentColumn: null,
                     solved: true,
                     backtracking: false,
-                    extraMetric: useArcConsistency ? "AC-3=active" : "AC-3=off"));
+                    extraMetric: useArcConsistency ? "AC-3=active" : "AC-3=off",
+                    domains: currentDomains));
                 return true;
             }
 
@@ -161,7 +165,8 @@ internal static class NQueensCspDemoFactory
                         currentColumn: column,
                         solved: false,
                         backtracking: false,
-                        extraMetric: useArcConsistency ? "AC-3=skip" : "AC-3=off"));
+                        extraMetric: useArcConsistency ? "AC-3=skip" : "AC-3=off",
+                        domains: currentDomains));
 
                     assignment.Remove(column);
                     board[column] = previousRow;
@@ -187,7 +192,8 @@ internal static class NQueensCspDemoFactory
                     currentColumn: column,
                     solved: false,
                     backtracking: false,
-                    extraMetric: useArcConsistency ? $"AC-3 pruned={pruned}" : "AC-3=off"));
+                    extraMetric: useArcConsistency ? $"AC-3 pruned={pruned}" : "AC-3=off",
+                    domains: nextDomains));
 
                 if (arcConsistent && Search(nextDomains))
                 {
@@ -208,7 +214,8 @@ internal static class NQueensCspDemoFactory
                     currentColumn: column,
                     solved: false,
                     backtracking: true,
-                    extraMetric: useArcConsistency ? "AC-3=active" : "AC-3=off"));
+                        extraMetric: useArcConsistency ? "AC-3=active" : "AC-3=off",
+                        domains: currentDomains));
             }
 
             return false;
@@ -325,7 +332,8 @@ internal static class NQueensCspDemoFactory
         int? currentColumn,
         bool solved,
         bool backtracking,
-        string extraMetric)
+        string extraMetric,
+        IReadOnlyList<HashSet<int>>? domains = null)
     {
         var assigned = assignedColumns
             .Distinct()
@@ -333,6 +341,7 @@ internal static class NQueensCspDemoFactory
             .ToArray();
         var conflictCount = CountConflictsForBoard(board, assigned);
         var conflictedColumns = GetConflictedColumns(board, assigned);
+        var domainSnapshot = CreateDomainSnapshot(board, assigned, domains);
 
         return new NQueensCspStep(
             number,
@@ -341,11 +350,32 @@ internal static class NQueensCspDemoFactory
             $"assigned={assigned.Length}/{board.Length}, conflicts={conflictCount}, {extraMetric}",
             board.ToArray(),
             assigned,
+            domainSnapshot,
             conflictedColumns,
             conflictCount,
             currentColumn,
             solved,
             backtracking);
+    }
+
+    private static IReadOnlyList<int[]> CreateDomainSnapshot(
+        IReadOnlyList<int> board,
+        IReadOnlyList<int> assignedColumns,
+        IReadOnlyList<HashSet<int>>? domains)
+    {
+        if (domains is not null)
+        {
+            return domains
+                .Select(domain => domain.OrderBy(value => value).ToArray())
+                .ToArray();
+        }
+
+        var assigned = new HashSet<int>(assignedColumns);
+        return Enumerable.Range(0, board.Count)
+            .Select(column => assigned.Contains(column)
+                ? [board[column]]
+                : Enumerable.Range(0, board.Count).ToArray())
+            .ToArray();
     }
 
     private static List<HashSet<int>> CreateInitialDomains()
