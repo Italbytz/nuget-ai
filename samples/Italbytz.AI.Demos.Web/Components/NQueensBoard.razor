@@ -9,7 +9,7 @@
                 var r = row;
                 var c = column;
                 <div class="@GetCellClass(c, r)" title="@GetCellTitle(c, r)">
-                    @if (QueenRows[c] == r)
+                    @if (IsAssigned(c) && QueenRows[c] == r)
                     {
                         <span class="queen">Q</span>
                     }
@@ -23,6 +23,7 @@
     [Parameter, EditorRequired] public int BoardSize { get; set; }
     [Parameter, EditorRequired] public IReadOnlyList<int> QueenRows { get; set; } = [];
     [Parameter] public IReadOnlyList<int> ConflictedColumns { get; set; } = [];
+    [Parameter] public IReadOnlyList<int>? AssignedColumns { get; set; }
     [Parameter] public int? CurrentColumn { get; set; }
 
     private string GetCellClass(int column, int row)
@@ -30,7 +31,7 @@
         var isDarkCell = (row + column) % 2 == 1;
         var cssClass = isDarkCell ? "board-cell board-cell-dark" : "board-cell board-cell-light";
 
-        if (QueenRows[column] == row)
+        if (IsAssigned(column) && QueenRows[column] == row)
         {
             cssClass += " board-cell-has-queen";
 
@@ -50,6 +51,11 @@
 
     private string GetCellTitle(int column, int row)
     {
+        if (!IsAssigned(column))
+        {
+            return $"Column {column + 1} is unassigned";
+        }
+
         if (QueenRows[column] != row)
         {
             return $"Column {column + 1}, row {row + 1}";
@@ -58,5 +64,10 @@
         return CurrentColumn == column
             ? $"Q{column + 1} is currently being modified"
             : $"Q{column + 1} in row {row + 1}";
+    }
+
+    private bool IsAssigned(int column)
+    {
+        return AssignedColumns is null || AssignedColumns.Contains(column);
     }
 }
