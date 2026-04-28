@@ -1,0 +1,113 @@
+@using Italbytz.AI.Demos.Web.Demos
+
+@code {
+    [Parameter]
+    public TicTacToeGameTree? Tree { get; set; }
+}
+
+@if (Tree is not null)
+{
+    <div class="game-tree-container">
+        <svg class="game-tree-svg" viewBox="0 0 @Tree.Width @Tree.Height" preserveAspectRatio="xMidYMid meet">
+            <defs>
+                <style>
+                    .tree-edge {
+                        stroke: #a0aec0;
+                        stroke-width: 2;
+                        fill: none;
+                    }
+                    .tree-edge-pv {
+                        stroke: #0b5c7a;
+                        stroke-width: 3;
+                        fill: none;
+                    }
+                    .tree-node {
+                        fill: #f6f2e9;
+                        stroke: #17324a;
+                        stroke-width: 2;
+                    }
+                    .tree-node-pv {
+                        fill: #0b5c7a;
+                        stroke: #17324a;
+                        stroke-width: 2;
+                    }
+                    .tree-node-leaf {
+                        fill: #e8d5c4;
+                        stroke: #17324a;
+                        stroke-width: 2;
+                    }
+                    .tree-node-label {
+                        font-size: 11px;
+                        font-weight: 500;
+                        text-anchor: middle;
+                        dominant-baseline: central;
+                        fill: #17324a;
+                    }
+                    .tree-node-label-pv {
+                        font-size: 11px;
+                        font-weight: 600;
+                        text-anchor: middle;
+                        dominant-baseline: central;
+                        fill: #f6f2e9;
+                    }
+                    .tree-utility-label {
+                        font-size: 10px;
+                        text-anchor: middle;
+                        dominant-baseline: hanging;
+                        fill: #666;
+                    }
+                </style>
+            </defs>
+
+            <!-- Draw edges first -->
+            <g class="tree-edges">
+                @RenderEdges(Tree.Root)
+            </g>
+
+            <!-- Draw nodes -->
+            <g class="tree-nodes">
+                @RenderNodes(Tree.Root)
+            </g>
+        </svg>
+    </div>
+}
+
+@code {
+    private RenderFragment RenderEdges(TicTacToeTreeNode node)
+    {
+        return @<div>
+            @foreach (var child in node.Children)
+            {
+                <line class="@(child.OnPrincipalVariation ? "tree-edge-pv" : "tree-edge")"
+                      x1="@node.XPos" y1="@node.YPos"
+                      x2="@child.XPos" y2="@child.YPos" />
+                @RenderEdges(child)
+            }
+        </div>;
+    }
+
+    private RenderFragment RenderNodes(TicTacToeTreeNode node)
+    {
+        var nodeClass = node.IsTerminal ? "tree-node-leaf" : (node.OnPrincipalVariation ? "tree-node-pv" : "tree-node");
+        var labelClass = node.OnPrincipalVariation ? "tree-node-label-pv" : "tree-node-label";
+        var utilityLabel = node.Utility.ToString("0.##");
+
+        return @<div>
+            <circle class="@nodeClass"
+                    cx="@node.XPos" cy="@node.YPos"
+                    r="20" />
+            <text class="@labelClass"
+                  x="@node.XPos" y="@node.YPos">
+                @node.Label
+            </text>
+            <text class="tree-utility-label"
+                  x="@node.XPos" y="@(node.YPos + 25)">
+                @utilityLabel
+            </text>
+            @foreach (var child in node.Children)
+            {
+                @RenderNodes(child)
+            }
+        </div>;
+    }
+}
