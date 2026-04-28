@@ -159,6 +159,20 @@
                 </div>
 
                 <div class="section-heading section-heading-tight">
+                    <h2>Game tree visualization</h2>
+                    <p>Visual representation of the search tree with principal variation highlighted in blue. Leaf nodes show lighter background.</p>
+                </div>
+
+                <div class="tree-toggle-row">
+                    <button class="ghost-button" @onclick="ToggleTreeVisualization">@(_showTreeVisualization ? "Hide tree" : "Show tree")</button>
+                </div>
+
+                @if (_showTreeVisualization && _gameTree is not null)
+                {
+                    <GameTreeViewer Tree="_gameTree" />
+                }
+
+                <div class="section-heading section-heading-tight">
                     <h2>Root branch explorer</h2>
                     <p>Shows branch utility and approximate explored nodes per root move for both algorithms.</p>
                 </div>
@@ -196,7 +210,14 @@
     private TicTacToeScenario _selectedScenario = TicTacToeDemoFactory.BuildScenarios()[0];
     private TicTacToeState _state = TicTacToeDemoFactory.BuildScenarios()[0].InitialState;
     private TicTacToeComparison _comparison = TicTacToeDemoFactory.Analyze(TicTacToeDemoFactory.BuildScenarios()[0].InitialState);
+    private TicTacToeGameTree? _gameTree;
     private bool _showTreeInsights;
+    private bool _showTreeVisualization;
+
+    protected override void OnInitialized()
+    {
+        _gameTree = TicTacToeDemoFactory.BuildGameTree(_state, _comparison.PrincipalVariation);
+    }
 
     private string AgreementLabel => _comparison.Minimax.BestMove?.Index == _comparison.AlphaBeta.BestMove?.Index ? "Same move" : "Different move";
     private string PositionStateLabel => _comparison.IsTerminal ? "Finished" : "In play";
@@ -264,11 +285,17 @@
     private void RecomputeComparison()
     {
         _comparison = TicTacToeDemoFactory.Analyze(_state);
+        _gameTree = TicTacToeDemoFactory.BuildGameTree(_state, _comparison.PrincipalVariation);
     }
 
     private void ToggleTreeInsights()
     {
         _showTreeInsights = !_showTreeInsights;
+    }
+
+    private void ToggleTreeVisualization()
+    {
+        _showTreeVisualization = !_showTreeVisualization;
     }
 
     private string GetCellClass(int index)
