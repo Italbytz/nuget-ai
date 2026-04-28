@@ -1,4 +1,3 @@
-@using System.Globalization
 @using Italbytz.AI.Demos.Web.Demos
 @using Italbytz.Graph.Visualization
 
@@ -42,6 +41,9 @@
     [Parameter]
     public TicTacToeGameTree? Tree { get; set; }
 
+    [Parameter]
+    public bool CondenseBeforeDecision { get; set; } = true;
+
     private GraphViewModel? _graphView;
     private GraphStateViewModel _graphState = new(string.Empty, [], [], [], [], [], [], []);
 
@@ -54,17 +56,36 @@
             return;
         }
 
-        var nodes = new List<GraphNodeViewModel>();
-        var edges = new List<GraphEdgeViewModel>();
+        var treeLayoutNodes = new List<TreeLayoutNode>();
         var activeNodeIds = new List<string>();
         var frontierNodeIds = new List<string>();
         var exploredNodeIds = new List<string>();
         var activeEdgeKeys = new List<string>();
         var directedActiveEdgeIds = new List<string>();
 
-        BuildGraphFromTree(Tree.Root, nodes, edges, activeNodeIds, frontierNodeIds, exploredNodeIds, activeEdgeKeys, directedActiveEdgeIds);
+        // Show only the selected path from root to the current decision (depth 1),
+        // then expand all continuations from there to leaves.
+        BuildTreeState(
+            Tree.Root,
+            null,
+            0,
+            treeLayoutNodes,
+            activeNodeIds,
+            frontierNodeIds,
+            exploredNodeIds,
+            activeEdgeKeys,
+            directedActiveEdgeIds,
+            expandAllFromDepth: CondenseBeforeDecision ? 1 : 0);
 
-        _graphView = new GraphViewModel(Tree.Width, Tree.Height, nodes, edges);
+        _graphView = GraphViewFactory.BuildTreeGraphView(
+            treeLayoutNodes,
+            horizontalSpacing: 108.0,
+            verticalSpacing: 220.0,
+            nodeRadius: 24.0,
+            padding: 56.0,
+            rootSpacing: 1.4,
+            orientation: TreeLayoutOrientation.LeftToRight);
+
         _graphState = new GraphStateViewModel(
             Tree.Root.Id,
             activeNodeIds,
@@ -76,18 +97,22 @@
             []);
     }
 
-    private static void BuildGraphFromTree(
+    private static void BuildTreeState(
         TicTacToeTreeNode node,
-        ICollection<GraphNodeViewModel> nodes,
-        ICollection<GraphEdgeViewModel> edges,
+        string? parentId,
+        int order,
+        ICollection<TreeLayoutNode> treeLayoutNodes,
         ICollection<string> activeNodeIds,
         ICollection<string> frontierNodeIds,
         ICollection<string> exploredNodeIds,
         ICollection<string> activeEdgeKeys,
-        ICollection<string> directedActiveEdgeIds)
+        ICollection<string> directedActiveEdgeIds,
+        int expandAllFromDepth)
     {
         var label = node.Label ?? "?";
-        nodes.Add(new GraphNodeViewModel(node.Id, label, node.XPos, node.YPos, 24, 24, node.OnPrincipalVariation));
+        var edgeLabel = node.Move is null ? string.Empty : node.Utility.ToString("0.##");
+
+        treeLayoutNodes.Add(new TreeLayoutNode(node.Id, label, parentId, edgeLabel, node.OnPrincipalVariation, order));
 
         if (node.OnPrincipalVariation)
         {
@@ -103,16 +128,20 @@
             frontierNodeIds.Add(node.Id);
         }
 
-        foreach (var child in node.Children)
+        var childrenToTraverse = node.Depth < expandAllFromDepth
+            ? node.Children.Where(c => c.OnPrincipalVariation).ToList()
+            : node.Children;
+
+        if (childrenToTraverse.Count == 0 && node.Depth < expandAllFromDepth)
+        {
+            // Fallback when no PV marker is present.
+            childrenToTraverse = node.Children;
+        }
+
+        foreach (var child in childrenToTraverse)
         {
             var edgeKey = $"{node.Id}->{child.Id}";
             var directedId = GraphViewKeys.CreateDirectedEdgeId(node.Id, child.Id);
-            var pathData = $"M {ToSvg(node.XPos)} {ToSvg(node.YPos)} L {ToSvg(child.XPos)} {ToSvg(child.YPos)}";
-            var labelX = (node.XPos + child.XPos) / 2.0;
-            var labelY = (node.YPos + child.YPos) / 2.0;
-            var weight = child.Utility.ToString("0.##", CultureInfo.InvariantCulture);
-
-            edges.Add(new GraphEdgeViewModel(edgeKey, node.Id, child.Id, weight, pathData, labelX, labelY, child.OnPrincipalVariation));
 
             if (child.OnPrincipalVariation)
             {
@@ -120,12 +149,17 @@
                 directedActiveEdgeIds.Add(directedId);
             }
 
-            BuildGraphFromTree(child, nodes, edges, activeNodeIds, frontierNodeIds, exploredNodeIds, activeEdgeKeys, directedActiveEdgeIds);
+            BuildTreeState(
+                child,
+                node.Id,
+                child.Move?.Index ?? 0,
+                treeLayoutNodes,
+                activeNodeIds,
+                frontierNodeIds,
+                exploredNodeIds,
+                activeEdgeKeys,
+                directedActiveEdgeIds,
+                expandAllFromDepth);
         }
-    }
-
-    private static string ToSvg(double value)
-    {
-        return value.ToString("0.##", CultureInfo.InvariantCulture);
     }
 }
