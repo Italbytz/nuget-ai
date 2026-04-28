@@ -75,7 +75,7 @@
 @code {
     private RenderFragment RenderEdges(TicTacToeTreeNode node)
     {
-        return @<div>
+        return @<g>
             @foreach (var child in node.Children)
             {
                 <line class="@(child.OnPrincipalVariation ? "tree-edge-pv" : "tree-edge")"
@@ -83,7 +83,7 @@
                       x2="@child.XPos" y2="@child.YPos" />
                 @RenderEdges(child)
             }
-        </div>;
+        </g>;
     }
 
     private RenderFragment RenderNodes(TicTacToeTreeNode node)
@@ -92,7 +92,7 @@
         var labelClass = node.OnPrincipalVariation ? "tree-node-label-pv" : "tree-node-label";
         var utilityLabel = node.Utility.ToString("0.##");
 
-        return @<div>
+        return @<g>
             <circle class="@nodeClass"
                     cx="@node.XPos" cy="@node.YPos"
                     r="20" />
@@ -108,6 +108,6 @@
             {
                 @RenderNodes(child)
             }
-        </div>;
+        </g>;
     }
 }
