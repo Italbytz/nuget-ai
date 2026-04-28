@@ -28,6 +28,8 @@ The demo area is intended to help package consumers:
 - Decision making: `GridWorld MDP` uses `ValueIteration` and `PolicyIteration` to compare utilities and greedy policies on the classic stochastic grid world.
 - Search: `Romania search` shows how `Italbytz.AI.Search` drives frontier-based state expansion and path evaluation, including randomized start cities.
 - Search: `Weighted Graph` uses `WeightedGraphSearchSimulator` to reveal Dijkstra relaxations, distance updates, and predecessor-tree growth step by step.
+- Adversarial search: `Tic-Tac-Toe` compares `MinimaxSearch` and `AlphaBetaSearch` on the same board state while exposing expanded-node metrics and recommended moves.
+- Adversarial search: `Two-Ply` compares minimax and alpha-beta on a compact depth-2 game tree while demonstrating the influence of move ordering on pruning.
 - Agents: `Vacuum World` uses `Italbytz.AI.Agent` base types such as `SimpleAgent` and `AbstractEnvironment` for a randomized visible action loop.
 - CSP: `Map Coloring` uses `Italbytz.AI.CSP` to compare constructive backtracking and min-conflicts repair on the Australia map.
 - CSP: `N-Queens` uses `Italbytz.AI.CSP` for constraint-aware board evaluation and a package-backed `MinConflictsSolver` reference solution, with randomized starts and progressively revealed traces.
@@ -55,6 +57,8 @@ The currently available public demos are:
 - `Umbrella World`: `https://italbytz.github.io/nuget-ai/demos/umbrella-world`
 - `Vacuum World`: `https://italbytz.github.io/nuget-ai/demos/vacuum-world`
 - `N-Queens`: `https://italbytz.github.io/nuget-ai/demos/n-queens`
+- `Tic-Tac-Toe`: `https://italbytz.github.io/nuget-ai/demos/tic-tac-toe`
+- `Two-Ply`: `https://italbytz.github.io/nuget-ai/demos/two-ply`
 - `Weighted Graph`: `https://italbytz.github.io/nuget-ai/demos/weighted-graph`
 
 ## What to look for in each demo
@@ -67,6 +71,8 @@ The currently available public demos are:
 - `Umbrella World`: compare filtered and smoothed `P(Rain)` values to see how later evidence revises earlier hidden-state estimates.
 - `Vacuum World`: compare reactive behavior versus model-based stopping in the same two-room environment while revealing the action trace one step at a time.
 - `N-Queens`: compare local and evolutionary search traces while checking conflicts against a CSP-backed baseline and revealing each run progressively.
+- `Tic-Tac-Toe`: compare recommended moves and expanded-node counts for minimax versus alpha-beta on the same board positions.
+- `Two-Ply`: compare root-action values and expansion counts while switching between natural and pruning-friendly action orders.
 - `Weighted Graph`: inspect accepted versus rejected relaxations, changing frontier priorities, and the shortest-path tree that emerges from the weighted graph.
 
 ## Site model
