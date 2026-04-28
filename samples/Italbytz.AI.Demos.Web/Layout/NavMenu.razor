@@ -1,27 +1,150 @@
-﻿<div class="top-nav-shell">
-    <button title="Navigation menu" class="nav-toggle" @onclick="ToggleNavMenu">Menu</button>
+﻿<div class="top-row">
+    <div>
+        <a class="navbar-brand" href="">nuget-ai demos</a>
+        <p class="navbar-copy">Package-backed AIMA examples.</p>
+    </div>
+    <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">Menu</button>
+</div>
 
-    <nav class="@NavMenuCssClass" aria-label="Demo navigation">
-        <NavLink class="nav-link" href="" Match="NavLinkMatch.All">Overview</NavLink>
-        <NavLink class="nav-link" href="romania-search">Romania search</NavLink>
-        <NavLink class="nav-link" href="weighted-graph">Weighted Graph</NavLink>
-        <NavLink class="nav-link" href="tic-tac-toe">Tic-Tac-Toe</NavLink>
-        <NavLink class="nav-link" href="two-ply">Two-Ply</NavLink>
-        <NavLink class="nav-link" href="linear-programming">Linear Programming</NavLink>
-        <NavLink class="nav-link" href="gridworld-mdp">GridWorld MDP</NavLink>
-        <NavLink class="nav-link" href="map-coloring">Map Coloring</NavLink>
-        <NavLink class="nav-link" href="burglary-network">Burglary Network</NavLink>
-        <NavLink class="nav-link" href="umbrella-world">Umbrella World</NavLink>
-        <NavLink class="nav-link" href="cyk-parser">CYK Parser</NavLink>
-        <NavLink class="nav-link" href="vacuum-world">Vacuum World</NavLink>
-        <NavLink class="nav-link" href="n-queens">N-Queens</NavLink>
+<div class="@NavMenuCssClass nav-scrollable" @onclick="ToggleNavMenu">
+    <nav class="nav-sections">
+        <p class="nav-group-label">Overview</p>
+        <div class="nav-item">
+            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+                <span class="nav-kicker">00</span>
+                <span>
+                    <strong>Home</strong>
+                    <small>Scope, routes, and package map</small>
+                </span>
+            </NavLink>
+        </div>
+
+        <p class="nav-group-label">Search</p>
+        <div class="nav-item">
+            <NavLink class="nav-link" href="romania-search">
+                <span class="nav-kicker">01</span>
+                <span>
+                    <strong>Romania search</strong>
+                    <small>BFS, UCS, and A* on the AIMA map</small>
+                </span>
+            </NavLink>
+        </div>
+        <div class="nav-item">
+            <NavLink class="nav-link" href="weighted-graph">
+                <span class="nav-kicker">02</span>
+                <span>
+                    <strong>Weighted graph</strong>
+                    <small>Dijkstra step-by-step</small>
+                </span>
+            </NavLink>
+        </div>
+
+        <p class="nav-group-label">Adversarial search</p>
+        <div class="nav-item">
+            <NavLink class="nav-link" href="tic-tac-toe">
+                <span class="nav-kicker">03</span>
+                <span>
+                    <strong>Tic-Tac-Toe</strong>
+                    <small>Minimax vs. alpha-beta pruning</small>
+                </span>
+            </NavLink>
+        </div>
+        <div class="nav-item">
+            <NavLink class="nav-link" href="two-ply">
+                <span class="nav-kicker">04</span>
+                <span>
+                    <strong>Two-Ply</strong>
+                    <small>Depth-2 game tree comparison</small>
+                </span>
+            </NavLink>
+        </div>
+
+        <p class="nav-group-label">Optimization &amp; planning</p>
+        <div class="nav-item">
+            <NavLink class="nav-link" href="linear-programming">
+                <span class="nav-kicker">05</span>
+                <span>
+                    <strong>Linear programming</strong>
+                    <small>Simplex and LP visualisation</small>
+                </span>
+            </NavLink>
+        </div>
+        <div class="nav-item">
+            <NavLink class="nav-link" href="gridworld-mdp">
+                <span class="nav-kicker">06</span>
+                <span>
+                    <strong>GridWorld MDP</strong>
+                    <small>Value iteration and policy</small>
+                </span>
+            </NavLink>
+        </div>
+
+        <p class="nav-group-label">CSP</p>
+        <div class="nav-item">
+            <NavLink class="nav-link" href="map-coloring">
+                <span class="nav-kicker">07</span>
+                <span>
+                    <strong>Map coloring</strong>
+                    <small>Backtracking with AC-3</small>
+                </span>
+            </NavLink>
+        </div>
+        <div class="nav-item">
+            <NavLink class="nav-link" href="n-queens">
+                <span class="nav-kicker">08</span>
+                <span>
+                    <strong>N-Queens</strong>
+                    <small>Backtracking constraint solver</small>
+                </span>
+            </NavLink>
+        </div>
+
+        <p class="nav-group-label">Probability</p>
+        <div class="nav-item">
+            <NavLink class="nav-link" href="burglary-network">
+                <span class="nav-kicker">09</span>
+                <span>
+                    <strong>Burglary network</strong>
+                    <small>Bayesian network inference</small>
+                </span>
+            </NavLink>
+        </div>
+        <div class="nav-item">
+            <NavLink class="nav-link" href="umbrella-world">
+                <span class="nav-kicker">10</span>
+                <span>
+                    <strong>Umbrella world</strong>
+                    <small>Hidden Markov model filtering</small>
+                </span>
+            </NavLink>
+        </div>
+
+        <p class="nav-group-label">NLP &amp; agents</p>
+        <div class="nav-item">
+            <NavLink class="nav-link" href="cyk-parser">
+                <span class="nav-kicker">11</span>
+                <span>
+                    <strong>CYK parser</strong>
+                    <small>Chart parsing with CNF grammars</small>
+                </span>
+            </NavLink>
+        </div>
+        <div class="nav-item">
+            <NavLink class="nav-link" href="vacuum-world">
+                <span class="nav-kicker">12</span>
+                <span>
+                    <strong>Vacuum world</strong>
+                    <small>Simple reflex and model agents</small>
+                </span>
+            </NavLink>
+        </div>
     </nav>
 </div>
 
 @code {
     private bool collapseNavMenu = true;
 
-    private string NavMenuCssClass => collapseNavMenu ? "top-nav collapsed" : "top-nav";
+    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
 
     private void ToggleNavMenu()
     {
