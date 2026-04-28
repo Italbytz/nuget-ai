@@ -20,6 +20,10 @@
           href: docs/demos/map-coloring.md
         - name: Romania search
           href: docs/demos/romania-search.md
+        - name: Tic-Tac-Toe
+          href: docs/demos/tic-tac-toe.md
+        - name: Two-Ply
+          href: docs/demos/two-ply.md
         - name: Umbrella world
           href: docs/demos/umbrella-world.md
         - name: Weighted graph
