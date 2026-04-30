@@ -1,0 +1,129 @@
+@page "/restaurant-learning"
+@using Italbytz.AI.Demos.Web.Demos
+
+<PageTitle>Restaurant learning demo</PageTitle>
+
+<section class="demo-hero">
+    <div>
+        <p class="eyebrow">Learning demo</p>
+        <h1>Restaurant: ID3 vs CART</h1>
+        <p class="hero-copy">Compare classic decision-tree learning on the AIMA restaurant dataset. This page contrasts information-gain splits with a gini-based CART-style learner integrated into Italbytz.AI.Learning.</p>
+    </div>
+
+    <div class="stat-grid">
+        <article>
+            <span class="stat-label">Dataset</span>
+            <strong>Restaurant (12 examples)</strong>
+        </article>
+        <article>
+            <span class="stat-label">ID3 accuracy</span>
+            <strong>@FormatAccuracy(_comparison.Id3.Accuracy)</strong>
+        </article>
+        <article>
+            <span class="stat-label">CART accuracy</span>
+            <strong>@FormatAccuracy(_comparison.Cart.Accuracy)</strong>
+        </article>
+        <article>
+            <span class="stat-label">Agreement</span>
+            <strong>@AgreementLabel</strong>
+        </article>
+    </div>
+</section>
+
+<section class="control-panel">
+    <div class="secondary-controls">
+        <div class="selection-copy">
+            <p class="selection-summary">@_comparison.Summary</p>
+            <p class="selection-summary">Use refresh to rebuild from the package-level learner implementations after changes in nuget-ai.</p>
+        </div>
+
+        <div class="step-buttons">
+            <button class="ghost-button" @onclick="Refresh">Refresh comparison</button>
+        </div>
+    </div>
+</section>
+
+<section class="demo-grid">
+    <article class="surface-card inspector-card">
+        <div class="section-heading">
+            <h2>Learner metrics</h2>
+            <p>Both metrics are computed on the canonical 12-example restaurant dataset.</p>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Learner</th>
+                    <th>Correct</th>
+                    <th>Incorrect</th>
+                    <th>Accuracy</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>@_comparison.Id3.Name</td>
+                    <td>@_comparison.Id3.Correct</td>
+                    <td>@_comparison.Id3.Incorrect</td>
+                    <td>@FormatAccuracy(_comparison.Id3.Accuracy)</td>
+                </tr>
+                <tr>
+                    <td>@_comparison.Cart.Name</td>
+                    <td>@_comparison.Cart.Correct</td>
+                    <td>@_comparison.Cart.Incorrect</td>
+                    <td>@FormatAccuracy(_comparison.Cart.Accuracy)</td>
+                </tr>
+            </tbody>
+        </table>
+    </article>
+
+    <article class="surface-card inspector-card">
+        <div class="section-heading">
+            <h2>Prediction diff</h2>
+            <p>Inspect per-example outputs to see where split criteria diverge.</p>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Actual</th>
+                    <th>ID3</th>
+                    <th>CART</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var row in _comparison.Rows)
+                {
+                    var same = string.Equals(row.Id3Prediction, row.CartPrediction, StringComparison.Ordinal);
+                    <tr class="@(same ? "applicable-row" : "blocked-row")">
+                        <td>@row.Index</td>
+                        <td>@row.Actual</td>
+                        <td>@row.Id3Prediction</td>
+                        <td>@row.CartPrediction</td>
+                        <td>@(same ? "same" : "different")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </article>
+</section>
+
+@code {
+    private RestaurantLearningComparison _comparison = RestaurantLearningDemo.Build();
+
+    private string AgreementLabel
+        => _comparison.Rows.Count == 0
+            ? "0 / 0"
+            : $"{_comparison.Rows.Count(row => string.Equals(row.Id3Prediction, row.CartPrediction, StringComparison.Ordinal))} / {_comparison.Rows.Count}";
+
+    private static string FormatAccuracy(double value)
+    {
+        return value.ToString("0.0%", System.Globalization.CultureInfo.InvariantCulture);
+    }
+
+    private void Refresh()
+    {
+        _comparison = RestaurantLearningDemo.Build();
+    }
+}

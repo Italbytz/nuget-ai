@@ -1,0 +1,374 @@
+@page "/blockworld-planning"
+@using Italbytz.AI.Demos.Web.Demos
+
+<PageTitle>Blockworld planning demo</PageTitle>
+
+<section class="demo-hero">
+    <div>
+        <p class="eyebrow">Planning demo</p>
+        <h1>Blockworld Planning</h1>
+        <p class="hero-copy">Inspect symbolic planning with explicit preconditions and effects. Compare an uninformed search baseline with A* and two intuitive heuristics.</p>
+    </div>
+
+    <div class="stat-grid">
+        <article>
+            <span class="stat-label">Scenario</span>
+            <strong>@CurrentScenario.Name</strong>
+        </article>
+        <article>
+            <span class="stat-label">Algorithm</span>
+            <strong>@BlockworldPlanningDemoFactory.AlgorithmLabel(_selectedAlgorithm)</strong>
+        </article>
+        <article>
+            <span class="stat-label">Heuristic</span>
+            <strong>@BlockworldPlanningDemoFactory.HeuristicLabel(_selectedHeuristic)</strong>
+        </article>
+        <article>
+            <span class="stat-label">Visible step</span>
+            <strong>@VisibleProgressLabel</strong>
+        </article>
+        <article>
+            <span class="stat-label">Plan length</span>
+            <strong>@(_run.Solved ? _run.Plan.Count : 0)</strong>
+        </article>
+        <article>
+            <span class="stat-label">Expanded nodes</span>
+            <strong>@_run.ExpandedNodes</strong>
+        </article>
+        <article>
+            <span class="stat-label">Effective branching</span>
+            <strong>@EffectiveBranchingLabel</strong>
+        </article>
+    </div>
+</section>
+
+<section class="control-panel">
+    <div class="secondary-controls">
+        <div class="selection-copy">
+            <p class="selection-summary">@CurrentScenario.Summary</p>
+            <p class="selection-summary">Current run: @(_run.Solved ? $"solved in {_run.Plan.Count} actions" : "no goal reached yet") after expanding @_run.ExpandedNodes nodes.</p>
+        </div>
+
+        <div class="step-buttons">
+            <button class="ghost-button" @onclick="PreviousStep" disabled="@(_currentStep == 0)">Previous</button>
+            <button class="primary-button" @onclick="NextStep" disabled="@(_currentStep >= _run.Steps.Count)">Next</button>
+            <button class="ghost-button" @onclick="ShowCompleteRun" disabled="@(_currentStep >= _run.Steps.Count)">Complete run</button>
+            <button class="ghost-button" @onclick="Reset">Reset</button>
+        </div>
+    </div>
+
+    <div class="selection-row">
+        <label>
+            Scenario
+            <select @onchange="OnScenarioChanged" value="@_selectedScenarioKey">
+                @foreach (var scenario in _scenarios)
+                {
+                    <option value="@scenario.Key">@scenario.Name</option>
+                }
+            </select>
+        </label>
+
+        <label>
+            Algorithm
+            <select @onchange="OnAlgorithmChanged" value="@_selectedAlgorithm.ToString()">
+                @foreach (var algorithm in Enum.GetValues<BlockworldAlgorithm>())
+                {
+                    <option value="@algorithm.ToString()">@BlockworldPlanningDemoFactory.AlgorithmLabel(algorithm)</option>
+                }
+            </select>
+        </label>
+
+        <label>
+            Heuristic
+            <select @onchange="OnHeuristicChanged" value="@_selectedHeuristic.ToString()" disabled="@(_selectedAlgorithm == BlockworldAlgorithm.UniformCost)">
+                @foreach (var heuristic in Enum.GetValues<BlockworldHeuristic>())
+                {
+                    <option value="@heuristic.ToString()">@BlockworldPlanningDemoFactory.HeuristicLabel(heuristic)</option>
+                }
+            </select>
+        </label>
+
+        <button class="ghost-button" @onclick="RunPlanning">Re-run</button>
+    </div>
+
+    <p class="step-summary">@CurrentSummary</p>
+</section>
+
+<section class="demo-grid">
+    <article class="surface-card board-card">
+        <div class="section-heading">
+            <h2>Current world state</h2>
+            <p>Each stack is rendered bottom-up. The hand slot shows whether an action is carrying a block.</p>
+        </div>
+
+        @if (CurrentStep is null)
+        {
+            <p class="empty-copy">No state revealed yet. Advance one step to inspect the first expansion.</p>
+        }
+        else
+        {
+            <div class="stacks-grid">
+                @foreach (var tower in CurrentStep.Stacks)
+                {
+                    <div class="stack-column">
+                        @foreach (var block in tower)
+                        {
+                            <div class="block-chip">@block</div>
+                        }
+                        <div class="table-chip">table</div>
+                    </div>
+                }
+            </div>
+
+            <div class="hand-box">
+                <span class="stat-label">Hand</span>
+                <strong>@(CurrentStep.Holding ?? "empty")</strong>
+            </div>
+
+            <div class="plan-box">
+                <span class="stat-label">Plan so far</span>
+                @if (CurrentStep.PlanSoFar.Count == 0)
+                {
+                    <p class="empty-copy">No action committed yet.</p>
+                }
+                else
+                {
+                    <ol>
+                        @foreach (var action in CurrentStep.PlanSoFar)
+                        {
+                            <li>@action</li>
+                        }
+                    </ol>
+                }
+            </div>
+
+            <div class="goal-box">
+                <span class="stat-label">Goal facts (current vs target)</span>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Block</th>
+                            <th>Current support</th>
+                            <th>Goal support</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var block in CurrentScenario.Blocks.OrderBy(block => block, StringComparer.Ordinal))
+                        {
+                            var goalSupport = CurrentScenario.GoalOn[block];
+                            var currentSupport = GetCurrentSupport(block);
+                            var isMatch = IsGoalFactSatisfied(block);
+                            <tr class="@(isMatch ? "goal-match" : "goal-miss")">
+                                <td>@block</td>
+                                <td>@currentSupport</td>
+                                <td>@goalSupport</td>
+                                <td>@(isMatch ? "match" : "miss")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </article>
+
+    <article class="surface-card inspector-card">
+        <div class="section-heading">
+            <h2>Search trace</h2>
+            <p>Step through expansions, inspect frontier growth, and compare applicable actions with generated successors.</p>
+        </div>
+
+        @if (VisibleSteps.Count == 0)
+        {
+            <p class="empty-copy">No expansion shown yet.</p>
+        }
+        else
+        {
+            <ol class="trace-list step-trace-list">
+                @foreach (var step in VisibleSteps)
+                {
+                    <li class="@(step.StepNumber == _currentStep ? "trace-step-active" : string.Empty)">
+                        <strong>@step.StepNumber. g=@step.G, h=@step.H, f=@step.F</strong>
+                        <span>Frontier: @step.FrontierCount, explored: @step.ExploredCount</span>
+                        <span>@step.CurrentStateSignature</span>
+                    </li>
+                }
+            </ol>
+        }
+
+        @if (CurrentStep is not null)
+        {
+            <div class="trace-columns">
+                <div>
+                    <h3>Action applicability</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Action</th>
+                                <th>Status</th>
+                                <th>Detail</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var action in CurrentStep.ActionOptions)
+                            {
+                                <tr class="@(action.IsApplicable ? "applicable-row" : "blocked-row")">
+                                    <td>@action.Action</td>
+                                    <td>@(action.IsApplicable ? "applicable" : "blocked")</td>
+                                    <td>@action.Detail</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <div>
+                    <h3>Generated successors</h3>
+                    @if (CurrentStep.Successors.Count == 0)
+                    {
+                        <p class="empty-copy">No successors generated from this step.</p>
+                    }
+                    else
+                    {
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Action</th>
+                                    <th>g</th>
+                                    <th>h</th>
+                                    <th>f</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var successor in CurrentStep.Successors)
+                                {
+                                    <tr>
+                                        <td>@successor.Action</td>
+                                        <td>@successor.G</td>
+                                        <td>@successor.H</td>
+                                        <td>@successor.F</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    }
+                </div>
+            </div>
+        }
+    </article>
+</section>
+
+@code {
+    private readonly IReadOnlyList<BlockworldScenario> _scenarios = BlockworldPlanningDemoFactory.BuildScenarios();
+    private string _selectedScenarioKey = string.Empty;
+    private BlockworldAlgorithm _selectedAlgorithm = BlockworldAlgorithm.AStar;
+    private BlockworldHeuristic _selectedHeuristic = BlockworldHeuristic.MisplacedBlocks;
+    private BlockworldPlanningRun _run = null!;
+    private int _currentStep;
+
+    protected override void OnInitialized()
+    {
+        _selectedScenarioKey = _scenarios[0].Key;
+        RunPlanning();
+    }
+
+    private BlockworldScenario CurrentScenario => _scenarios.First(s => string.Equals(s.Key, _selectedScenarioKey, StringComparison.Ordinal));
+    private IReadOnlyList<BlockworldPlanningStep> VisibleSteps => _run.Steps.Take(_currentStep).ToArray();
+    private BlockworldPlanningStep? CurrentStep => _currentStep > 0 && _run.Steps.Count > 0 ? _run.Steps[_currentStep - 1] : null;
+    private string VisibleProgressLabel => _run.Steps.Count == 0 ? "0 / 0" : $"{_currentStep} / {_run.Steps.Count}";
+
+    private string CurrentSummary => _currentStep switch
+    {
+        0 => "Start the trace to inspect which operator preconditions are currently satisfied.",
+        _ => CurrentStep?.Summary ?? "No step available."
+    };
+
+    private string EffectiveBranchingLabel
+        => _run.Steps.Count == 0
+            ? "0.00"
+            : (_run.Steps.Average(step => step.Successors.Count)).ToString("0.00", System.Globalization.CultureInfo.InvariantCulture);
+
+    private string GetCurrentSupport(string block)
+    {
+        if (CurrentStep is null)
+        {
+            return CurrentScenario.InitialOn.TryGetValue(block, out var initialSupport)
+                ? initialSupport
+                : "in hand";
+        }
+
+        return CurrentStep.On.TryGetValue(block, out var support)
+            ? support
+            : "in hand";
+    }
+
+    private bool IsGoalFactSatisfied(string block)
+    {
+        var goalSupport = CurrentScenario.GoalOn[block];
+        var currentSupport = GetCurrentSupport(block);
+        return string.Equals(currentSupport, goalSupport, StringComparison.Ordinal);
+    }
+
+    private void RunPlanning()
+    {
+        var heuristic = _selectedAlgorithm == BlockworldAlgorithm.UniformCost
+            ? BlockworldHeuristic.MisplacedBlocks
+            : _selectedHeuristic;
+        _run = BlockworldPlanningDemoFactory.BuildRun(CurrentScenario, _selectedAlgorithm, heuristic);
+        _currentStep = 0;
+    }
+
+    private void OnScenarioChanged(ChangeEventArgs args)
+    {
+        _selectedScenarioKey = args.Value?.ToString() ?? _selectedScenarioKey;
+        RunPlanning();
+    }
+
+    private void OnAlgorithmChanged(ChangeEventArgs args)
+    {
+        if (!Enum.TryParse<BlockworldAlgorithm>(args.Value?.ToString(), out var algorithm))
+        {
+            return;
+        }
+
+        _selectedAlgorithm = algorithm;
+        RunPlanning();
+    }
+
+    private void OnHeuristicChanged(ChangeEventArgs args)
+    {
+        if (!Enum.TryParse<BlockworldHeuristic>(args.Value?.ToString(), out var heuristic))
+        {
+            return;
+        }
+
+        _selectedHeuristic = heuristic;
+        RunPlanning();
+    }
+
+    private void PreviousStep()
+    {
+        if (_currentStep > 0)
+        {
+            _currentStep--;
+        }
+    }
+
+    private void NextStep()
+    {
+        if (_currentStep < _run.Steps.Count)
+        {
+            _currentStep++;
+        }
+    }
+
+    private void ShowCompleteRun()
+    {
+        _currentStep = _run.Steps.Count;
+    }
+
+    private void Reset()
+    {
+        _currentStep = 0;
+    }
+}

@@ -66,14 +66,34 @@
             <p>Each region shows its current assigned color. Neighbor conflicts are highlighted directly on the map.</p>
         </div>
 
-        <div class="australia-map">
-            @foreach (var region in Regions)
-            {
-                <div class="@GetRegionCssClass(region)" title="@GetRegionTitle(region)">
-                    <strong>@region</strong>
-                    <span>@GetRegionColor(region)</span>
-                </div>
-            }
+        <div class="australia-map" role="img" aria-label="Australia map coloring state">
+            <svg viewBox="0 0 520 360" preserveAspectRatio="xMidYMid meet">
+                <defs>
+                    <linearGradient id="oceanGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#d9ecfb"></stop>
+                        <stop offset="50%" stop-color="#eef7ff"></stop>
+                        <stop offset="100%" stop-color="#dceef9"></stop>
+                    </linearGradient>
+                    <filter id="mapShadow" x="-10%" y="-10%" width="130%" height="130%">
+                        <feDropShadow dx="0" dy="5" stdDeviation="5" flood-color="rgba(23, 50, 74, 0.22)"></feDropShadow>
+                    </filter>
+                </defs>
+
+                <rect class="map-ocean" x="0" y="0" width="520" height="360" rx="18" fill="url(#oceanGradient)"></rect>
+
+                <g class="map-landmass" filter="url(#mapShadow)">
+                    <polygon class="map-mainland" points="36,56 168,48 288,48 420,68 412,178 396,258 362,304 300,288 192,262 62,252 34,182"></polygon>
+                    @foreach (var region in Regions)
+                    {
+                        <g class="@GetRegionSvgClass(region)">
+                            <polygon points="@GetRegionPolygon(region)"></polygon>
+                            <text x="@GetRegionLabelX(region)" y="@GetRegionLabelY(region)">@region</text>
+                            <text class="map-color-label" x="@GetRegionLabelX(region)" y="@(GetRegionLabelY(region) + 18)">@GetRegionColor(region)</text>
+                            <title>@GetRegionTitle(region)</title>
+                        </g>
+                    }
+                </g>
+            </svg>
         </div>
 
         <div class="inspector-grid">
@@ -179,17 +199,18 @@
         _currentStep = 0;
     }
 
-    private string GetRegionCssClass(string region)
+    private string GetRegionSvgClass(string region)
     {
-        var cssClass = $"region-chip region-chip-{region.ToLowerInvariant()}";
+        var cssClass = "region-shape";
         var color = GetRegionColor(region).ToLowerInvariant();
+
         if (CurrentAssignments.ContainsKey(region))
         {
-            cssClass += $" region-assigned region-{color}";
+            cssClass += $" region-assigned region-{color} region-{region.ToLowerInvariant()}";
         }
         else
         {
-            cssClass += " region-unassigned";
+            cssClass += $" region-unassigned region-{region.ToLowerInvariant()}";
         }
 
         if (CurrentConflictedRegions.Contains(region, StringComparer.Ordinal))
@@ -203,6 +224,51 @@
         }
 
         return cssClass;
+    }
+
+    private static string GetRegionPolygon(string region)
+    {
+        return region switch
+        {
+            "WA" => "36,56 168,48 190,168 140,246 62,252 34,182",
+            "NT" => "168,48 288,48 294,144 190,168",
+            "SA" => "190,168 294,144 304,170 306,258 300,288 192,262 140,246",
+            "Q" => "288,48 420,68 412,178 304,170 294,144",
+            "NSW" => "304,170 412,178 396,258 306,258",
+            "V" => "300,288 306,258 396,258 362,304",
+            "T" => "430,296 470,318 454,350 418,334",
+            _ => ""
+        };
+    }
+
+    private static int GetRegionLabelX(string region)
+    {
+        return region switch
+        {
+            "WA" => 108,
+            "NT" => 234,
+            "SA" => 228,
+            "Q" => 352,
+            "NSW" => 352,
+            "V" => 332,
+            "T" => 444,
+            _ => 0
+        };
+    }
+
+    private static int GetRegionLabelY(string region)
+    {
+        return region switch
+        {
+            "WA" => 152,
+            "NT" => 106,
+            "SA" => 208,
+            "Q" => 124,
+            "NSW" => 222,
+            "V" => 274,
+            "T" => 326,
+            _ => 0
+        };
     }
 
     private string GetRegionTitle(string region)

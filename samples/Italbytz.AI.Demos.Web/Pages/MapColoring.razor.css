@@ -135,94 +135,97 @@
 }
 
 .australia-map {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(4.8rem, 1fr));
-    grid-template-rows: repeat(4, minmax(4.8rem, auto));
-    gap: 0.8rem;
     margin-top: 1rem;
-}
-
-.region-chip {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    gap: 0.25rem;
-    min-height: 5rem;
-    padding: 0.8rem;
     border-radius: 1rem;
-    border: 1px solid rgba(23, 50, 74, 0.12);
-    background: #f6f1e8;
+    overflow: hidden;
 }
 
-.region-chip strong {
-    color: #17324a;
+.australia-map svg {
+    width: 100%;
+    height: auto;
+    display: block;
 }
 
-.region-chip span {
-    font-size: 0.92rem;
+.map-ocean {
+    stroke: rgba(23, 50, 74, 0.08);
+    stroke-width: 1;
 }
 
-.region-assigned.region-red {
-    background: #f5d9d4;
-    color: #7f2d23;
+.map-landmass {
+    isolation: isolate;
 }
 
-.region-assigned.region-green {
-    background: #dcebd8;
-    color: #24552d;
+.map-mainland {
+    fill: #f6f1e8;
+    stroke: rgba(23, 50, 74, 0.14);
+    stroke-width: 1;
 }
 
-.region-assigned.region-blue {
-    background: #d8e4f2;
-    color: #234667;
+.region-shape polygon {
+    fill: #f6f1e8;
+    stroke: rgba(23, 50, 74, 0.34);
+    stroke-width: 2;
+    stroke-linejoin: round;
+    transition: transform 0.16s ease, filter 0.16s ease;
 }
 
-.region-unassigned {
-    background: #f6f1e8;
+.region-shape text {
+    fill: #17324a;
+    font-weight: 700;
+    font-size: 14px;
+    text-anchor: middle;
+    dominant-baseline: middle;
+    pointer-events: none;
 }
 
-.region-conflicted {
-    box-shadow: inset 0 0 0 3px rgba(154, 63, 33, 0.42);
+.region-shape .map-color-label {
+    font-size: 11px;
+    font-weight: 600;
+    fill: rgba(23, 50, 74, 0.86);
 }
 
-.region-current {
-    outline: 3px solid #17324a;
-    outline-offset: 2px;
+.region-assigned.region-red polygon {
+    fill: #f5d9d4;
 }
 
-.region-chip-wa {
-    grid-column: 1;
-    grid-row: 1 / span 2;
+.region-assigned.region-red .map-color-label {
+    fill: #7f2d23;
 }
 
-.region-chip-nt {
-    grid-column: 2;
-    grid-row: 1;
+.region-assigned.region-green polygon {
+    fill: #dcebd8;
 }
 
-.region-chip-q {
-    grid-column: 3;
-    grid-row: 1;
+.region-assigned.region-green .map-color-label {
+    fill: #24552d;
 }
 
-.region-chip-sa {
-    grid-column: 2;
-    grid-row: 2;
+.region-assigned.region-blue polygon {
+    fill: #d8e4f2;
 }
 
-.region-chip-nsw {
-    grid-column: 3;
-    grid-row: 2;
+.region-assigned.region-blue .map-color-label {
+    fill: #234667;
 }
 
-.region-chip-v {
-    grid-column: 3;
-    grid-row: 3;
+.region-unassigned polygon {
+    fill: #f6f1e8;
 }
 
-.region-chip-t {
-    grid-column: 4;
-    grid-row: 4;
+.region-conflicted polygon {
+    stroke: rgba(154, 63, 33, 0.95);
+    stroke-width: 3.5;
+    filter: drop-shadow(0 0 0.35rem rgba(154, 63, 33, 0.4));
+}
+
+.region-current polygon {
+    stroke: #17324a;
+    stroke-width: 4;
+}
+
+.region-shape:hover polygon {
+    transform: translateY(-1px);
+    filter: brightness(1.02);
 }
 
 .inspector-grid {
@@ -295,18 +298,6 @@
     }
 
     .australia-map {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        grid-template-rows: none;
-    }
-
-    .region-chip-wa,
-    .region-chip-nt,
-    .region-chip-q,
-    .region-chip-sa,
-    .region-chip-nsw,
-    .region-chip-v,
-    .region-chip-t {
-        grid-column: auto;
-        grid-row: auto;
+        border-radius: 0.85rem;
     }
 }

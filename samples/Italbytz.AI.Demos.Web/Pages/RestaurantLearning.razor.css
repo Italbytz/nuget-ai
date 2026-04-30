@@ -1,0 +1,146 @@
+.demo-hero,
+.control-panel,
+.surface-card {
+    background: rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(23, 50, 74, 0.1);
+    border-radius: 1.4rem;
+    box-shadow: 0 22px 56px rgba(23, 50, 74, 0.08);
+}
+
+.demo-hero {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: 1rem;
+    padding: 1.4rem;
+}
+
+.demo-hero h1,
+.section-heading h2 {
+    color: #17324a;
+}
+
+.hero-copy,
+.section-heading p,
+.selection-summary,
+table td,
+table th {
+    color: #4d5a66;
+}
+
+.stat-grid,
+.demo-grid {
+    display: grid;
+    gap: 0.85rem;
+}
+
+.stat-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.stat-grid article {
+    padding: 1rem;
+    border-radius: 1rem;
+    background: #f7f2e8;
+    border: 1px solid rgba(23, 50, 74, 0.08);
+}
+
+.stat-label {
+    display: block;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: #6c766f;
+    margin-bottom: 0.2rem;
+}
+
+.control-panel {
+    margin-top: 1rem;
+    padding: 1rem 1.2rem;
+}
+
+.secondary-controls,
+.step-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.secondary-controls {
+    justify-content: space-between;
+    align-items: center;
+}
+
+.selection-copy {
+    display: grid;
+    gap: 0.35rem;
+    max-width: 42rem;
+}
+
+.selection-summary {
+    margin: 0;
+}
+
+.demo-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin-top: 1rem;
+}
+
+.inspector-card {
+    padding: 1.25rem;
+}
+
+.ghost-button {
+    border-radius: 999px;
+    padding: 0.8rem 1rem;
+    font-weight: 600;
+    background: #fff;
+    color: #17324a;
+    border: 1px solid rgba(23, 50, 74, 0.16);
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+table thead {
+    border-bottom: 1px solid rgba(23, 50, 74, 0.16);
+}
+
+table th {
+    padding: 0.7rem;
+    text-align: left;
+    font-weight: 600;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+table td {
+    padding: 0.6rem 0.7rem;
+    border-top: 1px solid rgba(23, 50, 74, 0.08);
+}
+
+.applicable-row {
+    background: rgba(65, 124, 74, 0.08);
+}
+
+.blocked-row {
+    background: rgba(154, 63, 33, 0.06);
+}
+
+@media (max-width: 1100px) {
+    .demo-grid,
+    .demo-hero,
+    .stat-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 780px) {
+    .control-panel,
+    .surface-card,
+    .demo-hero {
+        padding: 1rem;
+    }
+}
