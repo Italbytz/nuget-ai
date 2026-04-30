@@ -319,6 +319,10 @@ internal static class BlockworldPlanningDemoFactory
 
         foreach (var block in blocks.OrderBy(b => b, StringComparer.Ordinal))
         {
+            if (!state.On.ContainsKey(block))
+            {
+                continue;
+            }
             var onSupport = state.On[block];
             yield return BuildActionOption(
                 $"PickUp({block})",
