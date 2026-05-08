@@ -1,0 +1,89 @@
+@page "/taxi-regression"
+@using Italbytz.AI.Demos.Web.Demos
+
+<PageTitle>Taxi regression demo</PageTitle>
+
+<section class="demo-hero">
+    <div>
+        <p class="eyebrow">Regression demo</p>
+        <h1>Taxi: Linear Regression</h1>
+        <p class="hero-copy">Multiple linear regression trained on a representative subset of NYC taxi trips. The model predicts the fare amount from passenger count, trip duration, and distance using the normal equations (no external ML library).</p>
+    </div>
+
+    <div class="stat-grid">
+        <article>
+            <span class="stat-label">Dataset</span>
+            <strong>NYC Taxi (25 trips)</strong>
+        </article>
+        <article>
+            <span class="stat-label">R²</span>
+            <strong>@_result.RSquared.ToString("F3", System.Globalization.CultureInfo.InvariantCulture)</strong>
+        </article>
+        <article>
+            <span class="stat-label">MAE</span>
+            <strong>$@_result.Mae.ToString("F2", System.Globalization.CultureInfo.InvariantCulture)</strong>
+        </article>
+        <article>
+            <span class="stat-label">Within ±$2</span>
+            <strong>@_result.WithinTolerance / @_result.Total</strong>
+        </article>
+    </div>
+</section>
+
+<section class="control-panel">
+    <div class="secondary-controls">
+        <div class="selection-copy">
+            <p class="selection-summary">@_result.Summary</p>
+            <p class="selection-summary">Fitted equation: @_result.Equation</p>
+        </div>
+        <div class="step-buttons">
+            <button class="ghost-button" @onclick="Refresh">Refresh</button>
+        </div>
+    </div>
+</section>
+
+<section class="demo-grid">
+    <article class="surface-card inspector-card">
+        <div class="section-heading">
+            <h2>Predictions vs. actuals</h2>
+            <p>Rows within ±$2.00 of the actual fare are highlighted.</p>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Pax</th>
+                    <th>Time (s)</th>
+                    <th>Dist (mi)</th>
+                    <th>Actual ($)</th>
+                    <th>Predicted ($)</th>
+                    <th>OK?</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var row in _result.Rows)
+                {
+                    <tr class="@(row.WithinTolerance ? "row-ok" : "row-miss")">
+                        <td>@row.Index</td>
+                        <td>@row.PassengerCount</td>
+                        <td>@row.TripTimeSecs</td>
+                        <td>@row.TripDistance</td>
+                        <td>@row.ActualFare</td>
+                        <td>@row.PredictedFare</td>
+                        <td>@(row.WithinTolerance ? "✓" : "✗")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </article>
+</section>
+
+@code {
+    private TaxiRegressionResult _result = TaxiRegressionDemo.Build();
+
+    private void Refresh()
+    {
+        _result = TaxiRegressionDemo.Build();
+    }
+}

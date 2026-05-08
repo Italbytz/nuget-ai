@@ -1,0 +1,7 @@
+.row-ok {
+    background-color: color-mix(in srgb, var(--color-success, #22c55e) 8%, transparent);
+}
+
+.row-miss {
+    background-color: color-mix(in srgb, var(--color-danger, #ef4444) 8%, transparent);
+}
