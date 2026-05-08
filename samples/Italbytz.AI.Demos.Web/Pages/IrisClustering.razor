@@ -1,0 +1,125 @@
+@page "/iris-clustering"
+@using Italbytz.AI.Demos.Web.Demos
+
+<PageTitle>Iris clustering demo</PageTitle>
+
+<section class="demo-hero">
+    <div>
+        <p class="eyebrow">Clustering demo</p>
+        <h1>Iris: k-Means (k=3)</h1>
+        <p class="hero-copy">Unsupervised k-Means clustering on the classic UCI Iris dataset. Each flower is assigned to one of three clusters based on sepal and petal measurements, without using the species label during training.</p>
+    </div>
+
+    <div class="stat-grid">
+        <article>
+            <span class="stat-label">Dataset</span>
+            <strong>Iris (30 examples)</strong>
+        </article>
+        <article>
+            <span class="stat-label">Clusters</span>
+            <strong>3</strong>
+        </article>
+        <article>
+            <span class="stat-label">Purity</span>
+            <strong>@FormatPercent(_result.Purity)</strong>
+        </article>
+        <article>
+            <span class="stat-label">Correct / Total</span>
+            <strong>@_result.Correct / @_result.Total</strong>
+        </article>
+    </div>
+</section>
+
+<section class="control-panel">
+    <div class="secondary-controls">
+        <div class="selection-copy">
+            <p class="selection-summary">@_result.Summary</p>
+            <p class="selection-summary">Use refresh to re-run clustering after package changes.</p>
+        </div>
+        <div class="step-buttons">
+            <button class="ghost-button" @onclick="Refresh">Refresh</button>
+        </div>
+    </div>
+</section>
+
+<section class="demo-grid">
+    <article class="surface-card inspector-card">
+        <div class="section-heading">
+            <h2>Cluster centroids</h2>
+            <p>Each centroid is the mean position of all assigned examples. The dominant species shows which class dominates that cluster.</p>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Cluster</th>
+                    <th>Sepal L</th>
+                    <th>Sepal W</th>
+                    <th>Petal L</th>
+                    <th>Petal W</th>
+                    <th>Dominant species</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var c in _result.Centroids)
+                {
+                    <tr>
+                        <td>@c.ClusterId</td>
+                        <td>@c.SepalLength</td>
+                        <td>@c.SepalWidth</td>
+                        <td>@c.PetalLength</td>
+                        <td>@c.PetalWidth</td>
+                        <td>@c.DominantSpecies</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </article>
+
+    <article class="surface-card inspector-card">
+        <div class="section-heading">
+            <h2>Per-example assignments</h2>
+            <p>True species label vs. assigned cluster id for each example.</p>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Sepal L</th>
+                    <th>Sepal W</th>
+                    <th>Petal L</th>
+                    <th>Petal W</th>
+                    <th>True species</th>
+                    <th>Cluster</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var row in _result.Rows)
+                {
+                    <tr>
+                        <td>@row.Index</td>
+                        <td>@row.SepalLength</td>
+                        <td>@row.SepalWidth</td>
+                        <td>@row.PetalLength</td>
+                        <td>@row.PetalWidth</td>
+                        <td>@row.TrueSpecies</td>
+                        <td>@row.ClusterId</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </article>
+</section>
+
+@code {
+    private IrisClusteringResult _result = IrisClusteringDemo.Build();
+
+    private static string FormatPercent(double value)
+        => value.ToString("0.0%", System.Globalization.CultureInfo.InvariantCulture);
+
+    private void Refresh()
+    {
+        _result = IrisClusteringDemo.Build();
+    }
+}
