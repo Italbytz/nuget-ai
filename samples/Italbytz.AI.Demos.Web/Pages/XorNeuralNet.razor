@@ -1,0 +1,142 @@
+@page "/xor-neural-net"
+@using Italbytz.AI.Demos.Web.Demos
+
+<PageTitle>XOR neural net demo</PageTitle>
+
+<section class="demo-hero">
+    <div>
+        <p class="eyebrow">Deep learning demo</p>
+        <h1>XOR: Multi-Layer Perceptron</h1>
+        <p class="hero-copy">A minimal 2→@_hiddenNeurons→1 MLP trained with batch backpropagation solves the XOR problem — a task provably impossible for a single-layer perceptron (Minsky &amp; Papert, 1969). Uses sigmoid activation and MSE loss. Pure C#, no external libraries.</p>
+    </div>
+
+    <div class="stat-grid">
+        <article>
+            <span class="stat-label">Architecture</span>
+            <strong>2→@_hiddenNeurons→1</strong>
+        </article>
+        <article>
+            <span class="stat-label">Epochs</span>
+            <strong>@_epochs</strong>
+        </article>
+        <article>
+            <span class="stat-label">Learning rate</span>
+            <strong>@_learningRate</strong>
+        </article>
+        <article>
+            <span class="stat-label">Accuracy</span>
+            <strong>@_result.Correct / @_result.Total</strong>
+        </article>
+    </div>
+</section>
+
+<section class="control-panel">
+    <div class="primary-controls">
+        <label class="control-label">
+            Hidden neurons
+            <select @bind="_hiddenNeurons">
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+            </select>
+        </label>
+        <label class="control-label">
+            Learning rate
+            <select @bind="_learningRate">
+                <option value="0.1">0.1</option>
+                <option value="0.5">0.5</option>
+                <option value="1.0">1.0</option>
+            </select>
+        </label>
+        <label class="control-label">
+            Epochs
+            <select @bind="_epochs">
+                <option value="1000">1 000</option>
+                <option value="5000">5 000</option>
+                <option value="10000">10 000</option>
+                <option value="50000">50 000</option>
+            </select>
+        </label>
+    </div>
+    <div class="secondary-controls">
+        <div class="selection-copy">
+            <p class="selection-summary">@_result.Summary</p>
+        </div>
+        <div class="step-buttons">
+            <button class="ghost-button" @onclick="Retrain">Train</button>
+        </div>
+    </div>
+</section>
+
+<section class="demo-grid">
+    <article class="surface-card inspector-card">
+        <div class="section-heading">
+            <h2>Predictions</h2>
+            <p>Raw sigmoid output and rounded prediction for each of the four XOR inputs. Correct predictions are highlighted.</p>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>x₁</th>
+                    <th>x₂</th>
+                    <th>Expected</th>
+                    <th>Raw output</th>
+                    <th>Predicted</th>
+                    <th>OK?</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var row in _result.Predictions)
+                {
+                    <tr class="@(row.Correct ? "row-ok" : "row-miss")">
+                        <td>@row.X1</td>
+                        <td>@row.X2</td>
+                        <td>@row.Expected</td>
+                        <td>@row.RawOutput</td>
+                        <td>@row.Predicted</td>
+                        <td>@(row.Correct ? "✓" : "✗")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </article>
+
+    <article class="surface-card inspector-card">
+        <div class="section-heading">
+            <h2>Training loss</h2>
+            <p>Mean squared error averaged over the 4 examples, sampled every 10 % of total epochs.</p>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Epoch</th>
+                    <th>MSE loss</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var row in _result.LossHistory)
+                {
+                    <tr>
+                        <td>@row.Epoch</td>
+                        <td>@row.Loss</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </article>
+</section>
+
+@code {
+    private int _hiddenNeurons = 2;
+    private double _learningRate = 0.5;
+    private int _epochs = 10000;
+    private XorNeuralNetResult _result = XorNeuralNetDemo.Build();
+
+    private void Retrain()
+    {
+        _result = XorNeuralNetDemo.Build(
+            hiddenNeurons: _hiddenNeurons,
+            learningRate: _learningRate,
+            epochs: _epochs);
+    }
+}
