@@ -77,7 +77,9 @@ internal abstract class CommonRunStrategy : global::Italbytz.AI.ML.Core.Control.
             new TimeStoppingCriterion(maxTime)
         ];
         var population = await logicGp.Run();
-        var bestIndividual = population.OrderByDescending(p => p.Fitness).FirstOrDefault();
+        var bestIndividual = population
+            .OrderByDescending(p => p.LatestKnownFitness?.ConsolidatedValue ?? double.MinValue)
+            .FirstOrDefault();
         return (bestIndividual ?? population.FirstOrDefault(), population);
     }
 
