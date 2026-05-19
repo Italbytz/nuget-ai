@@ -1,5 +1,7 @@
 @page "/cyk-parser"
 @using Italbytz.AI.Demos.Web.Demos
+@implements IAsyncDisposable
+@inject IJSRuntime JS
 
 <PageTitle>CYK parser demo</PageTitle>
 
@@ -65,6 +67,15 @@
             <h2>CYK chart</h2>
             <p>Cells are filled by increasing span length. Each revealed cell lists the non-terminals that can derive the corresponding substring.</p>
         </div>
+
+        <div class="animation-controls">
+            <button class="ghost-button" @onclick="PlayD3">Play</button>
+            <button class="ghost-button" @onclick="PauseD3">Pause</button>
+            <button class="ghost-button" @onclick="StepD3">Step</button>
+            <button class="ghost-button" @onclick="ReplayD3">Replay</button>
+        </div>
+
+        <div class="cyk-d3-host" @ref="_d3Host"></div>
 
         <div class="chart-shell">
             @for (var span = CurrentExample.Words.Count; span >= 1; span--)
@@ -177,6 +188,8 @@
     private IReadOnlyList<CykExampleDemo> _examples = CykParserDemoFactory.BuildExamples();
     private string _selectedExampleKey = "Canonical";
     private int _currentStep;
+    private ElementReference _d3Host;
+    private IJSObjectReference? _d3Module;
 
     private CykExampleDemo CurrentExample => _examples.First(example => example.Key == _selectedExampleKey);
     private IReadOnlyList<CykChartStep> VisibleTraceSteps => CurrentExample.Steps.Take(_currentStep).ToArray();
@@ -251,5 +264,71 @@
         }
 
         return cssClass;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _d3Module = await JS.InvokeAsync<IJSObjectReference>("import", "./js/cykParserD3.js");
+        }
+
+        if (_d3Module is not null)
+        {
+            await _d3Module.InvokeVoidAsync("renderCykParserD3", _d3Host, BuildCykPayload());
+        }
+    }
+
+    private object BuildCykPayload()
+    {
+        return new
+        {
+            words = CurrentExample.Words.ToArray(),
+            currentStep = _currentStep,
+            cells = CurrentExample.Steps.Select(step => new
+            {
+                number = step.Number,
+                span = step.Span,
+                start = step.Start,
+                end = step.End,
+                label = step.Label,
+                count = step.Entries.Count,
+                bestProbability = step.Entries.Count == 0
+                    ? 0.0
+                    : Math.Exp(step.Entries.Max(entry => entry.LogProbability))
+            }).ToArray()
+        };
+    }
+
+    private async Task PlayD3()
+    {
+        if (_d3Module is null) return;
+        await _d3Module.InvokeVoidAsync("playCykParserD3", _d3Host);
+    }
+
+    private async Task PauseD3()
+    {
+        if (_d3Module is null) return;
+        await _d3Module.InvokeVoidAsync("pauseCykParserD3", _d3Host);
+    }
+
+    private async Task StepD3()
+    {
+        if (_d3Module is null) return;
+        await _d3Module.InvokeVoidAsync("stepCykParserD3", _d3Host);
+    }
+
+    private async Task ReplayD3()
+    {
+        if (_d3Module is null) return;
+        await _d3Module.InvokeVoidAsync("replayCykParserD3", _d3Host);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_d3Module is not null)
+        {
+            await _d3Module.DisposeAsync();
+        }
     }
 }
