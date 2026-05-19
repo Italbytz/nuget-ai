@@ -7,6 +7,8 @@ namespace Italbytz.AI.Learning.Learners;
 
 public class DecisionTreeLearner : ILearner
 {
+    private static readonly Random TieBreakerRandom = new(0);
+
     public DecisionTreeLearner()
     {
         DefaultValue = "Unable To Classify";
@@ -89,19 +91,22 @@ public class DecisionTreeLearner : ILearner
 
     private static string ChooseAttribute(IDataSet ds, IEnumerable<string> attributeNames)
     {
-        var greatestGain = 0.0;
-        var attributeWithGreatestGain = attributeNames.First();
-        foreach (var attribute in attributeNames)
+        var gains = attributeNames
+            .Select(attribute => new { Attribute = attribute, Gain = ds.CalculateGainFor(attribute) })
+            .ToList();
+
+        var greatestGain = gains.Max(x => x.Gain);
+        var bestAttributes = gains
+            .Where(x => Math.Abs(x.Gain - greatestGain) < 1e-12)
+            .Select(x => x.Attribute)
+            .ToList();
+
+        if (bestAttributes.Count == 1)
         {
-            var gain = ds.CalculateGainFor(attribute);
-            if (gain > greatestGain)
-            {
-                greatestGain = gain;
-                attributeWithGreatestGain = attribute;
-            }
+            return bestAttributes[0];
         }
 
-        return attributeWithGreatestGain;
+        return bestAttributes[TieBreakerRandom.Next(bestAttributes.Count)];
     }
 
     private static ConstantDecisionTree MajorityValue(IDataSet ds)
