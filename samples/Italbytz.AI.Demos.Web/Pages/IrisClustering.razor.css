@@ -5,3 +5,61 @@
 .row-miss {
     background-color: color-mix(in srgb, var(--color-danger, #ef4444) 8%, transparent);
 }
+
+.axis-controls {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 1rem;
+}
+
+.axis-controls label {
+    display: grid;
+    gap: 0.35rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.axis-controls select {
+    min-width: 12rem;
+    border: 1px solid rgba(15, 23, 42, 0.2);
+    border-radius: 0.5rem;
+    padding: 0.4rem 0.65rem;
+    background: #fff;
+}
+
+.animation-controls {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+}
+
+.iris-d3-host {
+    width: 100%;
+    min-height: 430px;
+    border: 1px solid rgba(15, 23, 42, 0.12);
+    border-radius: 0.75rem;
+    background: linear-gradient(180deg, #fcfcfd 0%, #f5f8fb 100%);
+    overflow: hidden;
+}
+
+@media (max-width: 900px) {
+    .axis-controls {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .axis-controls select {
+        min-width: 0;
+        width: 100%;
+    }
+
+    .animation-controls {
+        width: 100%;
+    }
+
+    .iris-d3-host {
+        min-height: 340px;
+    }
+}
