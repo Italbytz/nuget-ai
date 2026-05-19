@@ -9,6 +9,8 @@ public class ConstantDecisionTree : DecisionTree
 
     public string Value { get; set; }
 
+    public override bool IsLeaf => true;
+
     public override object Predict(IExample example)
     {
         return Value;
