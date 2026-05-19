@@ -30,6 +30,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Checkout nuget-graph sibling repository
+        run: git clone --depth 1 https://github.com/Italbytz/nuget-graph.git "$GITHUB_WORKSPACE/../nuget-graph"
+
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
