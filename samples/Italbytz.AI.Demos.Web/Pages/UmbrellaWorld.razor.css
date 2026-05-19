@@ -79,6 +79,23 @@ table th,
     gap: 0.75rem;
 }
 
+.animation-controls {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-top: 0.8rem;
+}
+
+.umbrella-d3-host {
+    width: 100%;
+    min-height: 300px;
+    margin-top: 0.8rem;
+    border: 1px solid rgba(23, 50, 74, 0.16);
+    border-radius: 0.9rem;
+    background: linear-gradient(180deg, #f9fafb 0%, #edf2f7 100%);
+    overflow: hidden;
+}
+
 .secondary-controls {
     justify-content: space-between;
     align-items: center;
