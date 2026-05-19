@@ -35,6 +35,7 @@
         <div class="selection-copy">
             <p class="selection-summary">@_comparison.Summary</p>
             <p class="selection-summary">Use refresh to rebuild from the package-level learner implementations after changes in nuget-ai.</p>
+            <p class="selection-summary">Click a prediction row to highlight its traversed path in both learned trees.</p>
         </div>
 
         <div class="step-buttons">
@@ -44,36 +45,70 @@
 </section>
 
 <section class="demo-grid">
-    <article class="surface-card inspector-card">
+    <article class="surface-card map-card">
         <div class="section-heading">
-            <h2>Learner metrics</h2>
-            <p>Both metrics are computed on the canonical 12-example restaurant dataset.</p>
+            <h2>ID3 tree</h2>
+            <p>Learned split structure based on information gain.</p>
         </div>
 
-        <table>
-            <thead>
-                <tr>
-                    <th>Learner</th>
-                    <th>Correct</th>
-                    <th>Incorrect</th>
-                    <th>Accuracy</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>@_comparison.Id3.Name</td>
-                    <td>@_comparison.Id3.Correct</td>
-                    <td>@_comparison.Id3.Incorrect</td>
-                    <td>@FormatAccuracy(_comparison.Id3.Accuracy)</td>
-                </tr>
-                <tr>
-                    <td>@_comparison.Cart.Name</td>
-                    <td>@_comparison.Cart.Correct</td>
-                    <td>@_comparison.Cart.Incorrect</td>
-                    <td>@FormatAccuracy(_comparison.Cart.Accuracy)</td>
-                </tr>
-            </tbody>
-        </table>
+        <GraphViewport Graph="@_comparison.Id3Tree.Graph"
+                   ActiveNodeKeys="@(SelectedId3Path?.NodeIds ?? Array.Empty<string>())"
+                   ActiveEdgeKeys="@(SelectedId3Path?.EdgeKeys ?? Array.Empty<string>())"
+                   CurrentNodeKey="@SelectedId3Path?.LeafNodeId"
+                       Title="ID3 decision tree"
+                       ZoomInLabel="+"
+                       ZoomOutLabel="-"
+                       FitLabel="Fit"
+                       ResetLabel="Reset"
+                       InteractionHint="Inspect split nodes and branch labels to explain each decision path."
+                       ActiveLegendLabel="Active"
+                       SuccessorLegendLabel="Successor"
+                       CurrentNodeLegendLabel="Current"
+                       FrontierLegendLabel="Frontier"
+                       ExploredLegendLabel="Explored"
+                       SolutionLegendLabel="Solution"
+                       DefaultLegendLabel="Default"
+                       InspectorTitle="Inspector"
+                       NoSelectionTitle="Nothing selected"
+                       NoSelectionText="Select a node or edge to inspect the subtree structure."
+                       NodeLabel="Node"
+                       EdgeLabel="Edge"
+                       WeightLabel="Value"
+                       ConnectionsLabel="Connections"
+                       StateLabel="State" />
+    </article>
+
+    <article class="surface-card map-card">
+        <div class="section-heading">
+            <h2>CART tree</h2>
+            <p>Learned split structure based on gini impurity.</p>
+        </div>
+
+        <GraphViewport Graph="@_comparison.CartTree.Graph"
+                   ActiveNodeKeys="@(SelectedCartPath?.NodeIds ?? Array.Empty<string>())"
+                   ActiveEdgeKeys="@(SelectedCartPath?.EdgeKeys ?? Array.Empty<string>())"
+                   CurrentNodeKey="@SelectedCartPath?.LeafNodeId"
+                       Title="CART decision tree"
+                       ZoomInLabel="+"
+                       ZoomOutLabel="-"
+                       FitLabel="Fit"
+                       ResetLabel="Reset"
+                       InteractionHint="Compare branch depth and terminal decisions against the ID3 model."
+                       ActiveLegendLabel="Active"
+                       SuccessorLegendLabel="Successor"
+                       CurrentNodeLegendLabel="Current"
+                       FrontierLegendLabel="Frontier"
+                       ExploredLegendLabel="Explored"
+                       SolutionLegendLabel="Solution"
+                       DefaultLegendLabel="Default"
+                       InspectorTitle="Inspector"
+                       NoSelectionTitle="Nothing selected"
+                       NoSelectionText="Select a node or edge to inspect the subtree structure."
+                       NodeLabel="Node"
+                       EdgeLabel="Edge"
+                       WeightLabel="Value"
+                       ConnectionsLabel="Connections"
+                       StateLabel="State" />
     </article>
 
     <article class="surface-card inspector-card">
@@ -86,6 +121,10 @@
             <thead>
                 <tr>
                     <th>#</th>
+                    @foreach (var feature in _comparison.FeatureNames)
+                    {
+                        <th>@feature</th>
+                    }
                     <th>Actual</th>
                     <th>ID3</th>
                     <th>CART</th>
@@ -96,8 +135,12 @@
                 @foreach (var row in _comparison.Rows)
                 {
                     var same = string.Equals(row.Id3Prediction, row.CartPrediction, StringComparison.Ordinal);
-                    <tr class="@(same ? "applicable-row" : "blocked-row")">
+                    <tr class="@(GetRowCss(same, row.Index))" @onclick="() => SelectRow(row.Index)">
                         <td>@row.Index</td>
+                        @foreach (var featureValue in row.FeatureValues)
+                        {
+                            <td>@featureValue</td>
+                        }
                         <td>@row.Actual</td>
                         <td>@row.Id3Prediction</td>
                         <td>@row.CartPrediction</td>
@@ -111,6 +154,11 @@
 
 @code {
     private RestaurantLearningComparison _comparison = RestaurantLearningDemo.Build();
+    private int? _selectedRowIndex;
+
+    private RestaurantDecisionPath? SelectedId3Path => TryGetPath(_comparison.Id3Tree, _selectedRowIndex);
+
+    private RestaurantDecisionPath? SelectedCartPath => TryGetPath(_comparison.CartTree, _selectedRowIndex);
 
     private string AgreementLabel
         => _comparison.Rows.Count == 0
@@ -125,5 +173,27 @@
     private void Refresh()
     {
         _comparison = RestaurantLearningDemo.Build();
+        _selectedRowIndex = null;
+    }
+
+    private void SelectRow(int rowIndex)
+    {
+        _selectedRowIndex = _selectedRowIndex == rowIndex ? null : rowIndex;
+    }
+
+    private static RestaurantDecisionPath? TryGetPath(RestaurantTreeView tree, int? rowIndex)
+    {
+        if (!rowIndex.HasValue)
+        {
+            return null;
+        }
+
+        return tree.PathsByRow.TryGetValue(rowIndex.Value, out var path) ? path : null;
+    }
+
+    private string GetRowCss(bool same, int rowIndex)
+    {
+        var baseClass = same ? "applicable-row" : "blocked-row";
+        return _selectedRowIndex == rowIndex ? $"{baseClass} selected-row" : baseClass;
     }
 }
