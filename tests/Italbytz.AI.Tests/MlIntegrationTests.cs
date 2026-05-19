@@ -4,6 +4,7 @@ using Italbytz.AI.ML;
 using Italbytz.AI.ML.Core;
 using Italbytz.AI.ML.Core.Configuration;
 using Italbytz.AI.ML.LogicGp;
+using Italbytz.AI.ML.Trainers.FastTree;
 using Italbytz.AI.ML.Trainers;
 using Italbytz.AI.ML.UciDatasets;
 using Microsoft.ML;
@@ -214,6 +215,39 @@ public class MlIntegrationTests
         finally
         {
             File.Delete(path);
+        }
+    }
+
+    [TestMethod]
+    public void FastTree_models_can_be_exported_as_graphviz_and_plantuml()
+    {
+        var mlContext = new MLContext(seed: 13);
+        var rows = new[]
+        {
+            new FastTreeBinaryInput { FeatureA = 0f, FeatureB = 0f, Label = false },
+            new FastTreeBinaryInput { FeatureA = 0f, FeatureB = 1f, Label = false },
+            new FastTreeBinaryInput { FeatureA = 1f, FeatureB = 0f, Label = true },
+            new FastTreeBinaryInput { FeatureA = 1f, FeatureB = 1f, Label = true },
+            new FastTreeBinaryInput { FeatureA = 2f, FeatureB = 0f, Label = true },
+            new FastTreeBinaryInput { FeatureA = 2f, FeatureB = 1f, Label = true }
+        };
+
+        var data = mlContext.Data.LoadFromEnumerable(rows);
+        var pipeline = mlContext.Transforms.Concatenate(DefaultColumnNames.Features, nameof(FastTreeBinaryInput.FeatureA), nameof(FastTreeBinaryInput.FeatureB))
+            .Append(mlContext.BinaryClassification.Trainers.FastTree(labelColumnName: nameof(FastTreeBinaryInput.Label), featureColumnName: DefaultColumnNames.Features));
+
+        var model = pipeline.Fit(data);
+        var trees = model.ExtractFastTreeRegressionTrees();
+        var graphvizExports = model.ExportFastTreeRegressionTreesAsGraphviz();
+        var plantUmlExports = model.ExportFastTreeRegressionTreesAsPlantUml();
+
+        Assert.AreEqual(trees.Count, graphvizExports.Count);
+        Assert.AreEqual(trees.Count, plantUmlExports.Count);
+
+        if (trees.Count > 0)
+        {
+            StringAssert.Contains(graphvizExports[0], "digraph G");
+            StringAssert.Contains(plantUmlExports[0], "@startuml");
         }
     }
 
@@ -1242,4 +1276,11 @@ public class MlIntegrationTests
         [LoadColumn(1)] [ColumnName("x2")] public float X2 { get; set; }
         [LoadColumn(2)] [ColumnName("y")] public float Y { get; set; }
     }
+}
+
+public class FastTreeBinaryInput
+{
+    public float FeatureA { get; set; }
+    public float FeatureB { get; set; }
+    public bool Label { get; set; }
 }
