@@ -1,6 +1,8 @@
 @page "/n-queens-csp"
 @using Italbytz.AI.Demos.Web.Demos
 @using Italbytz.AI.Demos.Web.Components
+@implements IAsyncDisposable
+@inject IJSRuntime JS
 
 <PageTitle>N-Queens: CSP demo</PageTitle>
 
@@ -66,6 +68,15 @@
             <h2>Board</h2>
             <p>Assigned queens are rendered on the board. Conflicted assigned columns are highlighted.</p>
         </div>
+
+        <div class="animation-controls">
+            <button class="ghost-button" @onclick="PlayD3">Play</button>
+            <button class="ghost-button" @onclick="PauseD3">Pause</button>
+            <button class="ghost-button" @onclick="StepD3">Step</button>
+            <button class="ghost-button" @onclick="ReplayD3">Replay</button>
+        </div>
+
+        <div class="nqueens-csp-d3-host" @ref="_d3Host"></div>
 
         <NQueensBoard BoardSize="@CurrentAlgorithm.BoardSize"
                       QueenRows="@CurrentBoardRows"
@@ -135,6 +146,8 @@
     private string _selectedAlgorithmKey = "Backtracking";
     private int _scenarioSeed = 41;
     private int _currentStep;
+    private ElementReference _d3Host;
+    private IJSObjectReference? _d3Module;
 
     private NQueensCspAlgorithmDemo CurrentAlgorithm => _algorithms.First(algorithm => algorithm.Key == _selectedAlgorithmKey);
     private IReadOnlyList<NQueensCspStep> VisibleTraceSteps => CurrentAlgorithm.Steps.Take(_currentStep).ToArray();
@@ -237,5 +250,68 @@
         return Enumerable.Range(0, boardSize)
             .Select(_ => Enumerable.Range(0, boardSize).ToArray())
             .ToArray();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _d3Module = await JS.InvokeAsync<IJSObjectReference>("import", "./js/nQueensCspD3.js");
+        }
+
+        if (_d3Module is not null)
+        {
+            await _d3Module.InvokeVoidAsync("renderNQueensCspD3", _d3Host, BuildPayload());
+        }
+    }
+
+    private object BuildPayload()
+    {
+        return new
+        {
+            boardSize = CurrentAlgorithm.BoardSize,
+            currentStep = _currentStep,
+            steps = CurrentAlgorithm.Steps.Select(step => new
+            {
+                number = step.Number,
+                assigned = step.AssignedColumns.Count,
+                conflicts = step.ConflictCount,
+                backtracking = step.Backtracking,
+                solved = step.Solved,
+                currentColumn = step.CurrentColumn
+            }).ToArray()
+        };
+    }
+
+    private async Task PlayD3()
+    {
+        if (_d3Module is null) return;
+        await _d3Module.InvokeVoidAsync("playNQueensCspD3", _d3Host);
+    }
+
+    private async Task PauseD3()
+    {
+        if (_d3Module is null) return;
+        await _d3Module.InvokeVoidAsync("pauseNQueensCspD3", _d3Host);
+    }
+
+    private async Task StepD3()
+    {
+        if (_d3Module is null) return;
+        await _d3Module.InvokeVoidAsync("stepNQueensCspD3", _d3Host);
+    }
+
+    private async Task ReplayD3()
+    {
+        if (_d3Module is null) return;
+        await _d3Module.InvokeVoidAsync("replayNQueensCspD3", _d3Host);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_d3Module is not null)
+        {
+            await _d3Module.DisposeAsync();
+        }
     }
 }
