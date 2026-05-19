@@ -2,6 +2,7 @@ using Italbytz.AI.Learning;
 using Italbytz.AI.Learning.Framework;
 using Italbytz.AI.Learning.Inductive;
 using Italbytz.AI.Learning.Learners;
+using System.Text;
 
 namespace Italbytz.AI.Tests;
 
@@ -64,6 +65,110 @@ public class LearningIntegrationTests
         var result = learner.Test(ds);
 
         CollectionAssert.AreEqual(new[] { 12, 0 }, result);
+    }
+
+    [TestMethod]
+    public void Decision_tree_learner_matches_aima_style_generalization_on_complete_restaurant_space()
+    {
+        var trainingSet = RestaurantDataSetFactory.Create();
+        var completeSpace = CreateCompleteRestaurantDataSet();
+
+        var inducedLearner = new DecisionTreeLearner();
+        inducedLearner.Train(trainingSet);
+
+        var actualLearner = new DecisionTreeLearner(
+            CreateActualRestaurantDecisionTree(),
+            "Unable to classify");
+
+        var inducedPredictions = inducedLearner.Predict(completeSpace);
+        var actualPredictions = actualLearner.Predict(completeSpace);
+
+        var correct = inducedPredictions
+            .Zip(actualPredictions, (induced, actual) => string.Equals(induced, actual, StringComparison.Ordinal))
+            .Count(match => match);
+        var accuracy = (double)correct / actualPredictions.Length;
+
+        Assert.IsTrue(
+            accuracy >= 0.83 && accuracy <= 0.86,
+            $"Expected AIMA-like generalization accuracy around 0.84 on complete space, but got {accuracy:F4}.");
+    }
+
+    private static IDataSet CreateCompleteRestaurantDataSet()
+    {
+        var spec = RestaurantDataSetFactory.CreateSpecification();
+        var attributes = spec.GetAttributeNames().ToArray();
+        var dataString = new StringBuilder();
+        IteratePossibleValues(spec, attributes, 0, string.Empty, dataString);
+        return DataSetFactory.FromString(dataString.ToString(), spec, " ");
+    }
+
+    private static void IteratePossibleValues(
+        IDataSetSpecification spec,
+        IReadOnlyList<string> attributes,
+        int current,
+        string line,
+        StringBuilder dataString)
+    {
+        if (current == attributes.Count - 1)
+        {
+            line += spec.GetPossibleAttributeValues(attributes[current]).First();
+            dataString.AppendLine(line);
+            return;
+        }
+
+        foreach (var value in spec.GetPossibleAttributeValues(attributes[current]))
+        {
+            IteratePossibleValues(
+                spec,
+                attributes,
+                current + 1,
+                line + value + " ",
+                dataString);
+        }
+    }
+
+    private static DecisionTree CreateActualRestaurantDecisionTree()
+    {
+        var raining = new DecisionTree("raining");
+        raining.AddLeaf("Yes", "Yes");
+        raining.AddLeaf("No", "No");
+
+        var bar = new DecisionTree("bar");
+        bar.AddLeaf("Yes", "Yes");
+        bar.AddLeaf("No", "No");
+
+        var friSat = new DecisionTree("fri/sat");
+        friSat.AddLeaf("Yes", "Yes");
+        friSat.AddLeaf("No", "No");
+
+        var alternate2 = new DecisionTree("alternate");
+        alternate2.AddNode("Yes", raining);
+        alternate2.AddLeaf("No", "Yes");
+
+        var reservation = new DecisionTree("reservation");
+        reservation.AddNode("No", bar);
+        reservation.AddLeaf("Yes", "Yes");
+
+        var alternate1 = new DecisionTree("alternate");
+        alternate1.AddNode("No", reservation);
+        alternate1.AddNode("Yes", friSat);
+
+        var hungry = new DecisionTree("hungry");
+        hungry.AddLeaf("No", "Yes");
+        hungry.AddNode("Yes", alternate2);
+
+        var waitEstimate = new DecisionTree("wait_estimate");
+        waitEstimate.AddLeaf(">60", "No");
+        waitEstimate.AddNode("30-60", alternate1);
+        waitEstimate.AddNode("10-30", hungry);
+        waitEstimate.AddLeaf("0-10", "Yes");
+
+        var patrons = new DecisionTree("patrons");
+        patrons.AddLeaf("None", "No");
+        patrons.AddLeaf("Some", "Yes");
+        patrons.AddNode("Full", waitEstimate);
+
+        return patrons;
     }
 }
 
