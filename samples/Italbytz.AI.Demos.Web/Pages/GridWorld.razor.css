@@ -78,6 +78,13 @@ table th,
     gap: 0.75rem;
 }
 
+.animation-controls {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-top: 0.8rem;
+}
+
 .secondary-controls {
     justify-content: space-between;
     align-items: center;
@@ -138,6 +145,16 @@ table th,
     grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 0.8rem;
     margin-top: 1rem;
+}
+
+.grid-d3-host {
+    width: 100%;
+    min-height: 300px;
+    margin-top: 0.9rem;
+    border: 1px solid rgba(23, 50, 74, 0.15);
+    border-radius: 0.9rem;
+    background: linear-gradient(180deg, #f9fafb 0%, #eef2f7 100%);
+    overflow: hidden;
 }
 
 .grid-cell {
@@ -284,6 +301,10 @@ td {
 
     .gridworld-board {
         grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .grid-d3-host {
+        min-height: 250px;
     }
 
     .secondary-controls {
