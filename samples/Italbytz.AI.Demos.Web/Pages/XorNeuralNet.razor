@@ -1,5 +1,7 @@
 @page "/xor-neural-net"
 @using Italbytz.AI.Demos.Web.Demos
+@implements IAsyncDisposable
+@inject IJSRuntime JS
 
 <PageTitle>XOR neural net demo</PageTitle>
 
@@ -71,6 +73,22 @@
 <section class="demo-grid">
     <article class="surface-card inspector-card">
         <div class="section-heading">
+            <h2>D3 diagnostics</h2>
+            <p>Loss curve and XOR output landscape with step-through highlight over training checkpoints.</p>
+        </div>
+
+        <div class="animation-controls">
+            <button class="ghost-button" @onclick="PlayD3">Play</button>
+            <button class="ghost-button" @onclick="PauseD3">Pause</button>
+            <button class="ghost-button" @onclick="StepD3">Step</button>
+            <button class="ghost-button" @onclick="ReplayD3">Replay</button>
+        </div>
+
+        <div class="xor-d3-host" @ref="_d3Host"></div>
+    </article>
+
+    <article class="surface-card inspector-card">
+        <div class="section-heading">
             <h2>Predictions</h2>
             <p>Raw sigmoid output and rounded prediction for each of the four XOR inputs. Correct predictions are highlighted.</p>
         </div>
@@ -131,6 +149,8 @@
     private double _learningRate = 0.5;
     private int _epochs = 10000;
     private XorNeuralNetResult _result = XorNeuralNetDemo.Build();
+    private ElementReference _d3Host;
+    private IJSObjectReference? _d3Module;
 
     private void Retrain()
     {
@@ -138,5 +158,71 @@
             hiddenNeurons: _hiddenNeurons,
             learningRate: _learningRate,
             epochs: _epochs);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _d3Module = await JS.InvokeAsync<IJSObjectReference>("import", "./js/xorNeuralNetD3.js");
+        }
+
+        if (_d3Module is not null)
+        {
+            await _d3Module.InvokeVoidAsync("renderXorNeuralNetD3", _d3Host, BuildXorPayload());
+        }
+    }
+
+    private object BuildXorPayload()
+    {
+        return new
+        {
+            loss = _result.LossHistory.Select(item => new
+            {
+                epoch = item.Epoch,
+                mse = double.Parse(item.Loss, System.Globalization.CultureInfo.InvariantCulture)
+            }).ToArray(),
+            points = _result.Predictions.Select((item, index) => new
+            {
+                index = index + 1,
+                x1 = int.Parse(item.X1, System.Globalization.CultureInfo.InvariantCulture),
+                x2 = int.Parse(item.X2, System.Globalization.CultureInfo.InvariantCulture),
+                expected = int.Parse(item.Expected, System.Globalization.CultureInfo.InvariantCulture),
+                predicted = int.Parse(item.Predicted, System.Globalization.CultureInfo.InvariantCulture),
+                raw = double.Parse(item.RawOutput, System.Globalization.CultureInfo.InvariantCulture)
+            }).ToArray()
+        };
+    }
+
+    private async Task PlayD3()
+    {
+        if (_d3Module is null) return;
+        await _d3Module.InvokeVoidAsync("playXorNeuralNetD3", _d3Host);
+    }
+
+    private async Task PauseD3()
+    {
+        if (_d3Module is null) return;
+        await _d3Module.InvokeVoidAsync("pauseXorNeuralNetD3", _d3Host);
+    }
+
+    private async Task StepD3()
+    {
+        if (_d3Module is null) return;
+        await _d3Module.InvokeVoidAsync("stepXorNeuralNetD3", _d3Host);
+    }
+
+    private async Task ReplayD3()
+    {
+        if (_d3Module is null) return;
+        await _d3Module.InvokeVoidAsync("replayXorNeuralNetD3", _d3Host);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_d3Module is not null)
+        {
+            await _d3Module.DisposeAsync();
+        }
     }
 }
