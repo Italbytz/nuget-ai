@@ -19,6 +19,12 @@ public class DecisionTree
 
     private string? AttributeName { get; }
 
+    public string? SplitAttribute => AttributeName;
+
+    public IReadOnlyDictionary<string, DecisionTree> Children => _nodes;
+
+    public virtual bool IsLeaf => false;
+
     public void AddLeaf(string attributeValue, string decision)
     {
         _nodes[attributeValue] = new ConstantDecisionTree(decision);
