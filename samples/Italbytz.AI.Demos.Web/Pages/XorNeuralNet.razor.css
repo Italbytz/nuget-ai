@@ -5,3 +5,19 @@
 .row-miss {
     background-color: color-mix(in srgb, var(--color-danger, #ef4444) 8%, transparent);
 }
+
+.animation-controls {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.8rem;
+}
+
+.xor-d3-host {
+    width: 100%;
+    min-height: 330px;
+    border: 1px solid rgba(23, 50, 74, 0.16);
+    border-radius: 0.9rem;
+    background: linear-gradient(180deg, #f9fafb 0%, #edf2f7 100%);
+    overflow: hidden;
+}
