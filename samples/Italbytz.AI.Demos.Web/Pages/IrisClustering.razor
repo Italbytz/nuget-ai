@@ -1,5 +1,7 @@
 @page "/iris-clustering"
 @using Italbytz.AI.Demos.Web.Demos
+@implements IAsyncDisposable
+@inject IJSRuntime JS
 
 <PageTitle>Iris clustering demo</PageTitle>
 
@@ -43,6 +45,44 @@
 </section>
 
 <section class="demo-grid">
+    <article class="surface-card map-card">
+        <div class="section-heading">
+            <h2>D3 cluster plot</h2>
+            <p>Interactive scatter projection with animated centroid iterations. Color indicates cluster, symbol indicates true species.</p>
+        </div>
+
+        <div class="axis-controls">
+            <label>
+                X-Axis
+                <select @bind="_xAxis">
+                    @foreach (var feature in _featureOptions)
+                    {
+                        <option value="@feature.Key">@feature.Label</option>
+                    }
+                </select>
+            </label>
+
+            <label>
+                Y-Axis
+                <select @bind="_yAxis">
+                    @foreach (var feature in _featureOptions)
+                    {
+                        <option value="@feature.Key">@feature.Label</option>
+                    }
+                </select>
+            </label>
+        </div>
+
+        <div class="animation-controls">
+            <button class="ghost-button" @onclick="PlayAnimation">Play</button>
+            <button class="ghost-button" @onclick="PauseAnimation">Pause</button>
+            <button class="ghost-button" @onclick="StepAnimation">Step</button>
+            <button class="ghost-button" @onclick="ReplayAnimation">Replay</button>
+        </div>
+
+        <div class="iris-d3-host" @ref="_chartHost"></div>
+    </article>
+
     <article class="surface-card inspector-card">
         <div class="section-heading">
             <h2>Cluster centroids</h2>
@@ -99,10 +139,10 @@
                 {
                     <tr>
                         <td>@row.Index</td>
-                        <td>@row.SepalLength</td>
-                        <td>@row.SepalWidth</td>
-                        <td>@row.PetalLength</td>
-                        <td>@row.PetalWidth</td>
+                        <td>@FormatNumber(row.SepalLength)</td>
+                        <td>@FormatNumber(row.SepalWidth)</td>
+                        <td>@FormatNumber(row.PetalLength)</td>
+                        <td>@FormatNumber(row.PetalWidth)</td>
                         <td>@row.TrueSpecies</td>
                         <td>@row.ClusterId</td>
                     </tr>
@@ -114,12 +154,126 @@
 
 @code {
     private IrisClusteringResult _result = IrisClusteringDemo.Build();
+    private readonly IReadOnlyList<(string Key, string Label)> _featureOptions =
+    [
+        ("sepal_length", "Sepal Length"),
+        ("sepal_width", "Sepal Width"),
+        ("petal_length", "Petal Length"),
+        ("petal_width", "Petal Width")
+    ];
+    private string _xAxis = "petal_length";
+    private string _yAxis = "petal_width";
+    private ElementReference _chartHost;
+    private IJSObjectReference? _d3Module;
 
     private static string FormatPercent(double value)
         => value.ToString("0.0%", System.Globalization.CultureInfo.InvariantCulture);
 
+    private static string FormatNumber(double value)
+        => value.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture);
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _d3Module = await JS.InvokeAsync<IJSObjectReference>("import", "./js/irisClusteringD3.js");
+        }
+
+        if (_d3Module is not null)
+        {
+            await _d3Module.InvokeVoidAsync("renderIrisClustering", _chartHost, BuildChartPayload());
+        }
+    }
+
+    private object BuildChartPayload()
+    {
+        return new
+        {
+            xAxis = _xAxis,
+            yAxis = _yAxis,
+            points = _result.Rows.Select(row => new
+            {
+                index = row.Index,
+                sepal_length = row.SepalLength,
+                sepal_width = row.SepalWidth,
+                petal_length = row.PetalLength,
+                petal_width = row.PetalWidth,
+                species = row.TrueSpecies,
+                cluster = row.ClusterId
+            }).ToArray(),
+            centroids = _result.Centroids.Select(centroid => new
+            {
+                cluster = centroid.ClusterId,
+                sepal_length = double.Parse(centroid.SepalLength, System.Globalization.CultureInfo.InvariantCulture),
+                sepal_width = double.Parse(centroid.SepalWidth, System.Globalization.CultureInfo.InvariantCulture),
+                petal_length = double.Parse(centroid.PetalLength, System.Globalization.CultureInfo.InvariantCulture),
+                petal_width = double.Parse(centroid.PetalWidth, System.Globalization.CultureInfo.InvariantCulture)
+            }).ToArray(),
+            centroidFrames = _result.CentroidFrames.Select(frame => new
+            {
+                iteration = frame.Iteration,
+                centroids = frame.Centroids.Select(centroid => new
+                {
+                    cluster = centroid.ClusterId,
+                    sepal_length = centroid.SepalLength,
+                    sepal_width = centroid.SepalWidth,
+                    petal_length = centroid.PetalLength,
+                    petal_width = centroid.PetalWidth
+                }).ToArray()
+            }).ToArray()
+        };
+    }
+
     private void Refresh()
     {
         _result = IrisClusteringDemo.Build();
+    }
+
+    private async Task PlayAnimation()
+    {
+        if (_d3Module is null)
+        {
+            return;
+        }
+
+        await _d3Module.InvokeVoidAsync("playIrisClustering", _chartHost);
+    }
+
+    private async Task PauseAnimation()
+    {
+        if (_d3Module is null)
+        {
+            return;
+        }
+
+        await _d3Module.InvokeVoidAsync("pauseIrisClustering", _chartHost);
+    }
+
+    private async Task ReplayAnimation()
+    {
+        if (_d3Module is null)
+        {
+            return;
+        }
+
+        await _d3Module.InvokeVoidAsync("replayIrisClustering", _chartHost);
+    }
+
+    private async Task StepAnimation()
+    {
+        if (_d3Module is null)
+        {
+            return;
+        }
+
+        await _d3Module.InvokeVoidAsync("stepIrisClustering", _chartHost);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_d3Module is not null)
+        {
+            await _d3Module.DisposeAsync();
+        }
     }
 }
