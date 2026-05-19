@@ -144,7 +144,9 @@ internal class GeneticProgram : global::Italbytz.AI.Evolutionary.IGeneticProgram
             Mutations,
             Crossovers, SelectionForSurvival);
         var population = await _ea.Run();
-        var bestIndividual = population.OrderByDescending(p => p.Fitness).FirstOrDefault();
+        var bestIndividual = population
+            .OrderByDescending(p => p.LatestKnownFitness?.ConsolidatedValue ?? double.MinValue)
+            .FirstOrDefault();
         return (bestIndividual ?? population.FirstOrDefault(), population);
     }
 
