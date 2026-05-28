@@ -2,6 +2,11 @@ namespace Italbytz.AI.Learning.Framework;
 
 public static class IrisDataSetFactory
 {
+    private static readonly string[] IrisSpecies =
+        ["Iris-setosa", "Iris-versicolor", "Iris-virginica"];
+
+    private static readonly string[] BinLabels = ["low", "mid", "high"];
+
     private const string Iris = """
         4.9,3.0,1.4,0.2,Iris-setosa
         4.7,3.2,1.3,0.2,Iris-setosa
@@ -48,8 +53,18 @@ public static class IrisDataSetFactory
         specification.DefineNumericAttribute("sepal_width");
         specification.DefineNumericAttribute("petal_length");
         specification.DefineNumericAttribute("petal_width");
-        specification.DefineStringAttribute("species",
-            ["Iris-setosa", "Iris-versicolor", "Iris-virginica"]);
+        specification.DefineStringAttribute("species", IrisSpecies);
+        return specification;
+    }
+
+    public static DataSetSpecification CreateBinnedSpecification()
+    {
+        var specification = new DataSetSpecification();
+        specification.DefineStringAttribute("sepal_length_bin", BinLabels);
+        specification.DefineStringAttribute("sepal_width_bin", BinLabels);
+        specification.DefineStringAttribute("petal_length_bin", BinLabels);
+        specification.DefineStringAttribute("petal_width_bin", BinLabels);
+        specification.DefineStringAttribute("species", IrisSpecies);
         return specification;
     }
 }
