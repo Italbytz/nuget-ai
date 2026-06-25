@@ -17,6 +17,10 @@ public interface IColumnProperties
 }
 
 [JsonDerivedType(typeof(TabularFileDataSourceV3))]
+[JsonDerivedType(typeof(SqlDataSourceV1))]
+[JsonDerivedType(typeof(FolderDataSourceV1))]
+[JsonDerivedType(typeof(VottFileDataSourceV1))]
+[JsonDerivedType(typeof(CocoFileDataSourceV0))]
 public interface IDataSource
 {
     DataSourceType DataSourceType { get; set; }
@@ -77,6 +81,15 @@ public interface ITrainingConfiguration
 
 [JsonDerivedType(typeof(RegressionTrainingOptionV2))]
 [JsonDerivedType(typeof(ClassificationTrainingOptionV2))]
+[JsonDerivedType(typeof(DefaultTrainingOptionV1))]
+[JsonDerivedType(typeof(ForecastingTrainingOptionV3))]
+[JsonDerivedType(typeof(RecommendationTrainingOptionV2))]
+[JsonDerivedType(typeof(TextClassificationTrainingOptionV1))]
+[JsonDerivedType(typeof(SentenceSimilarityTrainingOptionV1))]
+[JsonDerivedType(typeof(NERTrainingOptionV0))]
+[JsonDerivedType(typeof(QuestionAnswerTrainingOptionV0))]
+[JsonDerivedType(typeof(LocalObjectDetectionTrainingOptionV0))]
+[JsonDerivedType(typeof(AzureObjectDetectionTrainingOptionV0))]
 public interface ITrainingOption
 {
     int TrainingTime { get; set; }

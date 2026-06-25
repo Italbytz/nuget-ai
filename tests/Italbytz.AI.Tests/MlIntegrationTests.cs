@@ -230,6 +230,104 @@ public class MlIntegrationTests
     }
 
     [TestMethod]
+    public void Forecasting_training_configuration_serializes_correctly()
+    {
+        var config = new TrainingConfiguration
+        {
+            Scenario = ScenarioType.Forecasting,
+            DataSource = new SqlDataSourceV1
+            {
+                ConnectionString = "Server=myServerAddress;Database=myDataBase;Trusted_Connection=True;",
+                CommandString = "SELECT * FROM Sales",
+                DatabaseName = "myDataBase",
+                TableName = "Sales",
+                SelectedTableDbo = "dbo",
+                ColumnProperties =
+                [
+                    new ColumnPropertiesV5
+                    {
+                        ColumnName = "Date",
+                        ColumnPurpose = ColumnPurposeType.Feature,
+                        ColumnDataFormat = ColumnDataKind.DateTime
+                    },
+                    new ColumnPropertiesV5
+                    {
+                        ColumnName = "Value",
+                        ColumnPurpose = ColumnPurposeType.Label,
+                        ColumnDataFormat = ColumnDataKind.Single
+                    }
+                ]
+            },
+            Environment = new LocalEnvironmentV1
+            {
+                Type = "LocalCPU",
+                EnvironmentType = EnvironmentType.LocalCPU
+            },
+            TrainingOption = new ForecastingTrainingOptionV3
+            {
+                LabelColumn = "Value",
+                TimeColumn = "Date",
+                Horizon = 10,
+                UseDefaultIndex = false,
+                OptimizeMetric = "RMSE",
+                TrainingTime = 30,
+                ValidationOption = new CrossValidationOptionV0
+                {
+                    NumberOfFolds = 5
+                }
+            }
+        };
+
+        var json = config.SerializeToJson();
+
+        StringAssert.Contains(json, "\"Scenario\":\"Forecasting\"");
+        StringAssert.Contains(json, "\"Type\":\"SQL\"");
+        StringAssert.Contains(json, "\"Horizon\":10");
+        StringAssert.Contains(json, "\"NumberOfFolds\":5");
+        Assert.DoesNotContain(json, "null");
+    }
+
+    [TestMethod]
+    public void Recommendation_training_configuration_serializes_correctly()
+    {
+        var config = new TrainingConfiguration
+        {
+            Scenario = ScenarioType.Recommendation,
+            DataSource = new FolderDataSourceV1
+            {
+                FolderPath = "myFolder"
+            },
+            Environment = new LocalEnvironmentV1
+            {
+                Type = "LocalCPU",
+                EnvironmentType = EnvironmentType.LocalCPU
+            },
+            TrainingOption = new RecommendationTrainingOptionV2
+            {
+                LabelColumn = "Rating",
+                UserIdColumn = "UserId",
+                ItemIdColumn = "ItemId",
+                AvailableTrainers = ["MatrixFactorization"],
+                OptimizeMetric = "RSquared",
+                TrainingTime = 20,
+                ValidationOption = new TrainValidationSplitOptionV0
+                {
+                    SplitRatio = 0.2f
+                }
+            }
+        };
+
+        var json = config.SerializeToJson();
+
+        StringAssert.Contains(json, "\"Scenario\":\"Recommendation\"");
+        StringAssert.Contains(json, "\"Type\":\"Folder\"");
+        StringAssert.Contains(json, "\"UserIdColumn\":\"UserId\"");
+        StringAssert.Contains(json, "\"ItemIdColumn\":\"ItemId\"");
+        StringAssert.Contains(json, "\"SplitRatio\":0.2");
+        Assert.DoesNotContain(json, "null");
+    }
+
+    [TestMethod]
     public void Explainer_generates_permutation_importance_and_ceteris_paribus_tables()
     {
         const string csv = "sepal length,sepal width,petal length,petal width,class\n" +

@@ -53,3 +53,61 @@ public class Scenario : IScenario
 public class Parameter
 {
 }
+
+public class SqlDataSourceV1 : MBConfig, IDataSource
+{
+    public override int Version => 1;
+
+    public override string? Type { get; set; } = "SQL";
+
+    [JsonIgnore]
+    public DataSourceType DataSourceType { get; set; } = DataSourceType.SQL;
+
+    public string? ConnectionString { get; set; }
+
+    public string? CommandString { get; set; }
+
+    public string? DatabaseName { get; set; }
+
+    public string? SelectedTableDbo { get; set; }
+
+    public string? TableName { get; set; }
+
+    public IEnumerable<IColumnProperties>? ColumnProperties { get; set; }
+}
+
+public class FolderDataSourceV1 : MBConfig, IDataSource
+{
+    public override int Version => 1;
+
+    public override string? Type { get; set; } = "Folder";
+
+    [JsonIgnore]
+    public DataSourceType DataSourceType { get; set; } = DataSourceType.Folder;
+
+    public string? FolderPath { get; set; }
+}
+
+public class VottFileDataSourceV1 : MBConfig, IDataSource
+{
+    public override int Version => 1;
+
+    public override string? Type { get; set; } = "Vott";
+
+    [JsonIgnore]
+    public DataSourceType DataSourceType { get; set; } = DataSourceType.Vott;
+
+    public string? FilePath { get; set; }
+}
+
+public class CocoFileDataSourceV0 : MBConfig, IDataSource
+{
+    public override int Version => 0;
+
+    public override string? Type { get; set; } = "Coco";
+
+    [JsonIgnore]
+    public DataSourceType DataSourceType { get; set; } = DataSourceType.Coco;
+
+    public string? FilePath { get; set; }
+}
