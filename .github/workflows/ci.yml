@@ -54,7 +54,7 @@ jobs:
         run: make build CONFIGURATION=Release
 
       - name: Run tests
-        run: make test CONFIGURATION=Release
+        run: make test CONFIGURATION=Release TEST_ARGS="--filter TestCategory!=SkipInCI"
 
       - name: Pack packages
         run: make pack PACK_CONFIGURATION=Release

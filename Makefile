@@ -44,7 +44,7 @@ build: restore
 	dotnet build $(SOLUTION) --configuration $(CONFIGURATION) --no-restore
 
 test: restore
-	dotnet test $(SOLUTION) --configuration $(CONFIGURATION) --no-restore --verbosity minimal
+	dotnet test $(SOLUTION) --configuration $(CONFIGURATION) --no-restore --verbosity minimal $(TEST_ARGS)
 
 pack: restore
 	dotnet pack $(SOLUTION) --configuration $(PACK_CONFIGURATION) --no-restore --verbosity minimal --output ./artifacts/packages

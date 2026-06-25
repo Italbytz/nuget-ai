@@ -126,8 +126,43 @@ public class MlIntegrationTests
     }
 
     [TestMethod]
+    [TestCategory("SkipInCI")]
     public void Training_configuration_runs_mlnet_cli_successfully()
     {
+        var mlnetPath = "mlnet";
+        var userProfile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+        var dotnetToolPath = Path.Combine(userProfile, ".dotnet", "tools", "mlnet");
+        if (File.Exists(dotnetToolPath))
+        {
+            mlnetPath = dotnetToolPath;
+        }
+
+        bool existsInPath = false;
+        try
+        {
+            using (var testProcess = new System.Diagnostics.Process())
+            {
+                testProcess.StartInfo.FileName = mlnetPath;
+                testProcess.StartInfo.Arguments = "--version";
+                testProcess.StartInfo.UseShellExecute = false;
+                testProcess.StartInfo.RedirectStandardOutput = true;
+                testProcess.StartInfo.RedirectStandardError = true;
+                testProcess.Start();
+                testProcess.WaitForExit();
+                existsInPath = true;
+            }
+        }
+        catch
+        {
+            existsInPath = false;
+        }
+
+        if (!existsInPath)
+        {
+            Assert.Inconclusive("mlnet CLI is not installed or not in PATH.");
+            return;
+        }
+
         var tempDir = Path.Combine(Path.GetTempPath(), $"mlnet-test-{Guid.NewGuid():N}");
         Directory.CreateDirectory(tempDir);
 
@@ -194,14 +229,6 @@ public class MlIntegrationTests
 
         var configPath = Path.Combine(tempDir, "config.mbconfig");
         File.WriteAllText(configPath, config.SerializeToJson());
-
-        var mlnetPath = "mlnet";
-        var userProfile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-        var dotnetToolPath = Path.Combine(userProfile, ".dotnet", "tools", "mlnet");
-        if (File.Exists(dotnetToolPath))
-        {
-            mlnetPath = dotnetToolPath;
-        }
 
         try
         {
