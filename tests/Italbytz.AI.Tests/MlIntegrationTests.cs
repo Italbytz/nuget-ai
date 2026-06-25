@@ -126,6 +126,110 @@ public class MlIntegrationTests
     }
 
     [TestMethod]
+    public void Training_configuration_runs_mlnet_cli_successfully()
+    {
+        var tempDir = Path.Combine(Path.GetTempPath(), $"mlnet-test-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(tempDir);
+
+        var csvPath = Path.Combine(tempDir, "test-data.csv");
+        var csvContent = "Feature1,Feature2,Label\n0.1,0.2,ClassA\n0.9,0.8,ClassB\n0.15,0.25,ClassA\n0.85,0.75,ClassB\n";
+        File.WriteAllText(csvPath, csvContent);
+
+        var config = new TrainingConfiguration
+        {
+            Scenario = ScenarioType.Classification,
+            DataSource = new TabularFileDataSourceV3
+            {
+                FilePath = csvPath,
+                Delimiter = ",",
+                DecimalMarker = '.',
+                HasHeader = true,
+                AllowQuoting = false,
+                EscapeCharacter = '\\',
+                ReadMultiLines = false,
+                ColumnProperties =
+                [
+                    new ColumnPropertiesV5
+                    {
+                        Type = "Column",
+                        ColumnName = "Feature1",
+                        ColumnDataFormat = ColumnDataKind.Single,
+                        ColumnPurpose = ColumnPurposeType.Feature,
+                        IsCategorical = false
+                    },
+                    new ColumnPropertiesV5
+                    {
+                        Type = "Column",
+                        ColumnName = "Feature2",
+                        ColumnDataFormat = ColumnDataKind.Single,
+                        ColumnPurpose = ColumnPurposeType.Feature,
+                        IsCategorical = false
+                    },
+                    new ColumnPropertiesV5
+                    {
+                        Type = "Column",
+                        ColumnName = "Label",
+                        ColumnDataFormat = ColumnDataKind.String,
+                        ColumnPurpose = ColumnPurposeType.Label,
+                        IsCategorical = true
+                    }
+                ]
+            },
+            Environment = new LocalEnvironmentV1
+            {
+                Type = "LocalCPU",
+                EnvironmentType = EnvironmentType.LocalCPU
+            },
+            TrainingOption = new ClassificationTrainingOptionV2
+            {
+                LabelColumn = "Label",
+                AvailableTrainers = null,
+                TrainingTime = 5,
+                ValidationOption = new TrainValidationSplitOptionV0
+                {
+                    SplitRatio = 0.2f
+                }
+            }
+        };
+
+        var configPath = Path.Combine(tempDir, "config.mbconfig");
+        File.WriteAllText(configPath, config.SerializeToJson());
+
+        var mlnetPath = "mlnet";
+        var userProfile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+        var dotnetToolPath = Path.Combine(userProfile, ".dotnet", "tools", "mlnet");
+        if (File.Exists(dotnetToolPath))
+        {
+            mlnetPath = dotnetToolPath;
+        }
+
+        try
+        {
+            var mlnet = new System.Diagnostics.Process();
+            mlnet.StartInfo.FileName = mlnetPath;
+            mlnet.StartInfo.WorkingDirectory = tempDir;
+            mlnet.StartInfo.Arguments = "train --training-config config.mbconfig -v q";
+            mlnet.StartInfo.UseShellExecute = false;
+            mlnet.StartInfo.RedirectStandardOutput = true;
+            mlnet.StartInfo.RedirectStandardError = true;
+            mlnet.Start();
+            var stdout = mlnet.StandardOutput.ReadToEnd();
+            var stderr = mlnet.StandardError.ReadToEnd();
+            mlnet.WaitForExit();
+
+            var expectedModelPath = Path.Combine(tempDir, "config.mlnet");
+            Assert.IsTrue(File.Exists(expectedModelPath), $"Model file not found. stdout: {stdout}, stderr: {stderr}");
+        }
+        finally
+        {
+            if (Directory.Exists(tempDir))
+            {
+                Directory.Delete(tempDir, true);
+            }
+        }
+    }
+
+    [TestMethod]
     public void Explainer_generates_permutation_importance_and_ceteris_paribus_tables()
     {
         const string csv = "sepal length,sepal width,petal length,petal width,class\n" +
