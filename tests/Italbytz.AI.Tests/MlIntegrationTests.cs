@@ -128,7 +128,7 @@ public class MlIntegrationTests
     [TestMethod]
     [TestCategory("SkipInCI")]
     public void Training_configuration_runs_mlnet_cli_successfully()
-    {
+    {        
         var mlnetPath = "mlnet";
         var userProfile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
         var dotnetToolPath = Path.Combine(userProfile, ".dotnet", "tools", "mlnet");
@@ -227,7 +227,7 @@ public class MlIntegrationTests
             }
         };
 
-        var configPath = Path.Combine(tempDir, "config.mbconfig");
+        var configPath = Path.Combine(tempDir, "config.mbconfig");        
         File.WriteAllText(configPath, config.SerializeToJson());
 
         try
@@ -238,13 +238,13 @@ public class MlIntegrationTests
             mlnet.StartInfo.Arguments = "train --training-config config.mbconfig -v q";
             mlnet.StartInfo.UseShellExecute = false;
             mlnet.StartInfo.RedirectStandardOutput = true;
-            mlnet.StartInfo.RedirectStandardError = true;
+            mlnet.StartInfo.RedirectStandardError = true;            
             mlnet.Start();
             var stdout = mlnet.StandardOutput.ReadToEnd();
             var stderr = mlnet.StandardError.ReadToEnd();
             mlnet.WaitForExit();
 
-            var expectedModelPath = Path.Combine(tempDir, "config.mlnet");
+            var expectedModelPath = Path.Combine(tempDir, "config.mlnet");            
             Assert.IsTrue(File.Exists(expectedModelPath), $"Model file not found. stdout: {stdout}, stderr: {stderr}");
         }
         finally
