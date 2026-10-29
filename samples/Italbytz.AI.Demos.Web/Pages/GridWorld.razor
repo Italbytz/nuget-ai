@@ -182,6 +182,16 @@
     </article>
 </section>
 
+<StepPlayerHud CurrentStepIndex="@_currentStep"
+               TotalSteps="@(CurrentAlgorithm.Steps.Count + 1)"
+               ProgressLabel="@VisibleProgressLabel"
+               CanGoPrevious="@(_currentStep > 0)"
+               CanGoNext="@(_currentStep < CurrentAlgorithm.Steps.Count)"
+               OnStart="Reset"
+               OnPrevious="PreviousStep"
+               OnNext="NextStep"
+               OnEnd="ShowCompleteRun" />
+
 @code {
     private static readonly (string? State, int Row, int Column)[] BoardCells =
     [

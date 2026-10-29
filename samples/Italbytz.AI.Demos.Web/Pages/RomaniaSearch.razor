@@ -186,6 +186,17 @@
     </article>
 </section>
 
+<StepPlayerHud CurrentStepIndex="@_currentStep"
+               TotalSteps="@(_steps.Count + 1)"
+               ProgressLabel="@VisibleProgressLabel"
+               CanGoPrevious="@(_currentStep > 0)"
+               CanGoNext="@(_currentStep < _steps.Count)"
+               OnStart="Reset"
+               OnPrevious="PreviousStep"
+               OnNext="NextStep"
+               OnEnd="ShowCompleteSolution"
+               OnRandom="RandomizeStartCity" />
+
 @code {
     private static readonly IReadOnlyList<RomaniaSearchAlgorithm> _algorithms =
     [

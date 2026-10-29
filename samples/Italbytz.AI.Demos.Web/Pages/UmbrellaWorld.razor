@@ -166,6 +166,17 @@
     </article>
 </section>
 
+<StepPlayerHud CurrentStepIndex="@_currentStep"
+               TotalSteps="@(_run.Steps.Count + 1)"
+               ProgressLabel="@VisibleProgressLabel"
+               CanGoPrevious="@(_currentStep > 0)"
+               CanGoNext="@(_currentStep < _run.Steps.Count)"
+               OnStart="Reset"
+               OnPrevious="PreviousStep"
+               OnNext="NextStep"
+               OnEnd="ShowCompleteRun"
+               OnRandom="RandomizeRun" />
+
 @code {
     private readonly Random _random = new();
     private UmbrellaWorldRun _run = UmbrellaWorldDemoFactory.BuildCanonicalRun();

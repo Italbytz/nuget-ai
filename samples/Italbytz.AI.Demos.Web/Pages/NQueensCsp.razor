@@ -140,6 +140,17 @@
     </article>
 </section>
 
+<StepPlayerHud CurrentStepIndex="@_currentStep"
+               TotalSteps="@(CurrentAlgorithm.Steps.Count + 1)"
+               ProgressLabel="@VisibleProgressLabel"
+               CanGoPrevious="@(_currentStep > 0)"
+               CanGoNext="@(_currentStep < CurrentAlgorithm.Steps.Count)"
+               OnStart="Reset"
+               OnPrevious="PreviousStep"
+               OnNext="NextStep"
+               OnEnd="ShowCompleteRun"
+               OnRandom="RandomizeRun" />
+
 @code {
     private readonly Random _random = new();
     private IReadOnlyList<NQueensCspAlgorithmDemo> _algorithms = NQueensCspDemoFactory.BuildAll(41);

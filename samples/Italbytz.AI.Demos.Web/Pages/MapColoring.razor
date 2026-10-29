@@ -136,6 +136,17 @@
     </article>
 </section>
 
+<StepPlayerHud CurrentStepIndex="@_currentStep"
+               TotalSteps="@(CurrentAlgorithm.Steps.Count + 1)"
+               ProgressLabel="@VisibleProgressLabel"
+               CanGoPrevious="@(_currentStep > 0)"
+               CanGoNext="@(_currentStep < CurrentAlgorithm.Steps.Count)"
+               OnStart="Reset"
+               OnPrevious="PreviousStep"
+               OnNext="NextStep"
+               OnEnd="ShowCompleteRun"
+               OnRandom="RandomizeRun" />
+
 @code {
     private static readonly string[] Regions = ["WA", "NT", "SA", "Q", "NSW", "V", "T"];
 

@@ -1,0 +1,301 @@
+@namespace Italbytz.AI.Demos.Web.Components
+@using Microsoft.JSInterop
+@inject IJSRuntime JSRuntime
+@implements IAsyncDisposable
+
+<aside class="step-player-hud @(IsCollapsed ? "is-collapsed" : "") @(IsEmbed ? "is-embed" : "") no-print"
+       aria-label="Schritt-Fernbedienung">
+    @if (!IsCollapsed)
+    {
+        <div class="hud-pill">
+            <button type="button" 
+                    class="hud-icon-btn hud-collapse-toggle" 
+                    title="Fernbedienung einklappen" 
+                    @onclick="ToggleCollapse">
+                <span class="hud-icon">🎮</span>
+            </button>
+
+            <div class="hud-controls">
+                <button type="button" 
+                        class="hud-btn" 
+                        title="Start (Pos 1)" 
+                        disabled="@IsStartDisabled" 
+                        @onclick="HandleStart">
+                    ⏮
+                </button>
+                <button type="button" 
+                        class="hud-btn" 
+                        title="Zurück (← / [ / k)" 
+                        disabled="@IsPreviousDisabled" 
+                        @onclick="HandlePrevious">
+                    ◀
+                </button>
+                @if (ShowPlay)
+                {
+                    <button type="button" 
+                            class="hud-btn hud-btn-play @(IsPlaying ? "is-playing" : "")" 
+                            title="@(IsPlaying ? "Pause (Leertaste)" : "Play (Leertaste)")" 
+                            @onclick="HandleTogglePlay">
+                        @(IsPlaying ? "⏸" : "▶")
+                    </button>
+                }
+                <button type="button" 
+                        class="hud-btn hud-btn-next primary" 
+                        title="Weiter (→ / ] / j / Leertaste)" 
+                        disabled="@IsNextDisabled" 
+                        @onclick="HandleNext">
+                    ▶
+                </button>
+                <button type="button" 
+                        class="hud-btn" 
+                        title="Ende (Ende)" 
+                        disabled="@IsEndDisabled" 
+                        @onclick="HandleEnd">
+                    ⏭
+                </button>
+                @if (OnRandom.HasDelegate)
+                {
+                    <button type="button" 
+                            class="hud-btn hud-btn-random" 
+                            title="Zufallsaufgabe würfeln (r)" 
+                            @onclick="HandleRandom">
+                        🎲
+                    </button>
+                }
+            </div>
+
+            <div class="hud-status">
+                <span class="hud-step-badge">@DisplayProgress</span>
+            </div>
+
+            <button type="button" 
+                    class="hud-close-btn" 
+                    title="Minimieren" 
+                    @onclick="ToggleCollapse">
+                &times;
+            </button>
+        </div>
+    }
+    else
+    {
+        <div class="hud-minimized-chip">
+            <button type="button" 
+                    class="hud-chip-main" 
+                    title="Fernbedienung ausklappen" 
+                    @onclick="ToggleCollapse">
+                <span class="hud-icon">🎮</span>
+                <span class="hud-chip-step">@DisplayProgress</span>
+            </button>
+            <button type="button" 
+                    class="hud-chip-quick-next" 
+                    title="Weiter" 
+                    disabled="@IsNextDisabled" 
+                    @onclick="HandleNext">
+                ▶
+            </button>
+            @if (OnRandom.HasDelegate)
+            {
+                <button type="button" 
+                        class="hud-chip-quick-random" 
+                        title="Zufallsaufgabe würfeln" 
+                        @onclick="HandleRandom">
+                    🎲
+                </button>
+            }
+        </div>
+    }
+</aside>
+
+@code {
+    [Parameter] public int CurrentStepIndex { get; set; } = 0;
+    [Parameter] public int TotalSteps { get; set; } = 1;
+    [Parameter] public string? ProgressLabel { get; set; }
+    [Parameter] public bool? CanGoPrevious { get; set; }
+    [Parameter] public bool? CanGoNext { get; set; }
+    [Parameter] public bool? CanGoStart { get; set; }
+    [Parameter] public bool? CanGoEnd { get; set; }
+    [Parameter] public bool IsPlaying { get; set; }
+    [Parameter] public bool ShowPlay { get; set; } = false;
+    [Parameter] public bool IsEmbed { get; set; }
+    [Parameter] public bool EnableKeyboardShortcuts { get; set; } = true;
+    [Parameter] public bool EnableRevealBridge { get; set; } = true;
+
+    [Parameter] public EventCallback OnPrevious { get; set; }
+    [Parameter] public EventCallback OnNext { get; set; }
+    [Parameter] public EventCallback OnTogglePlay { get; set; }
+    [Parameter] public EventCallback OnStart { get; set; }
+    [Parameter] public EventCallback OnEnd { get; set; }
+    [Parameter] public EventCallback OnReset { get; set; }
+    [Parameter] public EventCallback OnRandom { get; set; }
+
+    private bool IsPreviousDisabled => CanGoPrevious.HasValue ? !CanGoPrevious.Value : CurrentStepIndex <= 0;
+    private bool IsNextDisabled => CanGoNext.HasValue ? !CanGoNext.Value : CurrentStepIndex >= TotalSteps - 1;
+    private bool IsStartDisabled => CanGoStart.HasValue ? !CanGoStart.Value : IsPreviousDisabled;
+    private bool IsEndDisabled => CanGoEnd.HasValue ? !CanGoEnd.Value : IsNextDisabled;
+
+    private string DisplayProgress => !string.IsNullOrEmpty(ProgressLabel)
+        ? ProgressLabel
+        : $"{Math.Min(TotalSteps, CurrentStepIndex + 1)} / {TotalSteps}";
+
+    private bool IsCollapsed { get; set; } = false;
+    private DotNetObjectReference<StepPlayerHud>? _dotNetRef;
+    private bool _listenerRegistered;
+
+    private async Task HandleStart() => await OnStart.InvokeAsync();
+    private async Task HandlePrevious() => await OnPrevious.InvokeAsync();
+    private async Task HandleTogglePlay() => await OnTogglePlay.InvokeAsync();
+    private async Task HandleNext() => await OnNext.InvokeAsync();
+    private async Task HandleEnd() => await OnEnd.InvokeAsync();
+    private async Task HandleRandom() => await OnRandom.InvokeAsync();
+    private void ToggleCollapse() => IsCollapsed = !IsCollapsed;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && EnableKeyboardShortcuts)
+        {
+            try
+            {
+                await JSRuntime.InvokeVoidAsync("eval", @"
+if (!window.italbytzRegisterHudListener) {
+    window._italbytzHudRefs = window._italbytzHudRefs || [];
+    window.italbytzRegisterHudListener = function(ref) {
+        window._italbytzHudRefs.push(ref);
+        if (!window._italbytzHudKeyHandler) {
+            window._italbytzHudKeyHandler = function(e) {
+                var active = document.activeElement;
+                var tag = (active && active.tagName) ? active.tagName.toLowerCase() : '';
+                if (tag === 'input' || tag === 'textarea' || tag === 'select' || (active && active.isContentEditable)) return;
+                var activeRef = window._italbytzHudRefs[window._italbytzHudRefs.length - 1];
+                if (!activeRef) return;
+
+                if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ']' || e.key === 'j' || e.key === 'J') {
+                    e.preventDefault();
+                    activeRef.invokeMethodAsync('OnShortcutNext');
+                } else if (e.key === 'ArrowLeft' || e.key === 'PageUp' || e.key === '[' || e.key === 'k' || e.key === 'K') {
+                    e.preventDefault();
+                    activeRef.invokeMethodAsync('OnShortcutPrev');
+                } else if (e.key === ' ' || e.code === 'Space') {
+                    e.preventDefault();
+                    activeRef.invokeMethodAsync('OnShortcutTogglePlay');
+                } else if (e.key === 'Home') {
+                    e.preventDefault();
+                    activeRef.invokeMethodAsync('OnShortcutStart');
+                } else if (e.key === 'End') {
+                    e.preventDefault();
+                    activeRef.invokeMethodAsync('OnShortcutEnd');
+                } else if (e.key === 'r' || e.key === 'R') {
+                    e.preventDefault();
+                    activeRef.invokeMethodAsync('OnShortcutRandom');
+                }
+            };
+            window.addEventListener('keydown', window._italbytzHudKeyHandler);
+        }
+    };
+    window.italbytzUnregisterHudListener = function(ref) {
+        if (window._italbytzHudRefs) {
+            window._italbytzHudRefs = window._italbytzHudRefs.filter(function(r) { return r !== ref; });
+        }
+    };
+}");
+                _dotNetRef = DotNetObjectReference.Create(this);
+                await JSRuntime.InvokeVoidAsync("italbytzRegisterHudListener", _dotNetRef);
+                _listenerRegistered = true;
+            }
+            catch
+            {
+                // Silently fallback if JS execution is restricted
+            }
+        }
+    }
+
+    [JSInvokable]
+    public async Task OnShortcutNext()
+    {
+        if (!IsNextDisabled)
+        {
+            await HandleNext();
+            StateHasChanged();
+        }
+        else if (IsEmbed && EnableRevealBridge)
+        {
+            // Bridge to Reveal.js parent presentation to advance slide
+            try
+            {
+                await JSRuntime.InvokeVoidAsync("eval", "if (window.parent && window.parent !== window) { window.parent.postMessage({ method: 'next' }, '*'); }");
+            }
+            catch { }
+        }
+    }
+
+    [JSInvokable]
+    public async Task OnShortcutPrev()
+    {
+        if (!IsPreviousDisabled)
+        {
+            await HandlePrevious();
+            StateHasChanged();
+        }
+        else if (IsEmbed && EnableRevealBridge)
+        {
+            // Bridge to Reveal.js parent presentation to go to previous slide
+            try
+            {
+                await JSRuntime.InvokeVoidAsync("eval", "if (window.parent && window.parent !== window) { window.parent.postMessage({ method: 'prev' }, '*'); }");
+            }
+            catch { }
+        }
+    }
+
+    [JSInvokable]
+    public async Task OnShortcutTogglePlay()
+    {
+        if (ShowPlay)
+        {
+            await HandleTogglePlay();
+            StateHasChanged();
+        }
+        else
+        {
+            // When Play is disabled, Space acts as Next step (standard presenter behavior)
+            await OnShortcutNext();
+        }
+    }
+
+    [JSInvokable]
+    public async Task OnShortcutStart()
+    {
+        await HandleStart();
+        StateHasChanged();
+    }
+
+    [JSInvokable]
+    public async Task OnShortcutEnd()
+    {
+        await HandleEnd();
+        StateHasChanged();
+    }
+
+    [JSInvokable]
+    public async Task OnShortcutRandom()
+    {
+        if (OnRandom.HasDelegate)
+        {
+            await HandleRandom();
+            StateHasChanged();
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_listenerRegistered && _dotNetRef != null)
+        {
+            try
+            {
+                await JSRuntime.InvokeVoidAsync("italbytzUnregisterHudListener", _dotNetRef);
+            }
+            catch { }
+            _listenerRegistered = false;
+        }
+        _dotNetRef?.Dispose();
+    }
+}

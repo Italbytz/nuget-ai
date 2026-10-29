@@ -126,6 +126,17 @@
     </article>
 </section>
 
+<StepPlayerHud CurrentStepIndex="@_currentStep"
+               TotalSteps="@(CurrentAgent.Steps.Count + 1)"
+               ProgressLabel="@VisibleProgressLabel"
+               CanGoPrevious="@(_currentStep > 0)"
+               CanGoNext="@(_currentStep < CurrentAgent.Steps.Count)"
+               OnStart="Reset"
+               OnPrevious="PreviousStep"
+               OnNext="NextStep"
+               OnEnd="ShowCompleteRun"
+               OnRandom="RandomizeScenario" />
+
 @code {
     private readonly Random _random = new();
     private IReadOnlyList<VacuumWorldAgentDemo> _agents = VacuumWorldDemoFactory.BuildAll();

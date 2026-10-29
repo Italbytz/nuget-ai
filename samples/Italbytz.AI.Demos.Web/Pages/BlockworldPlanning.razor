@@ -269,6 +269,16 @@
     </article>
 </section>
 
+<StepPlayerHud CurrentStepIndex="@_currentStep"
+               TotalSteps="@(_run.Steps.Count + 1)"
+               ProgressLabel="@VisibleProgressLabel"
+               CanGoPrevious="@(_currentStep > 0)"
+               CanGoNext="@(_currentStep < _run.Steps.Count)"
+               OnStart="Reset"
+               OnPrevious="PreviousStep"
+               OnNext="NextStep"
+               OnEnd="ShowCompleteRun" />
+
 @code {
     private readonly IReadOnlyList<BlockworldScenario> _scenarios = BlockworldPlanningDemoFactory.BuildScenarios();
     private string _selectedScenarioKey = string.Empty;

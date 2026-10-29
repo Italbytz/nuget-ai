@@ -183,6 +183,17 @@
     </article>
 </section>
 
+<StepPlayerHud CurrentStepIndex="@_currentStep"
+               TotalSteps="@(CurrentExample.Steps.Count + 1)"
+               ProgressLabel="@VisibleProgressLabel"
+               CanGoPrevious="@(_currentStep > 0)"
+               CanGoNext="@(_currentStep < CurrentExample.Steps.Count)"
+               OnStart="Reset"
+               OnPrevious="PreviousStep"
+               OnNext="NextStep"
+               OnEnd="ShowCompleteRun"
+               OnRandom="RandomizeExample" />
+
 @code {
     private readonly Random _random = new();
     private IReadOnlyList<CykExampleDemo> _examples = CykParserDemoFactory.BuildExamples();
